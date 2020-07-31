@@ -1,6 +1,6 @@
 #!/bin/sh
 
-excludes="--exclude=devAssets --exclude=weeks --exclude=__pycache__"
+excludes="--exclude=devAssets --exclude=weeks --exclude=__pycache__ --exclude=.git --exclude=.gitignore"
 
 
 if [ -z "$1" ]; then
