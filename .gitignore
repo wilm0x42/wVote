@@ -1,0 +1,5 @@
+/__pycache__
+/bot.conf
+/weeks/*.pickle
+/weeks/archive/*.pickle
+/devAssets

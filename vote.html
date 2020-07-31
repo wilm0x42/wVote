@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>8 Bit Music Theory Weeklies</title>
+	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
+</head>
+<body>
+	<h1>
+		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
+	</h1>
+	<div id="content">
+		<div class="entries-container">
+			[VOTE-CONTROLS]
+		</div>
+		
+		<div class="pdf-container" id="pdf-container">
+			<object id="pdf-viewer" class="pdf-viewer-welcome" data="/dummy" type="application/pdf">
+				<div id="pdf-alt" class="pdf-alt">
+					<img width="100%" src="/static/kirb_phones.png" />
+					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+				</div>
+			</object>
+		</div>
+	</div>
+	
+	<script>
+		function viewPDF(url)
+		{
+			document.getElementById("pdf-alt").innerHTML =
+				"<img width=\"100%\" src=\"/static/kirb_think.png\" /><h2><a href=\""
+				+ url + "\">Link to PDF (embedded viewer failed)</a></h2>";
+			
+			document.getElementById("pdf-viewer").data = url;
+			document.getElementById("pdf-viewer").className = "pdf-viewer-live";
+		}
+	</script>
+</body>
+</html>

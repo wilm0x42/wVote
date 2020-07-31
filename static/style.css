@@ -1,0 +1,112 @@
+@font-face
+{
+	font-family: font-ubuntu;
+	src: url("/static/ubuntu-regular.ttf");
+}
+
+body
+{
+	font-family: font-ubuntu, Arial;
+	font-size: 1.1em;
+	color: black;
+	margin: 0;
+	padding: 0;
+	background-color: #ffccff;
+}
+
+content
+{
+	padding: auto;
+}
+
+h1
+{
+	background-color: #FF00FF;
+	background: url("/static/banner_background.png");
+	background-repeat: repeat-x;
+	color: white;
+	font-size: 3em;
+	margin: 0px;
+	padding: 0px;
+	width: 100%;
+	height: 87px;
+	text-shadow: 2px 2px black;
+}
+
+td
+{
+	font-size: 0.9em;
+	padding: 0.5em;
+	background-color: white;
+	text-align: center;
+}
+
+button
+{
+	background-color: white;
+	box-shadow: 0px 3px 5px gray;
+	border: 1px solid black;
+	padding: 8px;
+}
+
+button:hover
+{
+	cursor: pointer;
+}
+
+.week-title
+{
+	text-align: center;
+	margin-bottom: 0px;
+}
+
+.week-subtitle
+{
+	margin-top: 0px;
+	text-align: center;
+	font-size: 0.75em;
+}
+
+.entries-container
+{
+	background-image: url("/static/vote_background.png"), linear-gradient(to bottom left, #f0c1f0, #e085e0);
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+	background-size: cover;
+	background-position: left top;
+	float: left;
+	width: 50%;
+	height: calc(100vh - 87px);
+}
+
+.vote-controls
+{
+	margin: auto;
+	margin-top: 25px;
+	overflow: auto;
+}
+
+.pdf-container
+{
+	float: right;
+	width: 50%;
+	height: calc(100vh - 87px);
+	background-image: linear-gradient(to bottom left, #ff66ff, #eaaeea);
+}
+
+.pdf-viewer-welcome
+{
+	display: block;
+	margin: auto;
+	width: 50%;
+	height: 100px;
+	text-align: center;
+}
+
+.pdf-viewer-live
+{
+	display: block;
+	margin: auto;
+	width: 100%;
+	height: 100%;
+}
