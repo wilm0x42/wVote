@@ -44,15 +44,18 @@ root
 ## Workflow:
 
 !submit
-	* Anyone can use this command, but only in DMs
-	* Bot will reply with a secret link to a submission form
-	* If an existing entry is found for this user in the same week, the user can revise their submission
-	* Only inputs are "Entry Name" and the MP3 and PDF
+
+* Anyone can use this command, but only in DMs
+* Bot will reply with a secret link to a submission form
+* If an existing entry is found for this user in the same week, the user can revise their submission
+* Only inputs are "Entry Name" and the MP3 and PDF
 
 !manage
-	* Only "admins" (mods/admins in the 8bmt discord) can use this, and also only in DMs
-	* Bot will reply with a secret link to an administrative management interface
-	* This is where everything is staged and prepared for posting
+
+* Only "admins" (mods/admins in the 8bmt discord) can use this, and also only in DMs
+* Bot will reply with a secret link to an administrative management interface
+* This is where everything is staged and prepared for posting
 
 !postentries
-	* Post entries from current week into #weekly-challenge, pinging each entrant
+
+* Post entries from current week into #weekly-challenge, pinging each entrant
