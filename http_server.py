@@ -18,7 +18,7 @@ adminTemplate = open("admin.html", "r").read()
 
 favicon = open("static/favicon.ico", "rb").read()
 
-serverDomain = "downbeat.xyz"
+serverDomain = "8bitweekly.xyz"
 
 editKeys = {
 	#"a1b2c3d4":
