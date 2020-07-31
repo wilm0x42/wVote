@@ -27,12 +27,13 @@
 	<script>
 		function viewPDF(url)
 		{
-			document.getElementById("pdf-alt").innerHTML =
-				"<img width=\"100%\" src=\"/static/kirb_think.png\" /><h2><a href=\""
-				+ url + "\">Link to PDF (embedded viewer failed)</a></h2>";
-			
-			document.getElementById("pdf-viewer").data = url;
-			document.getElementById("pdf-viewer").className = "pdf-viewer-live";
+			document.getElementById("pdf-container").innerHTML =
+				"<object id='pdf-viewer' class='pdf-viewer-live' data='" + url + "' type='application/pdf'>"
+					"<div id='pdf-alt' class='pdf-alt'>"
+						"<img width='100%' src='/static/kirb_think.png' /><h2><a href='"
+						+ url + "'>Link to PDF (embedded viewer failed)</a></h2>";
+					"</div>"
+				"</object>"
 		}
 	</script>
 </body>
