@@ -67,9 +67,11 @@ async def on_message(message):
 					for e in w["entries"]:
 						if not compo.entryValid(e):
 							continue
+							
+						discordUser = client.get_user(e["discordID"])
 						
 						uploadFiles = []
-						uploadMessage = "@%s - %s" % (e["entrantName"], e["entryName"])
+						uploadMessage = "%s - %s" % (discordUser.mention, e["entryName"])
 						
 						if e["mp3Format"] == "mp3":
 							uploadFiles.append(discord.File(io.BytesIO(bytes(e["mp3"])), filename=e["mp3Filename"]))
