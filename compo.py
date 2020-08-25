@@ -64,14 +64,14 @@ def moveToNextWeek():
 	
 	saveWeeks()
 
-def createBlankEntry(entrantName, discordID):
+def createBlankEntry(entrantName, discordID, whichWeek=True):
 	entry = {
 		"entryName": "",
 		"entrantName": entrantName,
 		"discordID": discordID,
 		"uuid": str(uuid.uuid4())
 	}
-	getWeek(True)["entries"].append(entry)
+	getWeek(whichWeek)["entries"].append(entry)
 	
 	return entry["uuid"]
 	

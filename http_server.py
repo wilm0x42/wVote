@@ -100,6 +100,8 @@ def getAdminControls(authKey):
 	else:
 		html += "<p>Submissions are currently CLOSED</p>"
 	
+	#TODO: This is all html code, so it should probably go in a .html ;P
+	
 	html += "<form action='/admin/edit/%s' " % authKey
 	html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
 	html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
@@ -111,11 +113,22 @@ def getAdminControls(authKey):
 	html += "<input type='submit' value='Submit'/>"
 	html += "</form><br>"
 	
+	html += "<form style='border: 1px solid black;' action='/admin/edit/%s' " % authKey
+	html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
+	html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
+	html += "<label>Force create an entry</label><br>"
+	html += "<label for='newEntryEntrant'>Spoofed entrant name</label>"
+	html += "<input type='text' name='newEntryEntrant' value='Wiglaf'><br>"
+	html += "<label for='newEntryWeek'>Place entry in current week instead of next week?</label>"
+	html += "<input type='checkbox' name='newEntryWeek' value='on'><br>"
+	html += "<input type='submit' value='Submit'/>"
+	html += "</form><br>"
+	
 	html += "<form action='/admin/edit/%s' " % authKey
 	html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
 	html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
 	html += "<label for='rolloutWeek'>Archive current week, and make next week current</label>"
-	html += "<input type='checkbox' name='rolloutWeek' value='do it'>"
+	html += "<input type='checkbox' name='rolloutWeek' value='on'>"
 	html += "<input type='submit' value='Submit'/>"
 	html += "</form>"
 	
@@ -148,8 +161,14 @@ async def admin_control_handler(request):
 				compo.submissionsOpen = False
 		
 		if "rolloutWeek" in data:
-			if data["rolloutWeek"] == "do it":
+			if data["rolloutWeek"] == "on":
 				compo.moveToNextWeek()
+		
+		if "newEntryEntrant" in data:
+			newEntryWeek = True
+			if "newEntryWeek" in data:
+				newEntryWeek = False
+			compo.createBlankEntry(data["newEntryEntrant"], None, newEntryWeek)
 		
 		compo.saveWeeks()
 		return web.Response(status=204, text="Nice")
@@ -235,6 +254,7 @@ async def file_post_handler(request):
 						
 					elif field.name == "deleteEntry" and keyValid(authKey, adminKeys):
 						week["entries"].remove(e)
+						compo.saveWeeks()
 						return web.Response(status=200, text="Entry successfully deleted.")
 					
 					elif field.name == "mp3Link":

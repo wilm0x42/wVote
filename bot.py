@@ -70,8 +70,13 @@ async def on_message(message):
 							
 						discordUser = client.get_user(e["discordID"])
 						
+						entrantPing = "@" + e["entrantName"]
+						
+						if discordUser != None:
+							entrantPing = discordUser.mention
+						
 						uploadFiles = []
-						uploadMessage = "%s - %s" % (discordUser.mention, e["entryName"])
+						uploadMessage = "%s - %s" % (entrantPing, e["entryName"])
 						
 						if e["mp3Format"] == "mp3":
 							uploadFiles.append(discord.File(io.BytesIO(bytes(e["mp3"])), filename=e["mp3Filename"]))
