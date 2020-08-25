@@ -291,10 +291,13 @@ async def file_post_handler(request):
 							
 							size += len(chunk)
 							
-							if size > 1024 * 1024 * 32: # 32MB limit
+							if size > 1024 * 1024 * 8: # 8MB limit
 								e[field.name] = None
 								e[field.name + "Filename"] = None
-								return web.Response(status=413, text="File too big! Must be 32MB or less.")
+								tooBigText = "File too big! We can only upload to discord files 8MB or less. "
+								tooBigText = "You can alternatively upload to SoundCloud or Clyp or something, and provide us with a link. "
+								tooBigText = "If you need help, ask us in #weekly-challenge-discussion."
+								return web.Response(status=413, text=tooBigText)
 							
 							if e[field.name] == None:
 								e[field.name] = chunk
