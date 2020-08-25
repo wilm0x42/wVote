@@ -119,6 +119,8 @@ def getAdminControls(authKey):
 	html += "<label>Force create an entry</label><br>"
 	html += "<label for='newEntryEntrant'>Spoofed entrant name</label>"
 	html += "<input type='text' name='newEntryEntrant' value='Wiglaf'><br>"
+	html += "<label for='newEntryDiscordID'>(Optional) Spoofed entrant discord ID</label>"
+	html += "<input type='text' name='newEntryDiscordID' value=''><br>"
 	html += "<label for='newEntryWeek'>Place entry in current week instead of next week?</label>"
 	html += "<input type='checkbox' name='newEntryWeek' value='on'><br>"
 	html += "<input type='submit' value='Submit'/>"
@@ -168,7 +170,12 @@ async def admin_control_handler(request):
 			newEntryWeek = True
 			if "newEntryWeek" in data:
 				newEntryWeek = False
-			compo.createBlankEntry(data["newEntryEntrant"], None, newEntryWeek)
+			
+			newEntryDiscordID = None
+			if "newEntryDiscordID" in data:
+				newEntryDiscordID = data["newEntryDiscordID"]
+			
+			compo.createBlankEntry(data["newEntryEntrant"], newEntryDiscordID, newEntryWeek)
 		
 		compo.saveWeeks()
 		return web.Response(status=204, text="Nice")
