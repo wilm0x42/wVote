@@ -173,7 +173,7 @@ async def admin_control_handler(request):
 			
 			newEntryDiscordID = None
 			if "newEntryDiscordID" in data:
-				newEntryDiscordID = data["newEntryDiscordID"]
+				newEntryDiscordID = int(data["newEntryDiscordID"])
 			
 			compo.createBlankEntry(data["newEntryEntrant"], newEntryDiscordID, newEntryWeek)
 		
