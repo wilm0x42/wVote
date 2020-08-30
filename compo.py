@@ -12,7 +12,6 @@ except:
 	
 currentWeek = None
 nextWeek = None
-submissionsOpen = True
 
 def getWeek(next):
 	global currentWeek, nextWeek
@@ -25,6 +24,7 @@ def getWeek(next):
 			currentWeek = {
 				"theme": "Week XYZ: Fill this in by hand!",
 				"date": "Month day'th 20XX",
+				"submissionsOpen": False,
 				"entries": []
 			}
 	if nextWeek == None:
@@ -34,6 +34,7 @@ def getWeek(next):
 			nextWeek = {
 				"theme": "Week XYZ: Fill this in by hand!",
 				"date": "Month day'th 20XX",
+				"submissionsOpen": True,
 				"entries": []
 			}
 	

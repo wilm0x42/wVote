@@ -95,7 +95,7 @@ def getAdminControls(authKey):
 	textField("nextWeekTheme", "Theme/title of next week", nextWeek["theme"])
 	textField("nextWeekDate", "Date of next week", nextWeek["date"])
 	
-	if compo.submissionsOpen:
+	if compo.getWeek(True)["submissionsOpen"]:
 		html += "<p>Submissions are currently OPEN</p>"
 	else:
 		html += "<p>Submissions are currently CLOSED</p>"
@@ -158,9 +158,9 @@ async def admin_control_handler(request):
 		
 		if "submissionsOpen" in data:
 			if data["submissionsOpen"] == "Yes":
-				compo.submissionsOpen = True
+				compo.getWeek(True)["submissionsOpen"] = True
 			if data["submissionsOpen"] == "No":
-				compo.submissionsOpen = False
+				compo.getWeek(True)["submissionsOpen"] = False
 		
 		if "rolloutWeek" in data:
 			if data["rolloutWeek"] == "on":
@@ -207,7 +207,7 @@ async def favicon_handler(request):
 async def edit_handler(request):
 	authKey = request.match_info["authKey"]
 	
-	if not compo.submissionsOpen:
+	if not compo.getWeek(True)["submissionsOpen"]:
 		return web.Response(status=404, text="Submissions are currently closed!")
 	
 	if keyValid(authKey, editKeys):
@@ -239,7 +239,7 @@ async def file_post_handler(request):
 	authKey = request.match_info["authKey"]
 	uuid = request.match_info["uuid"]
 	
-	if (keyValid(authKey, editKeys) and editKeys[authKey]["entryUUID"] == uuid and compo.submissionsOpen) or keyValid(authKey, adminKeys):
+	if (keyValid(authKey, editKeys) and editKeys[authKey]["entryUUID"] == uuid and compo.getWeek(True)["submissionsOpen"]) or keyValid(authKey, adminKeys):
 		for whichWeek in [True, False]:
 			week = compo.getWeek(whichWeek)
 		

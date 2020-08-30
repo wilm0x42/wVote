@@ -29,6 +29,7 @@ Lines that start with a # will be ignored.
 root
 |- "theme": Title of week, e.g. "Week 23: Test Drive"
 |- "date": Pretty display of week's date: "June 27th 2020"
+|- "submissionsOpen": whether or not !submit is allowed
 '- "entries": List of submitted entries for this week
 	|- "pdf": byte data of PDF
 	|- "pdfFilename": Name of PDF file

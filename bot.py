@@ -103,7 +103,7 @@ async def on_message(message):
 			
 			if command == "submit":
 				if message.channel.type == discord.ChannelType.private:
-					if not compo.submissionsOpen:
+					if not compo.getWeek(True)["submissionsOpen"]:
 						await message.channel.send("Sorry! Submissions are currently closed.")
 						return
 				
