@@ -262,6 +262,8 @@ async def file_post_handler(request):
 						e["entryName"] = (await field.read(decode=True)).decode("utf-8")
 					elif field.name == "entrantName" and keyValid(authKey, adminKeys):
 						e["entrantName"] = (await field.read(decode=True)).decode("utf-8")
+					elif field.name == "entryNotes" and keyValid(authKey, adminKeys):
+						e["entryNotes"] = (await field.read(decode=True)).decode("utf-8")
 						
 					elif field.name == "deleteEntry" and keyValid(authKey, adminKeys):
 						week["entries"].remove(e)

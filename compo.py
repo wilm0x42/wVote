@@ -129,10 +129,17 @@ def getEditFormForEntry(uuid, authKey, admin=False):
 					
 					html += "</div><br>"
 				
+				def paramIfExists(param):
+					if param in entry:
+						return entry[param]
+					else:
+						return ""
+				
 				htmlInput("entryName", "Entry Name", "text", htmlLib.escape(entry["entryName"]))
 				
 				if admin:
 					htmlInput("entrantName", "Discord Username", "text", htmlLib.escape(entry["entrantName"]))
+					htmlInput("entryNotes", "Additional Notes", "text", htmlLib.escape(paramIfExists("entryNotes")))
 				
 				showFile("mp3")
 				htmlInput("mp3", "Upload MP3", "file", "")

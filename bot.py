@@ -78,6 +78,9 @@ async def on_message(message):
 						uploadFiles = []
 						uploadMessage = "%s - %s" % (entrantPing, e["entryName"])
 						
+						if "entryNotes" in e:
+							uploadMessage += "\n" + e["entryNotes"]
+						
 						if e["mp3Format"] == "mp3":
 							uploadFiles.append(discord.File(io.BytesIO(bytes(e["mp3"])), filename=e["mp3Filename"]))
 						elif e["mp3Format"] == "external":
