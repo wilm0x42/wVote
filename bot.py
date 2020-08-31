@@ -142,6 +142,10 @@ async def on_message(message):
 			if message.channel.type == discord.ChannelType.private:
 				await message.channel.send(helpMessage())
 				return
+			
+			if str(client.user.id) in message.content:
+				await message.channel.send(helpMessage())
+				return
 		
 
 if __name__ == "__main__":
