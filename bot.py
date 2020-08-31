@@ -42,6 +42,19 @@ def load_config():
 			client.admins.append(arguments[1])
 		
 	print("DISCORD: Loaded bot.conf")
+
+def helpMessage():
+	msg = "Hey there! I'm 8Bot-- My job is to help you participate in the 8Bit Music Theory Discord Weekly Composition Competition.\n"
+				
+	if compo.getWeek(True)["submissionsOpen"]:
+		msg += "Submissions for this week's prompt are currently open.\n"
+		msg += "If you'd like to submit an entry, DM me the command `" + client.command_prefix + "submit`, and I'll give you "
+		msg += "a secret link to a personal submission form."
+	else:
+		msg += "Submissions for this week's prompt are now closed.\n"
+		msg += "To see the already submitted entries for this week, head on over to https://" + http_server.serverDomain
+	
+	return msg
 		
 @client.event
 async def on_ready():
@@ -121,6 +134,15 @@ async def on_message(message):
 				else:
 					await message.channel.send("_Ahem._ DM me to use this command.")
 					return
+			
+			if command == "help":
+				await message.channel.send(helpMessage())
+				return
+		else:
+			if message.channel.type == discord.ChannelType.private:
+				await message.channel.send(helpMessage())
+				return
+		
 
 if __name__ == "__main__":
 	load_config()
