@@ -56,10 +56,6 @@ async def on_message(message):
 		if message.content.startswith(client.command_prefix):
 			command = message.content[len(client.command_prefix):].lower()
 			
-			if command == "ping":
-				await message.channel.send("pong")
-				return
-			
 			if command == "postentries" and str(message.author.id) in client.admins:
 				w = compo.getWeek(False)
 				
