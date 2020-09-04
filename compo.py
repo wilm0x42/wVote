@@ -60,6 +60,7 @@ def moveToNextWeek():
 	nextWeek = {
 		"theme": "Week XYZ: Fill this in by hand!",
 		"date": "Month day'th 20XX",
+		"submissionsOpen": True,
 		"entries": []
 	}
 	
