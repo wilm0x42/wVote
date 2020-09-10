@@ -16,7 +16,7 @@ nextWeek = None
 def getWeek(next):
     global currentWeek, nextWeek
 
-    if currentWeek == None:
+    if currentWeek is None:
         #currentWeek = json.loads(open("week.json", "r").read())
         try:
             currentWeek = pickle.load(open("weeks/current-week.pickle", "rb"))
