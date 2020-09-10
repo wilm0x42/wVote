@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import datetime
-import asyncio
 import html as htmlLib
 import string
 import random
 
 from aiohttp import web
 
-import bot
 import compo
 
 voteTemplate = open("vote.html", "r").read()
@@ -21,24 +19,25 @@ favicon = open("static/favicon.ico", "rb").read()
 serverDomain = "8bitweekly.xyz"
 
 editKeys = {
-    #"a1b2c3d4":
-    #{
-    #	"entryUUID": "cf56f9c3-e81f-43b0-b16b-de2144b54b02",
-    #	"creationTime": datetime.datetime.now(),
-    #	"timeToLive": 200
-    #}
+    # "a1b2c3d4":
+    # {
+    # 	"entryUUID": "cf56f9c3-e81f-43b0-b16b-de2144b54b02",
+    # 	"creationTime": datetime.datetime.now(),
+    # 	"timeToLive": 200
+    # }
 }
 
 adminKeys = {
-    #"a1b2c3d4":
-    #{
-    #	"creationTime": datetime.datetime.now(),
-    #	"timeToLive": 200
-    #}
+    # "a1b2c3d4":
+    # {
+    # 	"creationTime": datetime.datetime.now(),
+    # 	"timeToLive": 200
+    # }
 }
 
+
 def keyValid(key, keystore):
-    if not key in keystore:
+    if key not in keystore:
         return False
 
     now = datetime.datetime.now()
@@ -50,9 +49,11 @@ def keyValid(key, keystore):
         keystore.pop(key)
         return False
 
+
 def createEditKey(entryUUID):
     keyCharacters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    key = ''.join(random.SystemRandom().choice(keyCharacters) for _ in range(8))
+    key = ''.join(random.SystemRandom().choice(keyCharacters)
+                  for _ in range(8))
 
     editKeys[key] = {
         "entryUUID": entryUUID,
@@ -62,9 +63,11 @@ def createEditKey(entryUUID):
 
     return key
 
+
 def createAdminKey():
     keyCharacters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    key = ''.join(random.SystemRandom().choice(keyCharacters) for _ in range(8))
+    key = ''.join(random.SystemRandom().choice(keyCharacters)
+                  for _ in range(8))
 
     adminKeys[key] = {
         "creationTime": datetime.datetime.now(),
@@ -72,6 +75,7 @@ def createAdminKey():
     }
 
     return key
+
 
 def getAdminControls(authKey):
     thisWeek = compo.getWeek(False)
@@ -86,11 +90,13 @@ def getAdminControls(authKey):
         html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
 
         html += "<label for='%s'>%s</label>" % (field, label)
-        html += "<input name='%s' type='text' value='%s' />" % (field, htmlLib.escape(value))
+        html += "<input name='%s' type='text' value='%s' />" % (
+            field, htmlLib.escape(value))
         html += "<input type='submit' value='Submit'/>"
         html += "</form><br>"
 
-    textField("currentWeekTheme", "Theme/title of current week", thisWeek["theme"])
+    textField("currentWeekTheme",
+              "Theme/title of current week", thisWeek["theme"])
     textField("currentWeekDate", "Date of current week", thisWeek["date"])
     textField("nextWeekTheme", "Theme/title of next week", nextWeek["theme"])
     textField("nextWeekDate", "Date of next week", nextWeek["date"])
@@ -100,7 +106,7 @@ def getAdminControls(authKey):
     else:
         html += "<p>Submissions are currently CLOSED</p>"
 
-    #TODO: This is all html code, so it should probably go in a .html ;P
+    # TODO: This is all html code, so it should probably go in a .html ;P
 
     html += "<form action='/admin/edit/%s' " % authKey
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
@@ -135,6 +141,7 @@ def getAdminControls(authKey):
     html += "</form>"
 
     return html
+
 
 async def admin_control_handler(request):
     authKey = request.match_info["authKey"]
@@ -179,30 +186,37 @@ async def admin_control_handler(request):
                     except ValueError:
                         newEntryDiscordID = None
 
-            compo.createBlankEntry(data["newEntryEntrant"], newEntryDiscordID, newEntryWeek)
+            compo.createBlankEntry(
+                data["newEntryEntrant"], newEntryDiscordID, newEntryWeek)
 
         compo.saveWeeks()
         return web.Response(status=204, text="Nice")
     else:
         return web.Response(status=404, text="File not found")
 
+
 async def vote_handler(request):
     html = None
 
-    html = voteTemplate.replace("[VOTE-CONTROLS]", compo.getVoteControlsForWeek(False))
+    html = voteTemplate.replace(
+        "[VOTE-CONTROLS]", compo.getVoteControlsForWeek(False))
 
     return web.Response(text=html, content_type="text/html")
 
+
 async def week_files_handler(request):
-    data, contentType = compo.getEntryFile(request.match_info["uuid"], request.match_info["filename"])
+    data, contentType = compo.getEntryFile(
+        request.match_info["uuid"], request.match_info["filename"])
 
     if not data:
         return web.Response(status=404, text="File not found")
 
     return web.Response(status=200, body=data, content_type=contentType)
 
+
 async def favicon_handler(request):
     return web.Response(body=favicon)
+
 
 async def edit_handler(request):
     authKey = request.match_info["authKey"]
@@ -215,11 +229,13 @@ async def edit_handler(request):
 
         form = compo.getEditFormForEntry(key["entryUUID"], authKey)
         html = submitTemplate.replace("[ENTRY-FORM]", form)
-        html = html.replace("[ENTRANT-NAME]", compo.getEntrantName(key["entryUUID"]))
+        html = html.replace(
+            "[ENTRANT-NAME]", compo.getEntrantName(key["entryUUID"]))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
         return web.Response(status=404, text="File not found")
+
 
 async def admin_handler(request):
     authKey = request.match_info["authKey"]
@@ -227,13 +243,16 @@ async def admin_handler(request):
     if keyValid(authKey, adminKeys):
         key = adminKeys[authKey]
 
-        html = adminTemplate.replace("[ENTRY-LIST]", compo.getAllEntryForms(authKey))
-        html = html.replace("[VOTE-CONTROLS]", compo.getVoteControlsForWeek(True))
+        html = adminTemplate.replace(
+            "[ENTRY-LIST]", compo.getAllEntryForms(authKey))
+        html = html.replace("[VOTE-CONTROLS]",
+                            compo.getVoteControlsForWeek(True))
         html = html.replace("[ADMIN-CONTROLS]", getAdminControls(authKey))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
         return web.Response(status=404, text="File not found")
+
 
 async def file_post_handler(request):
     authKey = request.match_info["authKey"]
@@ -297,7 +316,7 @@ async def file_post_handler(request):
 
                             size += len(chunk)
 
-                            if size > 1024 * 1024 * 8: # 8MB limit
+                            if size > 1024 * 1024 * 8:  # 8MB limit
                                 e[field.name] = None
                                 e[field.name + "Filename"] = None
                                 tooBigText = "File too big! We can only upload to discord files 8MB or less. "
@@ -318,7 +337,7 @@ async def file_post_handler(request):
     else:
         return web.Response(status=403, text="Not happening babe")
 
-#async def debug_handler(request):
+# async def debug_handler(request):
 #	cmd = request.match_info["command"]
 #
 #	if cmd == "save":
@@ -326,24 +345,25 @@ async def file_post_handler(request):
 #
 #	return web.Response(status=200, text="Nice.")
 
-#for member in bot.client.guilds[0].members:
+# for member in bot.client.guilds[0].members:
 #
-#async def yeet_handler(request):
+# async def yeet_handler(request):
 #	await bot.client.get_channel(720055562573840384).send("yeet yate yote")
 #	return web.Response(text="lmao")
 
 server = web.Application()
 
-server.add_routes([ web.get("/", vote_handler),
-                    web.get("/files/{uuid}/{filename}", week_files_handler),
-                    web.get("/favicon.ico", favicon_handler),
-                    web.get("/edit/{authKey}", edit_handler),
-                    web.get("/admin/{authKey}", admin_handler),
-                    web.post("/admin/edit/{authKey}", admin_control_handler),
-                    web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
-                    #web.get("/debug/{command}", debug_handler),
-                    web.static("/static", "static")
-                ])
+server.add_routes([web.get("/", vote_handler),
+                   web.get("/files/{uuid}/{filename}", week_files_handler),
+                   web.get("/favicon.ico", favicon_handler),
+                   web.get("/edit/{authKey}", edit_handler),
+                   web.get("/admin/{authKey}", admin_handler),
+                   web.post("/admin/edit/{authKey}", admin_control_handler),
+                   web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
+                   #web.get("/debug/{command}", debug_handler),
+                   web.static("/static", "static")
+                   ])
+
 
 async def start_http():
     runner = web.AppRunner(server)

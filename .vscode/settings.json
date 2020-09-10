@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/home/jesse/anaconda3/envs/8bit/bin/python",
+    "python.formatting.provider": "autopep8"
+}

@@ -2,11 +2,8 @@
 
 import asyncio
 
-from aiohttp import web
-
 import http_server
 import bot
-import compo
 
 bot.load_config()
 

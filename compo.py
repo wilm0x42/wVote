@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import datetime
-import json
 import uuid
 import html as htmlLib
 
@@ -12,6 +11,7 @@ except:
 
 currentWeek = None
 nextWeek = None
+
 
 def getWeek(next):
     global currentWeek, nextWeek
@@ -43,6 +43,7 @@ def getWeek(next):
     else:
         return currentWeek
 
+
 def saveWeeks():
     if currentWeek != None and nextWeek != None:
         #open("week.json", "w").write(json.dumps(currentWeek))
@@ -50,10 +51,12 @@ def saveWeeks():
         pickle.dump(nextWeek, open("weeks/next-week.pickle", "wb"))
         print("COMPO: current-week.pickle and next-week.pickle overwritten")
 
+
 def moveToNextWeek():
     global currentWeek, nextWeek
 
-    archiveFilename = "weeks/archive/" + datetime.datetime.now().strftime("%m-%d-%y") + ".pickle"
+    archiveFilename = "weeks/archive/" + \
+        datetime.datetime.now().strftime("%m-%d-%y") + ".pickle"
     pickle.dump(currentWeek, open(archiveFilename, "wb"))
 
     currentWeek = nextWeek
@@ -66,6 +69,7 @@ def moveToNextWeek():
 
     saveWeeks()
 
+
 def createBlankEntry(entrantName, discordID, whichWeek=True):
     entry = {
         "entryName": "",
@@ -76,6 +80,7 @@ def createBlankEntry(entrantName, discordID, whichWeek=True):
     getWeek(whichWeek)["entries"].append(entry)
 
     return entry["uuid"]
+
 
 def getEditFormForEntry(uuid, authKey, admin=False):
     for whichWeek in [True, False]:
@@ -112,7 +117,8 @@ def getEditFormForEntry(uuid, authKey, admin=False):
 
                     html += "<div class='entry-param'>"
                     html += "<label for='%s'>%s</label>" % (entryParam, label)
-                    html += "<input name='%s' type='%s' value='%s'/>" % (entryParam, inputType, value)
+                    html += "<input name='%s' type='%s' value='%s'/>" % (
+                        entryParam, inputType, value)
                     html += "</div><br>"
 
                 def showFile(whichFile):
@@ -124,8 +130,10 @@ def getEditFormForEntry(uuid, authKey, admin=False):
                     html += "<div class='entry-param'>"
 
                     if (whichFile + "Filename") in entry:
-                        fileUrl = "/files/%s/%s" % (entry["uuid"], entry[whichFile + "Filename"])
-                        html += "<a href=%s>Link to %s</a>" % (fileUrl, whichFile)
+                        fileUrl = "/files/%s/%s" % (entry["uuid"],
+                                                    entry[whichFile + "Filename"])
+                        html += "<a href=%s>Link to %s</a>" % (
+                            fileUrl, whichFile)
                     else:
                         html += "<p>%s not uploaded.<p>" % whichFile
 
@@ -137,11 +145,14 @@ def getEditFormForEntry(uuid, authKey, admin=False):
                     else:
                         return ""
 
-                htmlInput("entryName", "Entry Name", "text", htmlLib.escape(entry["entryName"]))
+                htmlInput("entryName", "Entry Name", "text",
+                          htmlLib.escape(entry["entryName"]))
 
                 if admin:
-                    htmlInput("entrantName", "Discord Username", "text", htmlLib.escape(entry["entrantName"]))
-                    htmlInput("entryNotes", "Additional Notes", "text", htmlLib.escape(paramIfExists("entryNotes")))
+                    htmlInput("entrantName", "Discord Username",
+                              "text", htmlLib.escape(entry["entrantName"]))
+                    htmlInput("entryNotes", "Additional Notes", "text",
+                              htmlLib.escape(paramIfExists("entryNotes")))
 
                 showFile("mp3")
                 htmlInput("mp3", "Upload MP3", "file", "")
@@ -165,6 +176,7 @@ def getEditFormForEntry(uuid, authKey, admin=False):
 
     return "<p>I'm not sure how to tell you this, but that entry doesn't exist.</p>"
 
+
 def getAllEntryForms(authKey):
     html = ""
 
@@ -176,11 +188,13 @@ def getAllEntryForms(authKey):
 
     return html
 
+
 def getEntrantName(uuid):
     for whichWeek in [True, False]:
         for e in getWeek(whichWeek)["entries"]:
             if e["uuid"] == uuid:
                 return e["entrantName"]
+
 
 def entryValid(e):
     requirements = [
@@ -204,6 +218,7 @@ def entryValid(e):
 
     return True
 
+
 def countValidEntries(whichWeek):
     count = 0
 
@@ -213,13 +228,14 @@ def countValidEntries(whichWeek):
 
     return count
 
+
 def getEntryFile(uuid, filename):
     for whichWeek in [True, False]:
         w = getWeek(whichWeek)
 
         for e in w["entries"]:
             if e["uuid"] == uuid:
-                if False: #not entryValid(e):
+                if False:  # not entryValid(e):
                     return None, None
                 elif filename == e["mp3Filename"]:
                     return e["mp3"], "audio/mpeg"
@@ -228,20 +244,24 @@ def getEntryFile(uuid, filename):
 
     return None, None
 
+
 def getVoteControlsForWeek(whichWeek):
     w = getWeek(whichWeek)
 
     html = "<h2 class=\"week-title\">%s</h2>" % htmlLib.escape(w["theme"])
 
-    html += "<h3 class=\"week-subtitle\">%s - %d entries</h3>" % (htmlLib.escape(w["date"]), countValidEntries(whichWeek))
+    html += "<h3 class=\"week-subtitle\">%s - %d entries</h3>" % (
+        htmlLib.escape(w["date"]), countValidEntries(whichWeek))
 
     html += "<table cellpadding='0' class='vote-controls'>\n"
 
     def addNode(tag, data):
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
+
     def th(data):
         addNode("th", data)
+
     def td(data):
         addNode("td", data)
 
@@ -261,21 +281,25 @@ def getVoteControlsForWeek(whichWeek):
 
         td(htmlLib.escape(entry["entrantName"]))
         td(htmlLib.escape(entry["entryName"]))
-        td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" % (entry["uuid"], entry["pdfFilename"]))
+        td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
+           (entry["uuid"], entry["pdfFilename"]))
 
         if entry["mp3Format"] == "mp3":
             mp3Url = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
 
-            td( "<audio controls>"
+            td("<audio controls>"
                 "<source src=\"%s\" type=\"audio/mpeg\">"
                 "<a href=\"%s\">mp3 link</a>"
                 "</audio>"
                 % (mp3Url, mp3Url))
         elif entry["mp3Format"] == "external":
-            if "soundcloud.com" in entry["mp3"]: # TODO: embed soundcloud players
-                td("<a href=%s>Listen on SoundCloud</a>" % htmlLib.escape(entry["mp3"]))
+            # TODO: embed soundcloud players
+            if "soundcloud.com" in entry["mp3"]:
+                td("<a href=%s>Listen on SoundCloud</a>" %
+                   htmlLib.escape(entry["mp3"]))
             else:
-                td("<a href=%s>Listen here!</a>" % htmlLib.escape(entry["mp3"]))
+                td("<a href=%s>Listen here!</a>" %
+                   htmlLib.escape(entry["mp3"]))
         else:
             td("Audio format not recognized D:")
 
