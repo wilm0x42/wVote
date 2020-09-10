@@ -60,7 +60,7 @@ def key_valid(key, keystore):
 def create_key(length=8):
     key_characters = string.ascii_letters + string.digits
     key = ''.join(random.SystemRandom().choice(key_characters)
-                  for _ in range(8))
+                  for _ in range(length))
     return key
 
 

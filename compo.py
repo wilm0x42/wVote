@@ -7,6 +7,7 @@ import html as html_lib
 try:
     import cPickle as pickle
 # Should this be `except ImportError` instead?
+# But also, I think pickle uses cPickle underneath in Python 3.x
 except:
     import pickle
 
