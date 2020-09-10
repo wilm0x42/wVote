@@ -262,7 +262,7 @@ async def admin_handler(request):
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
-        # key = admin_keys[auth_key]
+        key = admin_keys[auth_key]
 
         html = admin_template.replace(
             "[ENTRY-LIST]", compo.get_all_entry_forms(auth_key))
