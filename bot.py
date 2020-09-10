@@ -69,8 +69,14 @@ async def on_message(message):
 		if message.content.startswith(client.command_prefix):
 			command = message.content[len(client.command_prefix):].lower()
 			
-			if command == "postentries" and str(message.author.id) in client.admins:
+			if command in ["postentries", "postentriespreview"] and str(message.author.id) in client.admins:
 				w = compo.getWeek(False)
+				
+				if command == "postentriespreview":
+					if not message.channel.type == discord.ChannelType.private:
+						await message.channel.send("_Ahem._ DM me to use this command.")
+						return
+					w = compo.getWeek(True)
 				
 				async with message.channel.typing():
 					for e in w["entries"]:
