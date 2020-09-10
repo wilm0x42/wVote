@@ -78,8 +78,8 @@ def createAdminKey():
 
 
 def getAdminControls(authKey):
-    thisWeek = compo.getWeek(False)
-    nextWeek = compo.getWeek(True)
+    thisWeek = compo.get_week(False)
+    nextWeek = compo.get_week(True)
 
     html = ""
 
@@ -101,7 +101,7 @@ def getAdminControls(authKey):
     textField("nextWeekTheme", "Theme/title of next week", nextWeek["theme"])
     textField("nextWeekDate", "Date of next week", nextWeek["date"])
 
-    if compo.getWeek(True)["submissionsOpen"]:
+    if compo.get_week(True)["submissionsOpen"]:
         html += "<p>Submissions are currently OPEN</p>"
     else:
         html += "<p>Submissions are currently CLOSED</p>"
@@ -147,8 +147,8 @@ async def admin_control_handler(request):
     authKey = request.match_info["authKey"]
 
     if keyValid(authKey, adminKeys):
-        thisWeek = compo.getWeek(False)
-        nextWeek = compo.getWeek(True)
+        thisWeek = compo.get_week(False)
+        nextWeek = compo.get_week(True)
 
         data = await request.post()
 
@@ -165,13 +165,13 @@ async def admin_control_handler(request):
 
         if "submissionsOpen" in data:
             if data["submissionsOpen"] == "Yes":
-                compo.getWeek(True)["submissionsOpen"] = True
+                compo.get_week(True)["submissionsOpen"] = True
             if data["submissionsOpen"] == "No":
-                compo.getWeek(True)["submissionsOpen"] = False
+                compo.get_week(True)["submissionsOpen"] = False
 
         if "rolloutWeek" in data:
             if data["rolloutWeek"] == "on":
-                compo.moveToNextWeek()
+                compo.move_to_next_week()
 
         if "newEntryEntrant" in data:
             newEntryWeek = True
@@ -182,14 +182,14 @@ async def admin_control_handler(request):
             if "newEntryDiscordID" in data:
                 if data["newEntryDiscordID"] != "":
                     try:
-                        newEntryDiscordID = int(data["newEntryDiscordID"])
+                       newEntryDiscordID = int(data["newEntryDiscordID"])
                     except ValueError:
                         newEntryDiscordID = None
 
-            compo.createBlankEntry(
-                data["newEntryEntrant"], newEntryDiscordID, newEntryWeek)
+            compo.create_blank_entry(
+                data["nentrywEntryEntrant"], newEntryDiscordID, newEntryWeek)
 
-        compo.saveWeeks()
+        compo.save_weeks()
         return web.Response(status=204, text="Nice")
     else:
         return web.Response(status=404, text="File not found")
@@ -199,13 +199,13 @@ async def vote_handler(request):
     html = None
 
     html = voteTemplate.replace(
-        "[VOTE-CONTROLS]", compo.getVoteControlsForWeek(False))
+        "[VOTE-CONTROLS]", compo.get_vote_controls_for_week(False))
 
     return web.Response(text=html, content_type="text/html")
 
 
 async def week_files_handler(request):
-    data, contentType = compo.getEntryFile(
+    data, contentType = compo.get_entry_file(
         request.match_info["uuid"], request.match_info["filename"])
 
     if not data:
@@ -221,16 +221,16 @@ async def favicon_handler(request):
 async def edit_handler(request):
     authKey = request.match_info["authKey"]
 
-    if not compo.getWeek(True)["submissionsOpen"]:
+    if not compo.get_week(True)["submissionsOpen"]:
         return web.Response(status=404, text="Submissions are currently closed!")
 
     if keyValid(authKey, editKeys):
         key = editKeys[authKey]
 
-        form = compo.getEditFormForEntry(key["entryUUID"], authKey)
+        form = compo.get_edit_form_for_entry(key["entryUUID"], authKey)
         html = submitTemplate.replace("[ENTRY-FORM]", form)
         html = html.replace(
-            "[ENTRANT-NAME]", compo.getEntrantName(key["entryUUID"]))
+            "[ENTRANT-NAME]", compo.get_entrant_name(key["entryUUID"]))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
@@ -244,9 +244,9 @@ async def admin_handler(request):
         key = adminKeys[authKey]
 
         html = adminTemplate.replace(
-            "[ENTRY-LIST]", compo.getAllEntryForms(authKey))
+            "[ENTRY-LIST]", compo.get_all_entry_forms(authKey))
         html = html.replace("[VOTE-CONTROLS]",
-                            compo.getVoteControlsForWeek(True))
+                            compo.get_vote_controls_for_week(True))
         html = html.replace("[ADMIN-CONTROLS]", getAdminControls(authKey))
 
         return web.Response(status=200, body=html, content_type="text/html")
@@ -258,9 +258,9 @@ async def file_post_handler(request):
     authKey = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
-    if (keyValid(authKey, editKeys) and editKeys[authKey]["entryUUID"] == uuid and compo.getWeek(True)["submissionsOpen"]) or keyValid(authKey, adminKeys):
+    if (keyValid(authKey, editKeys) and editKeys[authKey]["entryUUID"] == uuid and compo.get_week(True)["submissionsOpen"]) or keyValid(authKey, adminKeys):
         for whichWeek in [True, False]:
-            week = compo.getWeek(whichWeek)
+            week = compo.get_week(whichWeek)
 
             for e in week["entries"]:
                 if e["uuid"] != uuid:
@@ -286,7 +286,7 @@ async def file_post_handler(request):
 
                     elif field.name == "deleteEntry" and keyValid(authKey, adminKeys):
                         week["entries"].remove(e)
-                        compo.saveWeeks()
+                        compo.save_weeks()
                         return web.Response(status=200, text="Entry successfully deleted.")
 
                     elif field.name == "mp3Link":
@@ -329,7 +329,7 @@ async def file_post_handler(request):
                             else:
                                 e[field.name] += chunk
 
-                compo.saveWeeks()
+                compo.save_weeks()
                 return web.Response(status=200, body=submitSuccess, content_type="text/html")
 
         return web.Response(status=400, text="That entry doesn't seem to exist")
@@ -341,7 +341,7 @@ async def file_post_handler(request):
 #   cmd = request.match_info["command"]
 
 #   if cmd == "save":
-#       compo.saveWeeks()
+#       compo.saveWeeks()W
 
 #   return web.Response(status=200, text="Nice.")
 

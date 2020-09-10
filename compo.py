@@ -2,126 +2,126 @@
 
 import datetime
 import uuid
-import html as htmlLib
+import html as html_lib
 
 try:
     import cPickle as pickle
 except:
     import pickle
 
-currentWeek = None
-nextWeek = None
+current_week = None
+next_week = None
 
 
-def getWeek(next):
-    global currentWeek, nextWeek
+def get_week(get_next_week):
+    global current_week, next_week
 
-    if currentWeek is None:
-        #currentWeek = json.loads(open("week.json", "r").read())
+    if current_week is None:
+        # current_week = json.loads(open("week.json", "r").read())
         try:
-            currentWeek = pickle.load(open("weeks/current-week.pickle", "rb"))
+            current_week = pickle.load(open("weeks/current-week.pickle", "rb"))
         except FileNotFoundError:
-            currentWeek = {
+            current_week = {
                 "theme": "Week XYZ: Fill this in by hand!",
                 "date": "Month day'th 20XX",
                 "submissionsOpen": False,
                 "entries": []
             }
-    if nextWeek is None:
+    if next_week is None:
         try:
-            nextWeek = pickle.load(open("weeks/next-week.pickle", "rb"))
+            next_week = pickle.load(open("weeks/next-week.pickle", "rb"))
         except FileNotFoundError:
-            nextWeek = {
+            next_week = {
                 "theme": "Week XYZ: Fill this in by hand!",
                 "date": "Month day'th 20XX",
                 "submissionsOpen": True,
                 "entries": []
             }
 
-    if next:
-        return nextWeek
+    if get_next_week:
+        return next_week
     else:
-        return currentWeek
+        return current_week
 
 
-def saveWeeks():
-    if currentWeek is not None and nextWeek is not None:
-        #open("week.json", "w").write(json.dumps(currentWeek))
-        pickle.dump(currentWeek, open("weeks/current-week.pickle", "wb"))
-        pickle.dump(nextWeek, open("weeks/next-week.pickle", "wb"))
+def save_weeks():
+    if current_week is not None and next_week is not None:
+        # open("week.json", "w").write(json.dumps(current_week))
+        pickle.dump(current_week, open("weeks/current-week.pickle", "wb"))
+        pickle.dump(next_week, open("weeks/next-week.pickle", "wb"))
         print("COMPO: current-week.pickle and next-week.pickle overwritten")
 
 
-def moveToNextWeek():
-    global currentWeek, nextWeek
+def move_to_next_week():
+    global current_week, next_week
 
-    archiveFilename = "weeks/archive/" + \
+    archive_filename = "weeks/archive/" + \
         datetime.datetime.now().strftime("%m-%d-%y") + ".pickle"
-    pickle.dump(currentWeek, open(archiveFilename, "wb"))
+    pickle.dump(current_week, open(archive_filename, "wb"))
 
-    currentWeek = nextWeek
-    nextWeek = {
+    current_week = next_week
+    next_week = {
         "theme": "Week XYZ: Fill this in by hand!",
         "date": "Month day'th 20XX",
         "submissionsOpen": True,
         "entries": []
     }
 
-    saveWeeks()
+    save_weeks()
 
 
-def createBlankEntry(entrantName, discordID, whichWeek=True):
+def create_blank_entry(entrant_name, discord_id, get_next_week=True):
     entry = {
         "entryName": "",
-        "entrantName": entrantName,
-        "discordID": discordID,
+        "entrantName": entrant_name,
+        "discordID": discord_id,
         "uuid": str(uuid.uuid4())
     }
-    getWeek(whichWeek)["entries"].append(entry)
+    get_week(get_next_week)["entries"].append(entry)
 
     return entry["uuid"]
 
 
-def getEditFormForEntry(uuid, authKey, admin=False):
-    for whichWeek in [True, False]:
-        w = getWeek(whichWeek)
+def get_edit_form_for_entry(uuid, auth_key, admin=False):
+    for which_week in [True, False]:
+        w = get_week(which_week)
 
         for entry in w["entries"]:
             if entry["uuid"] == uuid:
-                postUrl = "/edit/post/%s/%s" % (uuid, authKey)
+                post_url = "/edit/post/%s/%s" % (uuid, auth_key)
 
-                formClass = "entry-form"
-                alertHeader = ""
+                form_class = "entry-form"
+                alert_header = ""
 
                 if admin:
-                    if whichWeek is True:
-                        formClass = "form-next-week entry-form"
-                        alertHeader = "=== Entry for next week ==="
+                    if which_week is True:
+                        form_class = "form-next-week entry-form"
+                        alert_header = "=== Entry for next week ==="
                     else:
-                        formClass = "form-current-week entry-form"
-                        alertHeader = "=== ENTRY FOR CURRENT WEEK ==="
+                        form_class = "form-current-week entry-form"
+                        alert_header = "=== ENTRY FOR CURRENT WEEK ==="
 
-                    if entryValid(entry):
-                        alertHeader += " (valid)"
+                    if entry_valid(entry):
+                        alert_header += " (valid)"
                     else:
-                        alertHeader += " (invalid!)"
+                        alert_header += " (invalid!)"
 
-                html = "<form class='%s' action='%s' " % (formClass, postUrl)
+                html = "<form class='%s' action='%s' " % (form_class, post_url)
                 html += "method='post' accept-charset='utf-8' enctype='multipart/form-data'>"
 
                 if admin:
-                    html += "<h3>%s</h3>" % alertHeader
+                    html += "<h3>%s</h3>" % alert_header
 
-                def htmlInput(entryParam, label, inputType, value):
+                def html_input(entry_param, label, input_type, value):
                     nonlocal html, entry
 
                     html += "<div class='entry-param'>"
-                    html += "<label for='%s'>%s</label>" % (entryParam, label)
+                    html += "<label for='%s'>%s</label>" % (entry_param, label)
                     html += "<input name='%s' type='%s' value='%s'/>" % (
-                        entryParam, inputType, value)
+                        entry_param, input_type, value)
                     html += "</div><br>"
 
-                def showFile(whichFile):
+                def show_file(which_file):
                     nonlocal html, entry, admin
 
                     if not admin:
@@ -129,39 +129,39 @@ def getEditFormForEntry(uuid, authKey, admin=False):
 
                     html += "<div class='entry-param'>"
 
-                    if (whichFile + "Filename") in entry:
-                        fileUrl = "/files/%s/%s" % (entry["uuid"],
-                                                    entry[whichFile + "Filename"])
+                    if (which_file + "Filename") in entry:
+                        file_url = "/files/%s/%s" % (entry["uuid"],
+                                                    entry[which_file + "Filename"])
                         html += "<a href=%s>Link to %s</a>" % (
-                            fileUrl, whichFile)
+                            file_url, which_file)
                     else:
-                        html += "<p>%s not uploaded.<p>" % whichFile
+                        html += "<p>%s not uploaded.<p>" % which_file
 
                     html += "</div><br>"
 
-                def paramIfExists(param):
+                def param_if_exists(param):
                     if param in entry:
                         return entry[param]
                     else:
                         return ""
 
-                htmlInput("entryName", "Entry Name", "text",
-                          htmlLib.escape(entry["entryName"]))
+                html_input("entryName", "Entry Name", "text",
+                          html_lib.escape(entry["entryName"]))
 
                 if admin:
-                    htmlInput("entrantName", "Discord Username",
-                              "text", htmlLib.escape(entry["entrantName"]))
-                    htmlInput("entryNotes", "Additional Notes", "text",
-                              htmlLib.escape(paramIfExists("entryNotes")))
+                    html_input("entrantName", "Discord Username",
+                              "text", html_lib.escape(entry["entrantName"]))
+                    html_input("entryNotes", "Additional Notes", "text",
+                              html_lib.escape(param_if_exists("entryNotes")))
 
-                showFile("mp3")
-                htmlInput("mp3", "Upload MP3", "file", "")
+                show_file("mp3")
+                html_input("mp3", "Upload MP3", "file", "")
 
-                linkLabel = "Or, if you have an external link to your submission (e.g. SoundCloud), you can enter that here."
-                htmlInput("mp3Link", linkLabel, "text", "")
+                link_label = "Or, if you have an external link to your submission (e.g. SoundCloud), you can enter that here."
+                html_input("mp3Link", link_label, "text", "")
 
-                showFile("pdf")
-                htmlInput("pdf", "Upload PDF", "file", "")
+                show_file("pdf")
+                html_input("pdf", "Upload PDF", "file", "")
 
                 if admin:
                     html += "<div class='entry-param'>"
@@ -177,26 +177,26 @@ def getEditFormForEntry(uuid, authKey, admin=False):
     return "<p>I'm not sure how to tell you this, but that entry doesn't exist.</p>"
 
 
-def getAllEntryForms(authKey):
+def get_all_entry_forms(auth_key):
     html = ""
 
-    for whichWeek in [True, False]:
-        w = getWeek(whichWeek)
+    for which_week in [True, False]:
+        w = get_week(which_week)
 
         for entry in w["entries"]:
-            html += getEditFormForEntry(entry["uuid"], authKey, admin=True)
+            html += get_edit_form_for_entry(entry["uuid"], auth_key, admin=True)
 
     return html
 
 
-def getEntrantName(uuid):
-    for whichWeek in [True, False]:
-        for e in getWeek(whichWeek)["entries"]:
-            if e["uuid"] == uuid:
-                return e["entrantName"]
+def get_entrant_name(uuid):
+    for which_week in [True, False]:
+        for entry in get_week(which_week)["entries"]:
+            if entry["uuid"] == uuid:
+                return entry["entrantName"]
 
 
-def entryValid(e):
+def entry_valid(entry):
     requirements = [
         "uuid",
         "pdf",
@@ -208,62 +208,63 @@ def entryValid(e):
         "entrantName",
     ]
 
-    for req in requirements:
-        if req not in e:
+    for requirement in requirements:
+        if requirement not in entry:
             return False
 
     for param in ["mp3", "pdf"]:
-        if e[param] == None:
+        if entry[param] is None:
             return False
 
     return True
 
 
-def countValidEntries(whichWeek):
+def count_valid_entries(which_week):
     count = 0
 
-    for e in getWeek(whichWeek)["entries"]:
-        if entryValid(e):
+    for e in get_week(which_week)["entries"]:
+        if entry_valid(e):
             count += 1
 
     return count
 
 
-def getEntryFile(uuid, filename):
-    for whichWeek in [True, False]:
-        w = getWeek(whichWeek)
+def get_entry_file(uuid, filename):
+    for which_week in [True, False]:
+        week = get_week(which_week)
 
-        for e in w["entries"]:
-            if e["uuid"] == uuid:
+        for entry in week["entries"]:
+            if entry["uuid"] == uuid:
                 if False:  # not entryValid(e):
                     return None, None
-                elif filename == e["mp3Filename"]:
-                    return e["mp3"], "audio/mpeg"
-                elif filename == e["pdfFilename"]:
-                    return e["pdf"], "application/pdf"
+                elif filename == entry["mp3Filename"]:
+                    return entry["mp3"], "audio/mpeg"
+                elif filename == entry["pdfFilename"]:
+                    return entry["pdf"], "application/pdf"
 
     return None, None
 
 
-def getVoteControlsForWeek(whichWeek):
-    w = getWeek(whichWeek)
+def get_vote_controls_for_week(which_week):
+    w = get_week(which_week)
 
-    html = "<h2 class=\"week-title\">%s</h2>" % htmlLib.escape(w["theme"])
+    html = "<h2 class=\"week-title\">%s</h2>" % html_lib.escape(w["theme"])
 
     html += "<h3 class=\"week-subtitle\">%s - %d entries</h3>" % (
-        htmlLib.escape(w["date"]), countValidEntries(whichWeek))
+        html_lib.escape(w["date"]), count_valid_entries(which_week))
 
     html += "<table cellpadding='0' class='vote-controls'>\n"
 
-    def addNode(tag, data):
+    def add_node(tag, data):
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
+    # ! Not sure what these are
     def th(data):
-        addNode("th", data)
+        add_node("th", data)
 
     def td(data):
-        addNode("td", data)
+        add_node("td", data)
 
     html += "<tr>"
     th("Entrant")
@@ -274,13 +275,13 @@ def getVoteControlsForWeek(whichWeek):
 
     for entry in w["entries"]:
 
-        if not entryValid(entry):
+        if not entry_valid(entry):
             continue
 
         html += "<tr>"
 
-        td(htmlLib.escape(entry["entrantName"]))
-        td(htmlLib.escape(entry["entryName"]))
+        td(html_lib.escape(entry["entrantName"]))
+        td(html_lib.escape(entry["entryName"]))
         td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
            (entry["uuid"], entry["pdfFilename"]))
 
@@ -296,10 +297,10 @@ def getVoteControlsForWeek(whichWeek):
             # TODO: embed soundcloud players
             if "soundcloud.com" in entry["mp3"]:
                 td("<a href=%s>Listen on SoundCloud</a>" %
-                   htmlLib.escape(entry["mp3"]))
+                   html_lib.escape(entry["mp3"]))
             else:
                 td("<a href=%s>Listen here!</a>" %
-                   htmlLib.escape(entry["mp3"]))
+                   html_lib.escape(entry["mp3"]))
         else:
             td("Audio format not recognized D:")
 

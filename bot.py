@@ -45,7 +45,7 @@ def load_config():
 def helpMessage():
     msg = "Hey there! I'm 8Bot-- My job is to help you participate in the 8Bit Music Theory Discord Weekly Composition Competition.\n"
 
-    if compo.getWeek(True)["submissionsOpen"]:
+    if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
             client.command_prefix + "submit`, and I'll give you "
@@ -75,17 +75,17 @@ async def on_message(message):
             command = message.content[len(client.command_prefix):].lower()
 
             if command in ["postentries", "postentriespreview"] and str(message.author.id) in client.admins:
-                w = compo.getWeek(False)
+                w = compo.get_week(False)
 
                 if command == "postentriespreview":
                     if not message.channel.type == discord.ChannelType.private:
                         await message.channel.send("_Ahem._ DM me to use this command.")
                         return
-                    w = compo.getWeek(True)
+                    w = compo.get_week(True)
 
                 async with message.channel.typing():
                     for e in w["entries"]:
-                        if not compo.entryValid(e):
+                        if not compo.entry_valid(e):
                             continue
 
                         discordUser = client.get_user(e["discordID"])
@@ -127,11 +127,11 @@ async def on_message(message):
 
             if command == "submit":
                 if message.channel.type == discord.ChannelType.private:
-                    if not compo.getWeek(True)["submissionsOpen"]:
+                    if not compo.get_week(True)["submissionsOpen"]:
                         await message.channel.send("Sorry! Submissions are currently closed.")
                         return
 
-                    week = compo.getWeek(True)
+                    week = compo.get_week(True)
 
                     for e in week["entries"]:
                         if e["discordID"] == message.author.id:
@@ -141,7 +141,7 @@ async def on_message(message):
                             await message.channel.send("Link to edit your existing submission: " + url)
                             return
 
-                    newEntry = compo.createBlankEntry(
+                    newEntry = compo.create_blank_entry(
                         message.author.name, message.author.id)
                     key = http_server.createEditKey(newEntry)
                     url = "https://%s/edit/%s" % (
