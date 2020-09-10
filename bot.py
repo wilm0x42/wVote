@@ -9,6 +9,7 @@ from discord.ext.commands import Bot
 import compo
 import http_server
 
+dm_reminder = "_Ahem._ DM me to use this command."
 client = Bot(description="Musical Voting Platform",
              pm_help=False, command_prefix="vote!")
 
@@ -43,7 +44,8 @@ def load_config():
 
 
 def help_message():
-    msg = "Hey there! I'm 8Bot-- My job is to help you participate in the 8Bit Music Theory Discord Weekly Composition Competition.\n"
+    msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
+           "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
@@ -52,8 +54,8 @@ def help_message():
         msg += "a secret link to a personal submission form."
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
-        msg += "To see the already submitted entries for this week, head on over to https://" + \
-            http_server.serverDomain
+        msg += ("To see the already submitted entries for this week, "
+                "head on over to https://" + http_server.serverDomain)
 
     return msg
 
@@ -64,8 +66,11 @@ async def on_ready():
           (client.user.name, client.user.id))
     print("DISCORD: Connected to %s servers, and %s users" %
           (str(len(client.guilds)), str(len(set(client.get_all_members())))))
-    print("DISCORD: Invite link: https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=335936592" % str(client.user.id))
-    return await client.change_presence(activity=discord.Game(name="Preventing Voter Fraud"))
+    print(("DISCORD: Invite link: "
+           "https://discordapp.com/oauth2/authorize?client_id="
+           "%s&scope=bot&permissions=335936592" % str(client.user.id)))
+    activity = discord.Game(name="Preventing Voter Fraud")
+    return await client.change_presence(activity=activity)
 
 
 @client.event
@@ -74,12 +79,13 @@ async def on_message(message):
         if message.content.startswith(client.command_prefix):
             command = message.content[len(client.command_prefix):].lower()
 
-            if command in ["postentries", "postentriespreview"] and str(message.author.id) in client.admins:
+            if command in ["postentries", "postentriespreview"] \
+                    and str(message.author.id) in client.admins:
                 week = compo.get_week(False)
 
                 if command == "postentriespreview":
                     if not message.channel.type == discord.ChannelType.private:
-                        await message.channel.send("_Ahem._ DM me to use this command.")
+                        await message.channel.send(dm_reminder)
                         return
                     week = compo.get_week(True)
 
@@ -97,21 +103,24 @@ async def on_message(message):
 
                         upload_files = []
                         upload_message = "%s - %s" % (entrant_ping,
-                                                     entry["entryName"])
+                                                      entry["entryName"])
 
                         if "entryNotes" in entry:
                             upload_message += "\n" + entry["entryNotes"]
 
                         if entry["mp3Format"] == "mp3":
-                            upload_files.append(discord.File(io.BytesIO(
-                                bytes(entry["mp3"])), filename=entry["mp3Filename"]))
+                            upload_files.append(
+                                discord.File(io.BytesIO(bytes(entry["mp3"])),
+                                             filename=entry["mp3Filename"]))
                         elif entry["mp3Format"] == "external":
                             upload_message += "\n" + entry["mp3"]
 
-                        upload_files.append(discord.File(io.BytesIO(
-                            bytes(entry["pdf"])), filename=entry["pdfFilename"]))
+                        upload_files.append(
+                            discord.File(io.BytesIO(bytes(entry["pdf"])),
+                                         filename=entry["pdfFilename"]))
 
-                        await message.channel.send(upload_message, files=upload_files)
+                        await message.channel.send(upload_message,
+                                                   files=upload_files)
 
             if command == "manage" and str(message.author.id) in client.admins:
                 if message.channel.type == discord.ChannelType.private:
@@ -122,13 +131,15 @@ async def on_message(message):
                     return
 
                 else:
-                    await message.channel.send("_Ahem._ DM me to use this command.")
+
+                    await message.channel.send(dm_reminder)
                     return
 
             if command == "submit":
                 if message.channel.type == discord.ChannelType.private:
                     if not compo.get_week(True)["submissionsOpen"]:
-                        await message.channel.send("Sorry! Submissions are currently closed.")
+                        closed_info = "Sorry! Submissions are currently closed."
+                        await message.channel.send(closed_info)
                         return
 
                     week = compo.get_week(True)
@@ -138,7 +149,9 @@ async def on_message(message):
                             key = http_server.create_edit_key(entry["uuid"])
                             url = "https://%s/edit/%s" % (
                                 http_server.server_domain, key)
-                            await message.channel.send("Link to edit your existing submission: " + url)
+                            edit_info = ("Link to edit your existing "
+                                         "submission: " + url)
+                            await message.channel.send(edit_info)
                             return
 
                     new_entry = compo.create_blank_entry(
@@ -150,7 +163,7 @@ async def on_message(message):
                     return
 
                 else:
-                    await message.channel.send("_Ahem._ DM me to use this command.")
+                    await message.channel.send(dm_reminder)
                     return
 
             if command == "help":

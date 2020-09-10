@@ -6,6 +6,7 @@ import html as html_lib
 
 try:
     import cPickle as pickle
+# Should this be `except ImportError` instead?
 except:
     import pickle
 
@@ -84,9 +85,9 @@ def create_blank_entry(entrant_name, discord_id, get_next_week=True):
 
 def get_edit_form_for_entry(uuid, auth_key, admin=False):
     for which_week in [True, False]:
-        w = get_week(which_week)
+        week = get_week(which_week)
 
-        for entry in w["entries"]:
+        for entry in week["entries"]:
             if entry["uuid"] == uuid:
                 post_url = "/edit/post/%s/%s" % (uuid, auth_key)
 
@@ -107,7 +108,8 @@ def get_edit_form_for_entry(uuid, auth_key, admin=False):
                         alert_header += " (invalid!)"
 
                 html = "<form class='%s' action='%s' " % (form_class, post_url)
-                html += "method='post' accept-charset='utf-8' enctype='multipart/form-data'>"
+                html += ("method='post' accept-charset='utf-8' "
+                         "enctype='multipart/form-data'>")
 
                 if admin:
                     html += "<h3>%s</h3>" % alert_header
@@ -131,7 +133,8 @@ def get_edit_form_for_entry(uuid, auth_key, admin=False):
 
                     if (which_file + "Filename") in entry:
                         file_url = "/files/%s/%s" % (entry["uuid"],
-                                                    entry[which_file + "Filename"])
+                                                     entry[which_file
+                                                           + "Filename"])
                         html += "<a href=%s>Link to %s</a>" % (
                             file_url, which_file)
                     else:
@@ -146,18 +149,20 @@ def get_edit_form_for_entry(uuid, auth_key, admin=False):
                         return ""
 
                 html_input("entryName", "Entry Name", "text",
-                          html_lib.escape(entry["entryName"]))
+                           html_lib.escape(entry["entryName"]))
 
                 if admin:
                     html_input("entrantName", "Discord Username",
-                              "text", html_lib.escape(entry["entrantName"]))
+                               "text", html_lib.escape(entry["entrantName"]))
                     html_input("entryNotes", "Additional Notes", "text",
-                              html_lib.escape(param_if_exists("entryNotes")))
+                               html_lib.escape(param_if_exists("entryNotes")))
 
                 show_file("mp3")
                 html_input("mp3", "Upload MP3", "file", "")
 
-                link_label = "Or, if you have an external link to your submission (e.g. SoundCloud), you can enter that here."
+                link_label = ("Or, if you have an external link to your "
+                              "submission (e.g. SoundCloud), you can "
+                              "enter that here.")
                 html_input("mp3Link", link_label, "text", "")
 
                 show_file("pdf")
@@ -166,15 +171,18 @@ def get_edit_form_for_entry(uuid, auth_key, admin=False):
                 if admin:
                     html += "<div class='entry-param'>"
                     html += "<label for='deleteEntry'>Delete Entry</label>"
-                    html += "<input type='checkbox' name='deleteEntry' value='true'/>"
+                    html += ("<input type='checkbox' name='deleteEntry' "
+                             "value='true'/>")
                     html += "</div><br>"
 
-                html += "<input class='entry-param submit-button' type='submit' value='Submit Entry'/>"
+                html += ("<input class='entry-param submit-button' "
+                         "type='submit' value='Submit Entry'/>")
                 html += "</form>"
 
                 return html
 
-    return "<p>I'm not sure how to tell you this, but that entry doesn't exist.</p>"
+    return ("<p>I'm not sure how to tell you this, "
+            "but that entry doesn't exist.</p>")
 
 
 def get_all_entry_forms(auth_key):
@@ -184,7 +192,8 @@ def get_all_entry_forms(auth_key):
         w = get_week(which_week)
 
         for entry in w["entries"]:
-            html += get_edit_form_for_entry(entry["uuid"], auth_key, admin=True)
+            html += get_edit_form_for_entry(entry["uuid"],
+                                            auth_key, admin=True)
 
     return html
 
@@ -282,24 +291,24 @@ def get_vote_controls_for_week(which_week):
         add_td(html_lib.escape(entry["entrantName"]))
         add_td(html_lib.escape(entry["entryName"]))
         add_td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
-           (entry["uuid"], entry["pdfFilename"]))
+               (entry["uuid"], entry["pdfFilename"]))
 
         if entry["mp3Format"] == "mp3":
             mp3Url = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
 
             add_td("<audio controls>"
-                "<source src=\"%s\" type=\"audio/mpeg\">"
-                "<a href=\"%s\">mp3 link</a>"
-                "</audio>"
-                % (mp3Url, mp3Url))
+                   "<source src=\"%s\" type=\"audio/mpeg\">"
+                   "<a href=\"%s\">mp3 link</a>"
+                   "</audio>"
+                   % (mp3Url, mp3Url))
         elif entry["mp3Format"] == "external":
             # TODO: embed soundcloud players
             if "soundcloud.com" in entry["mp3"]:
                 add_td("<a href=%s>Listen on SoundCloud</a>" %
-                   html_lib.escape(entry["mp3"]))
+                       html_lib.escape(entry["mp3"]))
             else:
                 add_td("<a href=%s>Listen here!</a>" %
-                   html_lib.escape(entry["mp3"]))
+                       html_lib.escape(entry["mp3"]))
         else:
             add_td("Audio format not recognized D:")
 

@@ -1,4 +1,6 @@
 {
     "python.pythonPath": "/home/jesse/anaconda3/envs/8bit/bin/python",
-    "python.formatting.provider": "autopep8"
+    "python.formatting.provider": "autopep8",
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true
 }

@@ -18,6 +18,13 @@ favicon = open("static/favicon.ico", "rb").read()
 
 server_domain = "8bitweekly.xyz"
 
+too_big_text = """
+File too big! We can only upload to discord files 8MB or less.
+You can alternatively upload to SoundCloud or Clyp or something,
+and provide us with a link. If you need help, ask us in
+#weekly-challenge-discussion.
+"""
+
 edit_keys = {
     # "a1b2c3d4":
     # {
@@ -89,8 +96,10 @@ def get_admin_controls(auth_key):
     def text_field(field, label, value):
         nonlocal html
         html += "<form action='/admin/edit/%s' " % auth_key
-        html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
-        html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
+        html += ("onsubmit='setTimeout(function()"
+                 "{window.location.reload();},100);' ")
+        html += ("method='post' accept-charset='utf-8' "
+                 "enctype='application/x-www-form-urlencoded'>")
 
         html += "<label for='%s'>%s</label>" % (field, label)
         html += "<input name='%s' type='text' value='%s' />" % (
@@ -113,7 +122,8 @@ def get_admin_controls(auth_key):
 
     html += "<form action='/admin/edit/%s' " % auth_key
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
-    html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
+    html += ("method='post' accept-charset='utf-8' "
+             "enctype='application/x-www-form-urlencoded'>")
     html += "<label for='submissionsOpen'>Submissions Open</label>"
     html += "<input type='radio' name='submissionsOpen' value='Yes'>"
     html += "<label for='Yes'>Yes</label>"
@@ -122,23 +132,30 @@ def get_admin_controls(auth_key):
     html += "<input type='submit' value='Submit'/>"
     html += "</form><br>"
 
-    html += "<form style='border: 1px solid black;' action='/admin/edit/%s' " % auth_key
+    html += ("<form style='border: 1px solid black;' action='/admin/edit/%s' "
+             % auth_key)
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
-    html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
+    html += ("(method='post' accept-charset='utf-8'"
+             "enctype='application/x-www-form-urlencoded'>")
     html += "<label>Force create an entry</label><br>"
     html += "<label for='newEntryEntrant'>Spoofed entrant name</label>"
-    html += "<input type='text' name='newEntryEntrant' value='Wiglaf'><br>"
-    html += "<label for='newEntryDiscordID'>(Optional) Spoofed entrant discord ID</label>"
+    html += ("<input type='text' name='newEntryEntrant' "
+             "value='Wiglaf'><br>")
+    html += ("<label for='newEntryDiscordID'>(Optional) "
+             "Spoofed entrant discord ID</label>")
     html += "<input type='text' name='newEntryDiscordID' value=''><br>"
-    html += "<label for='newEntryWeek'>Place entry in current week instead of next week?</label>"
+    html += ("<label for='newEntryWeek'>Place entry in current week "
+             "instead of next week?</label>")
     html += "<input type='checkbox' name='newEntryWeek' value='on'><br>"
     html += "<input type='submit' value='Submit'/>"
     html += "</form><br>"
 
     html += "<form action='/admin/edit/%s' " % auth_key
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
-    html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
-    html += "<label for='rolloutWeek'>Archive current week, and make next week current</label>"
+    html += ("method='post' accept-charset='utf-8' "
+             "enctype='application/x-www-form-urlencoded'>")
+    html += ("<label for='rolloutWeek'>Archive current week, "
+             "and make next week current</label>")
     html += "<input type='checkbox' name='rolloutWeek' value='on'>"
     html += "<input type='submit' value='Submit'/>"
     html += "</form>"
@@ -189,7 +206,7 @@ async def admin_control_handler(request):
                     except ValueError:
                         new_entry_discord_id = None
 
-            compo.create_blank_entry(data["nentrywEntryEntrant"],
+            compo.create_blank_entry(data["newEntryEntrant"],
                                      new_entry_discord_id,
                                      new_entry_week)
         compo.save_weeks()
@@ -225,7 +242,8 @@ async def edit_handler(request):
     authKey = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
-        return web.Response(status=404, text="Submissions are currently closed!")
+        return web.Response(status=404,
+                            text="Submissions are currently closed!")
 
     if key_valid(authKey, edit_keys):
         key = edit_keys[authKey]
@@ -244,7 +262,7 @@ async def admin_handler(request):
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
-        key = admin_keys[auth_key]
+        # key = admin_keys[auth_key]
 
         html = admin_template.replace(
             "[ENTRY-LIST]", compo.get_all_entry_forms(auth_key))
@@ -285,16 +303,23 @@ async def file_post_handler(request):
                         break
 
                     if field.name == "entryName":
-                        entry["entryName"] = (await field.read(decode=True)).decode("utf-8")
-                    elif field.name == "entrantName" and key_valid(auth_key, admin_keys):
-                        entry["entrantName"] = (await field.read(decode=True)).decode("utf-8")
-                    elif field.name == "entryNotes" and key_valid(auth_key, admin_keys):
-                        entry["entryNotes"] = (await field.read(decode=True)).decode("utf-8")
+                        entry["entryName"] = \
+                            (await field.read(decode=True)).decode("utf-8")
+                    elif (field.name == "entrantName"
+                          and key_valid(auth_key, admin_keys)):
+                        entry["entrantName"] = \
+                            (await field.read(decode=True)).decode("utf-8")
+                    elif (field.name == "entryNotes"
+                          and key_valid(auth_key, admin_keys)):
+                        entry["entryNotes"] = \
+                            (await field.read(decode=True)).decode("utf-8")
 
-                    elif field.name == "deleteEntry" and key_valid(auth_key, admin_keys):
+                    elif (field.name == "deleteEntry"
+                          and key_valid(auth_key, admin_keys)):
                         week["entries"].remove(entry)
                         compo.save_weeks()
-                        return web.Response(status=200, text="Entry successfully deleted.")
+                        return web.Response(status=200,
+                                            text="Entry successfully deleted.")
 
                     elif field.name == "mp3Link":
                         url = (await field.read(decode=True)).decode("utf-8")
@@ -326,10 +351,8 @@ async def file_post_handler(request):
                             if size > 1024 * 1024 * 8:  # 8MB limit
                                 entry[field.name] = None
                                 entry[field.name + "Filename"] = None
-                                too_big_text = "File too big! We can only upload to discord files 8MB or less. "
-                                too_big_text += "You can alternatively upload to SoundCloud or Clyp or something, and provide us with a link. "
-                                too_big_text += "If you need help, ask us in #weekly-challenge-discussion."
-                                return web.Response(status=413, text=too_big_text)
+                                return web.Response(status=413,
+                                                    text=too_big_text)
 
                             if entry[field.name] is None:
                                 entry[field.name] = chunk
@@ -337,7 +360,9 @@ async def file_post_handler(request):
                                 entry[field.name] += chunk
 
                 compo.save_weeks()
-                return web.Response(status=200, body=submit_success, content_type="text/html")
+                return web.Response(status=200,
+                                    body=submit_success,
+                                    content_type="text/html")
 
         return web.Response(status=400, text="That entry doesn't seem to exist")
 
