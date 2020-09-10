@@ -42,7 +42,7 @@ def load_config():
     print("DISCORD: Loaded bot.conf")
 
 
-def helpMessage():
+def help_message():
     msg = "Hey there! I'm 8Bot-- My job is to help you participate in the 8Bit Music Theory Discord Weekly Composition Competition.\n"
 
     if compo.get_week(True)["submissionsOpen"]:
@@ -75,43 +75,43 @@ async def on_message(message):
             command = message.content[len(client.command_prefix):].lower()
 
             if command in ["postentries", "postentriespreview"] and str(message.author.id) in client.admins:
-                w = compo.get_week(False)
+                week = compo.get_week(False)
 
                 if command == "postentriespreview":
                     if not message.channel.type == discord.ChannelType.private:
                         await message.channel.send("_Ahem._ DM me to use this command.")
                         return
-                    w = compo.get_week(True)
+                    week = compo.get_week(True)
 
                 async with message.channel.typing():
-                    for e in w["entries"]:
-                        if not compo.entry_valid(e):
+                    for entry in week["entries"]:
+                        if not compo.entry_valid(entry):
                             continue
 
-                        discordUser = client.get_user(e["discordID"])
+                        discord_user = client.get_user(entry["discordID"])
 
-                        entrantPing = "@" + e["entrantName"]
+                        if discord_user is None:
+                            entrant_ping = "@" + entry["entrantName"]
+                        else:
+                            entrant_ping = discord_user.mention
 
-                        if discordUser != None:
-                            entrantPing = discordUser.mention
+                        upload_files = []
+                        upload_message = "%s - %s" % (entrant_ping,
+                                                     entry["entryName"])
 
-                        uploadFiles = []
-                        uploadMessage = "%s - %s" % (entrantPing,
-                                                     e["entryName"])
+                        if "entryNotes" in entry:
+                            upload_message += "\n" + entry["entryNotes"]
 
-                        if "entryNotes" in e:
-                            uploadMessage += "\n" + e["entryNotes"]
+                        if entry["mp3Format"] == "mp3":
+                            upload_files.append(discord.File(io.BytesIO(
+                                bytes(entry["mp3"])), filename=entry["mp3Filename"]))
+                        elif entry["mp3Format"] == "external":
+                            upload_message += "\n" + entry["mp3"]
 
-                        if e["mp3Format"] == "mp3":
-                            uploadFiles.append(discord.File(io.BytesIO(
-                                bytes(e["mp3"])), filename=e["mp3Filename"]))
-                        elif e["mp3Format"] == "external":
-                            uploadMessage += "\n" + e["mp3"]
+                        upload_files.append(discord.File(io.BytesIO(
+                            bytes(entry["pdf"])), filename=entry["pdfFilename"]))
 
-                        uploadFiles.append(discord.File(io.BytesIO(
-                            bytes(e["pdf"])), filename=e["pdfFilename"]))
-
-                        await message.channel.send(uploadMessage, files=uploadFiles)
+                        await message.channel.send(upload_message, files=upload_files)
 
             if command == "manage" and str(message.author.id) in client.admins:
                 if message.channel.type == discord.ChannelType.private:
@@ -133,17 +133,17 @@ async def on_message(message):
 
                     week = compo.get_week(True)
 
-                    for e in week["entries"]:
-                        if e["discordID"] == message.author.id:
-                            key = http_server.create_edit_key(e["uuid"])
+                    for entry in week["entries"]:
+                        if entry["discordID"] == message.author.id:
+                            key = http_server.create_edit_key(entry["uuid"])
                             url = "https://%s/edit/%s" % (
                                 http_server.server_domain, key)
                             await message.channel.send("Link to edit your existing submission: " + url)
                             return
 
-                    newEntry = compo.create_blank_entry(
+                    new_entry = compo.create_blank_entry(
                         message.author.name, message.author.id)
-                    key = http_server.create_edit_key(newEntry)
+                    key = http_server.create_edit_key(new_entry)
                     url = "https://%s/edit/%s" % (
                         http_server.server_domain, key)
                     await message.channel.send("Submission form: " + url)
@@ -154,15 +154,15 @@ async def on_message(message):
                     return
 
             if command == "help":
-                await message.channel.send(helpMessage())
+                await message.channel.send(help_message())
                 return
         else:
             if message.channel.type == discord.ChannelType.private:
-                await message.channel.send(helpMessage())
+                await message.channel.send(help_message())
                 return
 
             if str(client.user.id) in message.content:
-                await message.channel.send(helpMessage())
+                await message.channel.send(help_message())
                 return
 
 
