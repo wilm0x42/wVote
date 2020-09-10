@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
-import html as htmlLib
+import html as html_lib
 import string
 import random
 
@@ -9,16 +9,16 @@ from aiohttp import web
 
 import compo
 
-voteTemplate = open("vote.html", "r").read()
-submitTemplate = open("submit.html", "r").read()
-submitSuccess = open("submitted.html", "r").read()
-adminTemplate = open("admin.html", "r").read()
+vote_template = open("vote.html", "r").read()
+submit_template = open("submit.html", "r").read()
+submit_success = open("submitted.html", "r").read()
+admin_template = open("admin.html", "r").read()
 
 favicon = open("static/favicon.ico", "rb").read()
 
-serverDomain = "8bitweekly.xyz"
+server_domain = "8bitweekly.xyz"
 
-editKeys = {
+edit_keys = {
     # "a1b2c3d4":
     # {
     # 	"entryUUID": "cf56f9c3-e81f-43b0-b16b-de2144b54b02",
@@ -27,7 +27,7 @@ editKeys = {
     # }
 }
 
-adminKeys = {
+admin_keys = {
     # "a1b2c3d4":
     # {
     # 	"creationTime": datetime.datetime.now(),
@@ -36,7 +36,7 @@ adminKeys = {
 }
 
 
-def keyValid(key, keystore):
+def key_valid(key, keystore):
     if key not in keystore:
         return False
 
@@ -50,13 +50,18 @@ def keyValid(key, keystore):
         return False
 
 
-def createEditKey(entryUUID):
-    keyCharacters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    key = ''.join(random.SystemRandom().choice(keyCharacters)
+def create_key(length=8):
+    key_characters = string.ascii_letters + string.digits
+    key = ''.join(random.SystemRandom().choice(key_characters)
                   for _ in range(8))
+    return key
 
-    editKeys[key] = {
-        "entryUUID": entryUUID,
+
+def create_edit_key(entry_uuid):
+    key = create_key()
+
+    edit_keys[key] = {
+        "entryUUID": entry_uuid,
         "creationTime": datetime.datetime.now(),
         "timeToLive": 30
     }
@@ -64,12 +69,10 @@ def createEditKey(entryUUID):
     return key
 
 
-def createAdminKey():
-    keyCharacters = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    key = ''.join(random.SystemRandom().choice(keyCharacters)
-                  for _ in range(8))
+def create_admin_key():
+    key = create_key()
 
-    adminKeys[key] = {
+    admin_keys[key] = {
         "creationTime": datetime.datetime.now(),
         "timeToLive": 30
     }
@@ -77,29 +80,29 @@ def createAdminKey():
     return key
 
 
-def getAdminControls(authKey):
-    thisWeek = compo.get_week(False)
-    nextWeek = compo.get_week(True)
+def get_admin_controls(auth_key):
+    this_week = compo.get_week(False)
+    next_week = compo.get_week(True)
 
     html = ""
 
-    def textField(field, label, value):
+    def text_field(field, label, value):
         nonlocal html
-        html += "<form action='/admin/edit/%s' " % authKey
+        html += "<form action='/admin/edit/%s' " % auth_key
         html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
         html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
 
         html += "<label for='%s'>%s</label>" % (field, label)
         html += "<input name='%s' type='text' value='%s' />" % (
-            field, htmlLib.escape(value))
+            field, html_lib.escape(value))
         html += "<input type='submit' value='Submit'/>"
         html += "</form><br>"
 
-    textField("currentWeekTheme",
-              "Theme/title of current week", thisWeek["theme"])
-    textField("currentWeekDate", "Date of current week", thisWeek["date"])
-    textField("nextWeekTheme", "Theme/title of next week", nextWeek["theme"])
-    textField("nextWeekDate", "Date of next week", nextWeek["date"])
+    text_field("currentWeekTheme",
+               "Theme/title of current week", this_week["theme"])
+    text_field("currentWeekDate", "Date of current week", this_week["date"])
+    text_field("nextWeekTheme", "Theme/title of next week", next_week["theme"])
+    text_field("nextWeekDate", "Date of next week", next_week["date"])
 
     if compo.get_week(True)["submissionsOpen"]:
         html += "<p>Submissions are currently OPEN</p>"
@@ -108,7 +111,7 @@ def getAdminControls(authKey):
 
     # TODO: This is all html code, so it should probably go in a .html ;P
 
-    html += "<form action='/admin/edit/%s' " % authKey
+    html += "<form action='/admin/edit/%s' " % auth_key
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
     html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
     html += "<label for='submissionsOpen'>Submissions Open</label>"
@@ -119,7 +122,7 @@ def getAdminControls(authKey):
     html += "<input type='submit' value='Submit'/>"
     html += "</form><br>"
 
-    html += "<form style='border: 1px solid black;' action='/admin/edit/%s' " % authKey
+    html += "<form style='border: 1px solid black;' action='/admin/edit/%s' " % auth_key
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
     html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
     html += "<label>Force create an entry</label><br>"
@@ -132,7 +135,7 @@ def getAdminControls(authKey):
     html += "<input type='submit' value='Submit'/>"
     html += "</form><br>"
 
-    html += "<form action='/admin/edit/%s' " % authKey
+    html += "<form action='/admin/edit/%s' " % auth_key
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
     html += "method='post' accept-charset='utf-8' enctype='application/x-www-form-urlencoded'>"
     html += "<label for='rolloutWeek'>Archive current week, and make next week current</label>"
@@ -144,24 +147,24 @@ def getAdminControls(authKey):
 
 
 async def admin_control_handler(request):
-    authKey = request.match_info["authKey"]
+    auth_key = request.match_info["authKey"]
 
-    if keyValid(authKey, adminKeys):
-        thisWeek = compo.get_week(False)
-        nextWeek = compo.get_week(True)
+    if key_valid(auth_key, admin_keys):
+        this_week = compo.get_week(False)
+        next_week = compo.get_week(True)
 
         data = await request.post()
 
-        def dataParam(week, param, field):
+        def data_param(week, param, field):
             nonlocal data
 
             if field in data:
                 week[param] = data[field]
 
-        dataParam(thisWeek, "theme", "currentWeekTheme")
-        dataParam(thisWeek, "date", "currentWeekDate")
-        dataParam(nextWeek, "theme", "nextWeekTheme")
-        dataParam(nextWeek, "date", "nextWeekDate")
+        data_param(this_week, "theme", "currentWeekTheme")
+        data_param(this_week, "date", "currentWeekDate")
+        data_param(next_week, "theme", "nextWeekTheme")
+        data_param(next_week, "date", "nextWeekDate")
 
         if "submissionsOpen" in data:
             if data["submissionsOpen"] == "Yes":
@@ -174,21 +177,21 @@ async def admin_control_handler(request):
                 compo.move_to_next_week()
 
         if "newEntryEntrant" in data:
-            newEntryWeek = True
+            new_entry_week = True
             if "newEntryWeek" in data:
-                newEntryWeek = False
+                new_entry_week = False
 
-            newEntryDiscordID = None
+            new_entry_discord_id = None
             if "newEntryDiscordID" in data:
                 if data["newEntryDiscordID"] != "":
                     try:
-                       newEntryDiscordID = int(data["newEntryDiscordID"])
+                        new_entry_discord_id = int(data["newEntryDiscordID"])
                     except ValueError:
-                        newEntryDiscordID = None
+                        new_entry_discord_id = None
 
-            compo.create_blank_entry(
-                data["nentrywEntryEntrant"], newEntryDiscordID, newEntryWeek)
-
+            compo.create_blank_entry(data["nentrywEntryEntrant"],
+                                     new_entry_discord_id,
+                                     new_entry_week)
         compo.save_weeks()
         return web.Response(status=204, text="Nice")
     else:
@@ -198,20 +201,20 @@ async def admin_control_handler(request):
 async def vote_handler(request):
     html = None
 
-    html = voteTemplate.replace(
+    html = vote_template.replace(
         "[VOTE-CONTROLS]", compo.get_vote_controls_for_week(False))
 
     return web.Response(text=html, content_type="text/html")
 
 
 async def week_files_handler(request):
-    data, contentType = compo.get_entry_file(
-        request.match_info["uuid"], request.match_info["filename"])
+    data, content_type = compo.get_entry_file(request.match_info["uuid"],
+                                              request.match_info["filename"])
 
     if not data:
         return web.Response(status=404, text="File not found")
 
-    return web.Response(status=200, body=data, content_type=contentType)
+    return web.Response(status=200, body=data, content_type=content_type)
 
 
 async def favicon_handler(request):
@@ -224,11 +227,11 @@ async def edit_handler(request):
     if not compo.get_week(True)["submissionsOpen"]:
         return web.Response(status=404, text="Submissions are currently closed!")
 
-    if keyValid(authKey, editKeys):
-        key = editKeys[authKey]
+    if key_valid(authKey, edit_keys):
+        key = edit_keys[authKey]
 
         form = compo.get_edit_form_for_entry(key["entryUUID"], authKey)
-        html = submitTemplate.replace("[ENTRY-FORM]", form)
+        html = submit_template.replace("[ENTRY-FORM]", form)
         html = html.replace(
             "[ENTRANT-NAME]", compo.get_entrant_name(key["entryUUID"]))
 
@@ -238,75 +241,79 @@ async def edit_handler(request):
 
 
 async def admin_handler(request):
-    authKey = request.match_info["authKey"]
+    auth_key = request.match_info["authKey"]
 
-    if keyValid(authKey, adminKeys):
-        key = adminKeys[authKey]
+    if key_valid(auth_key, admin_keys):
+        key = admin_keys[auth_key]
 
-        html = adminTemplate.replace(
-            "[ENTRY-LIST]", compo.get_all_entry_forms(authKey))
+        html = admin_template.replace(
+            "[ENTRY-LIST]", compo.get_all_entry_forms(auth_key))
         html = html.replace("[VOTE-CONTROLS]",
                             compo.get_vote_controls_for_week(True))
-        html = html.replace("[ADMIN-CONTROLS]", getAdminControls(authKey))
+        html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
         return web.Response(status=404, text="File not found")
 
 
+# TODO: Refactor this function
 async def file_post_handler(request):
-    authKey = request.match_info["authKey"]
+    auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
-    if (keyValid(authKey, editKeys) and editKeys[authKey]["entryUUID"] == uuid and compo.get_week(True)["submissionsOpen"]) or keyValid(authKey, adminKeys):
-        for whichWeek in [True, False]:
-            week = compo.get_week(whichWeek)
+    if (key_valid(auth_key, edit_keys)
+        and edit_keys[auth_key]["entryUUID"] == uuid
+        and compo.get_week(True)["submissionsOpen"]) \
+            or key_valid(auth_key, admin_keys):
+        for which_week in [True, False]:
+            week = compo.get_week(which_week)
 
-            for e in week["entries"]:
-                if e["uuid"] != uuid:
+            for entry in week["entries"]:
+                if entry["uuid"] != uuid:
                     continue
 
                 reader = await request.multipart()
 
-                if reader == None:
+                if reader is None:
                     return web.Response(status=400, text="Not happening babe")
 
                 while True:
                     field = await reader.next()
 
-                    if field == None:
+                    if field is None:
                         break
 
                     if field.name == "entryName":
-                        e["entryName"] = (await field.read(decode=True)).decode("utf-8")
-                    elif field.name == "entrantName" and keyValid(authKey, adminKeys):
-                        e["entrantName"] = (await field.read(decode=True)).decode("utf-8")
-                    elif field.name == "entryNotes" and keyValid(authKey, adminKeys):
-                        e["entryNotes"] = (await field.read(decode=True)).decode("utf-8")
+                        entry["entryName"] = (await field.read(decode=True)).decode("utf-8")
+                    elif field.name == "entrantName" and key_valid(auth_key, admin_keys):
+                        entry["entrantName"] = (await field.read(decode=True)).decode("utf-8")
+                    elif field.name == "entryNotes" and key_valid(auth_key, admin_keys):
+                        entry["entryNotes"] = (await field.read(decode=True)).decode("utf-8")
 
-                    elif field.name == "deleteEntry" and keyValid(authKey, adminKeys):
-                        week["entries"].remove(e)
+                    elif field.name == "deleteEntry" and key_valid(auth_key, admin_keys):
+                        week["entries"].remove(entry)
                         compo.save_weeks()
                         return web.Response(status=200, text="Entry successfully deleted.")
 
                     elif field.name == "mp3Link":
                         url = (await field.read(decode=True)).decode("utf-8")
                         if len(url) > 1:
-                            e["mp3"] = url
-                            e["mp3Format"] = "external"
-                            e["mp3Filename"] = ""
+                            entry["mp3"] = url
+                            entry["mp3Format"] = "external"
+                            entry["mp3Filename"] = ""
 
                     elif field.name == "mp3" or field.name == "pdf":
                         if field.filename == "":
                             continue
 
                         size = 0
-                        e[field.name] = None
+                        entry[field.name] = None
 
-                        e[field.name + "Filename"] = field.filename
+                        entry[field.name + "Filename"] = field.filename
 
                         if field.name == "mp3":
-                            e["mp3Format"] = "mp3"
+                            entry["mp3Format"] = "mp3"
 
                         while True:
                             chunk = await field.read_chunk()
@@ -317,20 +324,20 @@ async def file_post_handler(request):
                             size += len(chunk)
 
                             if size > 1024 * 1024 * 8:  # 8MB limit
-                                e[field.name] = None
-                                e[field.name + "Filename"] = None
-                                tooBigText = "File too big! We can only upload to discord files 8MB or less. "
-                                tooBigText += "You can alternatively upload to SoundCloud or Clyp or something, and provide us with a link. "
-                                tooBigText += "If you need help, ask us in #weekly-challenge-discussion."
-                                return web.Response(status=413, text=tooBigText)
+                                entry[field.name] = None
+                                entry[field.name + "Filename"] = None
+                                too_big_text = "File too big! We can only upload to discord files 8MB or less. "
+                                too_big_text += "You can alternatively upload to SoundCloud or Clyp or something, and provide us with a link. "
+                                too_big_text += "If you need help, ask us in #weekly-challenge-discussion."
+                                return web.Response(status=413, text=too_big_text)
 
-                            if e[field.name] == None:
-                                e[field.name] = chunk
+                            if entry[field.name] is None:
+                                entry[field.name] = chunk
                             else:
-                                e[field.name] += chunk
+                                entry[field.name] += chunk
 
                 compo.save_weeks()
-                return web.Response(status=200, body=submitSuccess, content_type="text/html")
+                return web.Response(status=200, body=submit_success, content_type="text/html")
 
         return web.Response(status=400, text="That entry doesn't seem to exist")
 
@@ -341,7 +348,7 @@ async def file_post_handler(request):
 #   cmd = request.match_info["command"]
 
 #   if cmd == "save":
-#       compo.saveWeeks()W
+#       compo.save_weeks()
 
 #   return web.Response(status=200, text="Nice.")
 

@@ -115,9 +115,9 @@ async def on_message(message):
 
             if command == "manage" and str(message.author.id) in client.admins:
                 if message.channel.type == discord.ChannelType.private:
-                    key = http_server.createAdminKey()
+                    key = http_server.create_admin_key()
                     url = "https://%s/admin/%s" % (
-                        http_server.serverDomain, key)
+                        http_server.server_domain, key)
                     await message.channel.send("Admin interface: " + url)
                     return
 
@@ -135,17 +135,17 @@ async def on_message(message):
 
                     for e in week["entries"]:
                         if e["discordID"] == message.author.id:
-                            key = http_server.createEditKey(e["uuid"])
+                            key = http_server.create_edit_key(e["uuid"])
                             url = "https://%s/edit/%s" % (
-                                http_server.serverDomain, key)
+                                http_server.server_domain, key)
                             await message.channel.send("Link to edit your existing submission: " + url)
                             return
 
                     newEntry = compo.create_blank_entry(
                         message.author.name, message.author.id)
-                    key = http_server.createEditKey(newEntry)
+                    key = http_server.create_edit_key(newEntry)
                     url = "https://%s/edit/%s" % (
-                        http_server.serverDomain, key)
+                        http_server.server_domain, key)
                     await message.channel.send("Submission form: " + url)
                     return
 
