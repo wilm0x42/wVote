@@ -259,18 +259,17 @@ def get_vote_controls_for_week(which_week):
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
-    # ! Not sure what these are
-    def th(data):
+    def add_th(data):
         add_node("th", data)
 
-    def td(data):
+    def add_td(data):
         add_node("td", data)
 
     html += "<tr>"
-    th("Entrant")
-    th("Composition Title")
-    th("PDF")
-    th("MP3")
+    add_th("Entrant")
+    add_th("Composition Title")
+    add_th("PDF")
+    add_th("MP3")
     html += "</tr>"
 
     for entry in w["entries"]:
@@ -280,15 +279,15 @@ def get_vote_controls_for_week(which_week):
 
         html += "<tr>"
 
-        td(html_lib.escape(entry["entrantName"]))
-        td(html_lib.escape(entry["entryName"]))
-        td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
+        add_td(html_lib.escape(entry["entrantName"]))
+        add_td(html_lib.escape(entry["entryName"]))
+        add_td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
            (entry["uuid"], entry["pdfFilename"]))
 
         if entry["mp3Format"] == "mp3":
             mp3Url = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
 
-            td("<audio controls>"
+            add_td("<audio controls>"
                 "<source src=\"%s\" type=\"audio/mpeg\">"
                 "<a href=\"%s\">mp3 link</a>"
                 "</audio>"
@@ -296,13 +295,13 @@ def get_vote_controls_for_week(which_week):
         elif entry["mp3Format"] == "external":
             # TODO: embed soundcloud players
             if "soundcloud.com" in entry["mp3"]:
-                td("<a href=%s>Listen on SoundCloud</a>" %
+                add_td("<a href=%s>Listen on SoundCloud</a>" %
                    html_lib.escape(entry["mp3"]))
             else:
-                td("<a href=%s>Listen here!</a>" %
+                add_td("<a href=%s>Listen here!</a>" %
                    html_lib.escape(entry["mp3"]))
         else:
-            td("Audio format not recognized D:")
+            add_td("Audio format not recognized D:")
 
         html += "</tr>"
 
