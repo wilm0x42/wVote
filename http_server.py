@@ -338,18 +338,18 @@ async def file_post_handler(request):
         return web.Response(status=403, text="Not happening babe")
 
 # async def debug_handler(request):
-#	cmd = request.match_info["command"]
-#
-#	if cmd == "save":
-#		compo.saveWeeks()
-#
-#	return web.Response(status=200, text="Nice.")
+#   cmd = request.match_info["command"]
+
+#   if cmd == "save":
+#       compo.saveWeeks()
+
+#   return web.Response(status=200, text="Nice.")
 
 # for member in bot.client.guilds[0].members:
-#
+
 # async def yeet_handler(request):
-#	await bot.client.get_channel(720055562573840384).send("yeet yate yote")
-#	return web.Response(text="lmao")
+#   await bot.client.get_channel(720055562573840384).send("yeet yate yote")
+#   return web.Response(text="lmao")
 
 server = web.Application()
 
@@ -360,7 +360,7 @@ server.add_routes([web.get("/", vote_handler),
                    web.get("/admin/{authKey}", admin_handler),
                    web.post("/admin/edit/{authKey}", admin_control_handler),
                    web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
-                   #web.get("/debug/{command}", debug_handler),
+                   # web.get("/debug/{command}", debug_handler),
                    web.static("/static", "static")
                    ])
 

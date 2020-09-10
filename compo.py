@@ -27,7 +27,7 @@ def getWeek(next):
                 "submissionsOpen": False,
                 "entries": []
             }
-    if nextWeek == None:
+    if nextWeek is None:
         try:
             nextWeek = pickle.load(open("weeks/next-week.pickle", "rb"))
         except FileNotFoundError:
@@ -45,7 +45,7 @@ def getWeek(next):
 
 
 def saveWeeks():
-    if currentWeek != None and nextWeek != None:
+    if currentWeek is not None and nextWeek is not None:
         #open("week.json", "w").write(json.dumps(currentWeek))
         pickle.dump(currentWeek, open("weeks/current-week.pickle", "wb"))
         pickle.dump(nextWeek, open("weeks/next-week.pickle", "wb"))
@@ -94,7 +94,7 @@ def getEditFormForEntry(uuid, authKey, admin=False):
                 alertHeader = ""
 
                 if admin:
-                    if whichWeek == True:
+                    if whichWeek is True:
                         formClass = "form-next-week entry-form"
                         alertHeader = "=== Entry for next week ==="
                     else:
@@ -209,7 +209,7 @@ def entryValid(e):
     ]
 
     for req in requirements:
-        if not req in e:
+        if req not in e:
             return False
 
     for param in ["mp3", "pdf"]:
