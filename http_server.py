@@ -17,6 +17,7 @@ admin_template = open("admin.html", "r").read()
 favicon = open("static/favicon.ico", "rb").read()
 
 server_domain = "8bitweekly.xyz"
+default_ttl = 30
 
 too_big_text = """
 File too big! We can only upload to discord files 8MB or less.
@@ -70,7 +71,7 @@ def create_edit_key(entry_uuid):
     edit_keys[key] = {
         "entryUUID": entry_uuid,
         "creationTime": datetime.datetime.now(),
-        "timeToLive": 30
+        "timeToLive": default_ttl
     }
 
     return key
@@ -81,7 +82,7 @@ def create_admin_key():
 
     admin_keys[key] = {
         "creationTime": datetime.datetime.now(),
-        "timeToLive": 30
+        "timeToLive": default_ttl
     }
 
     return key

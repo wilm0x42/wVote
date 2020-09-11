@@ -66,7 +66,7 @@ def get_week(get_next_week: bool) -> dict:
         return current_week
 
 
-def save_weeks():
+def save_weeks() -> None:
     """
     Saves `current_week` and `next_week` into pickle objects so that they can
     later be read again.
@@ -78,7 +78,7 @@ def save_weeks():
         print("COMPO: current-week.pickle and next-week.pickle overwritten")
 
 
-def move_to_next_week():
+def move_to_next_week() -> None:
     """
     Replaces `current_week` with `next_week`, freeing up `next_week` to be
     replaced with new information.
