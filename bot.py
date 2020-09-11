@@ -35,6 +35,8 @@ def load_config():
 
         if key == "command_prefix":
             client.command_prefix = arguments[1]
+            # if arguments[1] == "test!":
+            #     http_server.server_domain = "0.0.0.0:8251"
         if key == "bot_key":
             client.bot_key = arguments[1]
         if key == "admin":
