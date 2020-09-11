@@ -133,15 +133,14 @@ def get_admin_controls(auth_key):
     html += "<input type='submit' value='Submit'/>"
     html += "</form><br>"
 
-    html += ("<form style='border: 1px solid black;' action='/admin/edit/%s' "
-             % auth_key)
+    html += ("<form style='border: 1px solid black;' "
+             "action='/admin/edit/%s' " % auth_key)
     html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
-    html += ("(method='post' accept-charset='utf-8'"
+    html += ("method='post' accept-charset='utf-8' "
              "enctype='application/x-www-form-urlencoded'>")
     html += "<label>Force create an entry</label><br>"
     html += "<label for='newEntryEntrant'>Spoofed entrant name</label>"
-    html += ("<input type='text' name='newEntryEntrant' "
-             "value='Wiglaf'><br>")
+    html += "<input type='text' name='newEntryEntrant' value='Wiglaf'><br>"
     html += ("<label for='newEntryDiscordID'>(Optional) "
              "Spoofed entrant discord ID</label>")
     html += "<input type='text' name='newEntryDiscordID' value=''><br>"
