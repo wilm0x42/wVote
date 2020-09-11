@@ -239,16 +239,16 @@ async def favicon_handler(request):
 
 
 async def edit_handler(request):
-    authKey = request.match_info["authKey"]
+    auth_key = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
         return web.Response(status=404,
                             text="Submissions are currently closed!")
 
-    if key_valid(authKey, edit_keys):
-        key = edit_keys[authKey]
+    if key_valid(auth_key, edit_keys):
+        key = edit_keys[auth_key]
 
-        form = compo.get_edit_form_for_entry(key["entryUUID"], authKey)
+        form = compo.get_edit_form_for_entry(key["entryUUID"], auth_key)
         html = submit_template.replace("[ENTRY-FORM]", form)
         html = html.replace(
             "[ENTRANT-NAME]", compo.get_entrant_name(key["entryUUID"]))
@@ -262,7 +262,7 @@ async def admin_handler(request):
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
-        key = admin_keys[auth_key]
+        # key = admin_keys[auth_key]
 
         html = admin_template.replace(
             "[ENTRY-LIST]", compo.get_all_entry_forms(auth_key))
@@ -275,7 +275,9 @@ async def admin_handler(request):
         return web.Response(status=404, text="File not found")
 
 
-# TODO: Refactor this function
+# TODO: Break this down to simpler functions
+# In particular, doubly-nested while loops contained in doubly-nested
+# for loops should probably to be approached differently
 async def file_post_handler(request):
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]

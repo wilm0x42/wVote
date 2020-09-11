@@ -15,7 +15,27 @@ current_week = None
 next_week = None
 
 
-def get_week(get_next_week):
+def get_week(get_next_week: bool) -> dict:
+    """
+    Returns a dictionary that encodes information for a week's challenge. If
+    the requested week has no information, attempts to read previously
+    serialized information. If the pickle object was not found, returns
+    a new dictionary.
+
+    Parameters
+    ----------
+    get_next_week : bool
+        Whether the week that should be retrieved is the following week.
+        False returns the current week's information, while True retrieves
+        next week's information.
+
+    Returns
+    -------
+    dict
+        A dictionary that encodes information for a week. The information
+        includes theme, date, whether submissions are open, and a list of
+        entries.
+    """
     global current_week, next_week
 
     if current_week is None:
@@ -47,6 +67,10 @@ def get_week(get_next_week):
 
 
 def save_weeks():
+    """
+    Saves `current_week` and `next_week` into pickle objects so that they can
+    later be read again.
+    """
     if current_week is not None and next_week is not None:
         # open("week.json", "w").write(json.dumps(current_week))
         pickle.dump(current_week, open("weeks/current-week.pickle", "wb"))
@@ -55,6 +79,12 @@ def save_weeks():
 
 
 def move_to_next_week():
+    """
+    Replaces `current_week` with `next_week`, freeing up `next_week` to be
+    replaced with new information.
+
+    Calls `save_weeks()` to serialize the data after modification.
+    """
     global current_week, next_week
 
     archive_filename = "weeks/archive/" + \
@@ -72,7 +102,26 @@ def move_to_next_week():
     save_weeks()
 
 
-def create_blank_entry(entrant_name, discord_id, get_next_week=True):
+def create_blank_entry(entrant_name: str,
+                       discord_id: int,
+                       get_next_week: bool = True) -> str:
+    """
+    Create a blank entry for an entrant and returns a UUID
+
+    Parameters
+    ----------
+    entrant_name : str
+        The name of the entrant
+    discord_id : int
+        The entrant's Discord ID
+    get_next_week : bool, optional
+        Whether the entry should be for the folowing week, by default True
+
+    Returns
+    -------
+    str
+        A randomly generated UUID
+    """
     entry = {
         "entryName": "",
         "entrantName": entrant_name,
@@ -84,7 +133,10 @@ def create_blank_entry(entrant_name, discord_id, get_next_week=True):
     return entry["uuid"]
 
 
-def get_edit_form_for_entry(uuid, auth_key, admin=False):
+# TODO: Break this down to simpler functions
+def get_edit_form_for_entry(uuid: str,
+                            auth_key,
+                            admin: bool = False):
     for which_week in [True, False]:
         week = get_week(which_week)
 
@@ -190,9 +242,9 @@ def get_all_entry_forms(auth_key):
     html = ""
 
     for which_week in [True, False]:
-        w = get_week(which_week)
+        week = get_week(which_week)
 
-        for entry in w["entries"]:
+        for entry in week["entries"]:
             html += get_edit_form_for_entry(entry["uuid"],
                                             auth_key, admin=True)
 
