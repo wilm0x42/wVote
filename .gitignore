@@ -3,3 +3,4 @@
 /weeks/*.pickle
 /weeks/archive/*.pickle
 /devAssets
+/.vscode
