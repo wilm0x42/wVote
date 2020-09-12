@@ -61,6 +61,8 @@ def help_message():
 
     return msg
 
+def expiry_message():
+    return "\nThis link will expire in %d minutes" % http_server.default_ttl
 
 @client.event
 async def on_ready():
@@ -127,9 +129,11 @@ async def on_message(message):
             if command == "manage" and str(message.author.id) in client.admins:
                 if message.channel.type == discord.ChannelType.private:
                     key = http_server.create_admin_key()
+                    
                     url = "https://%s/admin/%s" % (
                         http_server.server_domain, key)
-                    await message.channel.send("Admin interface: " + url)
+                    await message.channel.send("Admin interface: " + url \
+                                                + expiry_message())
                     return
 
                 else:
@@ -152,7 +156,8 @@ async def on_message(message):
                             url = "https://%s/edit/%s" % (
                                 http_server.server_domain, key)
                             edit_info = ("Link to edit your existing "
-                                         "submission: " + url)
+                                         "submission: " + url \
+                                         + expiry_message())
                             await message.channel.send(edit_info)
                             return
 
@@ -161,7 +166,11 @@ async def on_message(message):
                     key = http_server.create_edit_key(new_entry)
                     url = "https://%s/edit/%s" % (
                         http_server.server_domain, key)
-                    await message.channel.send("Submission form: " + url)
+                    
+                    msg = "Submission form: " + url \
+                    
+                    await message.channel.send("Submission form: " + url \
+                                               + expiry_message())
                     return
 
                 else:
