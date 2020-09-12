@@ -12,9 +12,18 @@ import http_server
 dm_reminder = "_Ahem._ DM me to use this command."
 client = Bot(description="Musical Voting Platform",
              pm_help=False, command_prefix="vote!")
+test_mode = False
+
+
+def url_prefix():
+    if test_mode:
+        return "http://0.0.0.0:8251"
+    else:
+        return "https://%s" % http_server.server_domain
 
 
 def load_config():
+    global test_mode
     conf = open("bot.conf", "r")
 
     client.admins = []
@@ -35,8 +44,8 @@ def load_config():
 
         if key == "command_prefix":
             client.command_prefix = arguments[1]
-            # if arguments[1] == "test!":
-            #     http_server.server_domain = "0.0.0.0:8251"
+            if arguments[1] == "test!":
+                test_mode = True
         if key == "bot_key":
             client.bot_key = arguments[1]
         if key == "admin":
@@ -57,12 +66,14 @@ def help_message():
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
         msg += ("To see the already submitted entries for this week, "
-                "head on over to https://" + http_server.serverDomain)
+                "head on over to " + url_prefix())
 
     return msg
 
+
 def expiry_message():
     return "\nThis link will expire in %d minutes" % http_server.default_ttl
+
 
 @client.event
 async def on_ready():
@@ -129,11 +140,10 @@ async def on_message(message):
             if command == "manage" and str(message.author.id) in client.admins:
                 if message.channel.type == discord.ChannelType.private:
                     key = http_server.create_admin_key()
-                    
-                    url = "https://%s/admin/%s" % (
-                        http_server.server_domain, key)
-                    await message.channel.send("Admin interface: " + url \
-                                                + expiry_message())
+
+                    url = "%s/admin/%s" % (url_prefix(), key)
+                    await message.channel.send("Admin interface: " + url
+                                               + expiry_message())
                     return
 
                 else:
@@ -153,10 +163,9 @@ async def on_message(message):
                     for entry in week["entries"]:
                         if entry["discordID"] == message.author.id:
                             key = http_server.create_edit_key(entry["uuid"])
-                            url = "https://%s/edit/%s" % (
-                                http_server.server_domain, key)
+                            url = "%s/edit/%s" % (url_prefix(), key)
                             edit_info = ("Link to edit your existing "
-                                         "submission: " + url \
+                                         "submission: " + url
                                          + expiry_message())
                             await message.channel.send(edit_info)
                             return
@@ -164,12 +173,9 @@ async def on_message(message):
                     new_entry = compo.create_blank_entry(
                         message.author.name, message.author.id)
                     key = http_server.create_edit_key(new_entry)
-                    url = "https://%s/edit/%s" % (
-                        http_server.server_domain, key)
-                    
-                    msg = "Submission form: " + url \
-                    
-                    await message.channel.send("Submission form: " + url \
+                    url = "%s/edit/%s" % (url_prefix(), key)
+
+                    await message.channel.send("Submission form: " + url
                                                + expiry_message())
                     return
 
