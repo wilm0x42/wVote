@@ -13,6 +13,7 @@ dm_reminder = "_Ahem._ DM me to use this command."
 client = Bot(description="Musical Voting Platform",
              pm_help=False, command_prefix="vote!")
 test_mode = False
+postentries_channel = 0
 
 
 def url_prefix():
@@ -24,6 +25,7 @@ def url_prefix():
 
 def load_config():
     global test_mode
+    global postentries_channel
     conf = open("bot.conf", "r")
 
     client.admins = []
@@ -46,6 +48,8 @@ def load_config():
             client.command_prefix = arguments[1]
             if arguments[1] == "test!":
                 test_mode = True
+        if key == "postentries_channel":
+            postentries_channel = int(arguments[1])
         if key == "bot_key":
             client.bot_key = arguments[1]
         if key == "admin":
@@ -103,6 +107,15 @@ async def on_message(message):
                         await message.channel.send(dm_reminder)
                         return
                     week = compo.get_week(True)
+                
+                if command == "postentries" \
+                        and postentries_channel != 0 \
+                        and message.channel.id != postentries_channel \
+                        and message.channel.type != discord.ChannelType.private:
+                    await message.channel.send("This isn't the right channel"
+                                               " for this!")
+                    return
+                        
 
                 async with message.channel.typing():
                     for entry in week["entries"]:
