@@ -21,11 +21,19 @@
 		<div class="admin-controls">
 			[ADMIN-CONTROLS]
 		</div>
-		<div class="entry-list">
-			[ENTRY-LIST]
-		</div>
 		<div class="entries-container">
 			[VOTE-CONTROLS]
+		</div>
+		<div class="pdf-container" id="pdf-container">
+			<object id="pdf-viewer" class="pdf-viewer-welcome" data="/dummy" type="application/pdf">
+				<div id="pdf-alt" class="pdf-alt">
+					<img width="100%" src="/static/kirb_phones.png" />
+					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+				</div>
+			</object>
+		</div>
+		<div class="entry-list">
+			[ENTRY-LIST]
 		</div>
 	</div>
 	
@@ -58,6 +66,19 @@
 	    {
 	        foldForm(adminForms[i])
 	    }
+	</script>
+	
+	<script>
+		function viewPDF(url)
+		{
+			document.getElementById("pdf-container").innerHTML =
+				"<object id='pdf-viewer' class='pdf-viewer-live' data='" + url + "' type='application/pdf'>"
+					"<div id='pdf-alt' class='pdf-alt'>"
+						"<img width='100%' src='/static/kirb_think.png' /><h2><a href='"
+						+ url + "'>Link to PDF (embedded viewer failed)</a></h2>";
+					"</div>"
+				"</object>"
+		}
 	</script>
 </body>
 </html>
