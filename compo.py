@@ -185,6 +185,10 @@ def get_admin_form_for_entry(uuid: str, auth_key):
                         file_url = "/files/%s/%s" % (entry["uuid"],
                                                      entry[which_file
                                                            + "Filename"])
+                        if which_file == "mp3":
+                            if entry["mp3Format"] == "external":
+                                file_url = entry["mp3"]
+                        
                         html += "<a href=%s>Link to %s</a>" % (
                             file_url, which_file)
                     else:
