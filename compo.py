@@ -191,7 +191,6 @@ def get_admin_form_for_entry(uuid: str, auth_key):
                         
                         html += "<a href='%s'>Link to %s</a>" % (
                             file_url, which_file)
-                        print(file_url)
                     else:
                         html += "<p>%s not uploaded.<p>" % which_file
 
