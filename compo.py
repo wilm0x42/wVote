@@ -189,8 +189,9 @@ def get_admin_form_for_entry(uuid: str, auth_key):
                             if entry["mp3Format"] == "external":
                                 file_url = entry["mp3"]
                         
-                        html += "<a href=%s>Link to %s</a>" % (
+                        html += "<a href='%s'>Link to %s</a>" % (
                             file_url, which_file)
+                        print(file_url)
                     else:
                         html += "<p>%s not uploaded.<p>" % which_file
 
@@ -345,12 +346,17 @@ def get_entry_file(uuid, filename):
         week = get_week(which_week)
 
         for entry in week["entries"]:
+            def param_if_exists(param):
+                nonlocal entry
+                if param in entry:
+                    return entry[param]
+                else:
+                    return ""
+        
             if entry["uuid"] == uuid:
-                if False:  # not entryValid(e):
-                    return None, None
-                elif filename == entry["mp3Filename"]:
+                if filename == param_if_exists("mp3Filename"):
                     return entry["mp3"], "audio/mpeg"
-                elif filename == entry["pdfFilename"]:
+                elif filename == param_if_exists("pdfFilename"):
                     return entry["pdf"], "application/pdf"
 
     return None, None
