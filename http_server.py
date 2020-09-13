@@ -265,7 +265,7 @@ async def admin_handler(request):
         # key = admin_keys[auth_key]
 
         html = admin_template.replace(
-            "[ENTRY-LIST]", compo.get_all_entry_forms(auth_key))
+            "[ENTRY-LIST]", compo.get_all_admin_forms(auth_key))
         html = html.replace("[VOTE-CONTROLS]",
                             compo.get_vote_controls_for_week(True))
         html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))

@@ -4,7 +4,7 @@
 	<meta charset="utf-8" />
 	<title>Admin Interface - 8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
-	<link rel="stylesheet" href="/static/form.css" type="text/css" media="all">
+	<link rel="stylesheet" href="/static/admin.css" type="text/css" media="all">
 </head>
 <body>
 	<h1>
@@ -30,6 +30,34 @@
 	</div>
 	
 	<script>
+	    function foldForm(form)
+	    {
+	        var params = form.getElementsByClassName("admin-entry-param");
+	        var breaks = form.getElementsByTagName("br");
+	        
+	        var setTo = !params[0].hidden;
+	        
+	        for (var i = 0; i < params.length; i++)
+	        {
+	            // We skip the second parameter, as it indentifies
+	            // the entry by the entrant's name.
+	            if (i == 1)
+	                continue
+	            params[i].hidden = setTo;
+	        }
+	        
+	        for (var i = 0; i < breaks.length; i++)
+	        {
+	            breaks[i].hidden = setTo;
+	        }
+	    }
+	    
+	    adminForms = document.getElementsByClassName("admin-entry-form")
+	    
+	    for (var i = 0; i < adminForms.length; i++)
+	    {
+	        foldForm(adminForms[i])
+	    }
 	</script>
 </body>
 </html>
