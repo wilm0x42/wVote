@@ -146,10 +146,10 @@ def get_admin_form_for_entry(uuid: str, auth_key):
 
                 if which_week is True:
                     form_class = "form-next-week admin-entry-form"
-                    alert_header = "=== Entry for next week ==="
+                    alert_header = "Entry for NEXT week"
                 else:
                     form_class = "form-current-week admin-entry-form"
-                    alert_header = "=== ENTRY FOR CURRENT WEEK ==="
+                    alert_header = "Entry for CURRENT week"
                     header_color = "orange";
 
                 if entry_valid(entry):
