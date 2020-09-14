@@ -14,6 +14,7 @@ client = Bot(description="Musical Voting Platform",
              pm_help=False, command_prefix="vote!")
 test_mode = False
 postentries_channel = 0
+notify_admins_channel = 0
 
 
 def url_prefix():
@@ -26,6 +27,8 @@ def url_prefix():
 def load_config():
     global test_mode
     global postentries_channel
+    global notify_admins_channel
+    
     conf = open("bot.conf", "r")
 
     client.admins = []
@@ -50,6 +53,8 @@ def load_config():
                 test_mode = True
         if key == "postentries_channel":
             postentries_channel = int(arguments[1])
+        if key == "notify_admins_channel":
+            notify_admins_channel = int(arguments[1])
         if key == "bot_key":
             client.bot_key = arguments[1]
         if key == "admin":
@@ -57,6 +62,34 @@ def load_config():
 
     print("DISCORD: Loaded bot.conf")
 
+async def notify_admins(msg):
+    if notify_admins_channel == 0:
+        return
+    
+    await client.get_channel(notify_admins_channel).send(msg)
+
+async def submission_message(entry):
+    notif = "%s submitted \"%s\":\n" % (entry["entrantName"], entry["entryName"])
+    
+    if "mp3" in entry:
+        if entry["mp3Format"] == "mp3":
+            notif += "MP3: %s/files/%s/%s %d KB\n" \
+                % (url_prefix(), entry["uuid"], entry["mp3Filename"], \
+                    len(entry["mp3"]) / 1000)
+        elif entry["mp3Format"] == "external":
+            notif += "MP3: %s\n" % entry["mp3"]
+    
+    if entry["pdf"]:
+        notif += "PDF: %s/files/%s/%s %d KB\n" \
+            % (url_prefix(), entry["uuid"], entry["pdfFilename"], \
+                len(entry["pdf"]) / 1000)
+    
+    if compo.entry_valid(entry):
+        notif += "This entry is valid, and good to go!"
+    else:
+        notif += "This entry isn't valid! (Something is missing or broken!)"
+    
+    await notify_admins(notif)
 
 def help_message():
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "

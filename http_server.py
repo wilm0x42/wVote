@@ -8,6 +8,7 @@ import random
 from aiohttp import web
 
 import compo
+import bot
 
 vote_template = open("vote.html", "r").read()
 submit_template = open("submit.html", "r").read()
@@ -362,6 +363,9 @@ async def file_post_handler(request):
                                 entry[field.name] += chunk
 
                 compo.save_weeks()
+                
+                await bot.submission_message(entry)
+                
                 return web.Response(status=200,
                                     body=submit_success,
                                     content_type="text/html")
