@@ -77,6 +77,7 @@ button:hover
 	float: left;
 	width: 50%;
 	height: calc(100vh - 87px);
+	overflow: scroll;
 }
 
 .vote-controls
