@@ -79,7 +79,7 @@ async def submission_message(entry):
         elif entry["mp3Format"] == "external":
             notif += "MP3: %s\n" % entry["mp3"]
     
-    if entry["pdf"]:
+    if "pdf" in entry:
         notif += "PDF: %s/files/%s/%s %d KB\n" \
             % (url_prefix(), entry["uuid"], entry["pdfFilename"], \
                 len(entry["pdf"]) / 1000)
