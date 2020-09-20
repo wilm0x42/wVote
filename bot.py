@@ -25,7 +25,7 @@ def url_prefix() -> str:
 
     Returns
     -------
-    bool
+    str
         The URL of the test server if in test mode, and the production server
         URL otherwise.
     """
