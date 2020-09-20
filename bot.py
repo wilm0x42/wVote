@@ -190,6 +190,7 @@ async def on_ready() -> CoroutineType:
     return await client.change_presence(activity=activity)
 
 
+# TODO: Break this so that it is a smaller function
 @client.event
 async def on_message(message: discord.message.Message) -> CoroutineType:
     """
