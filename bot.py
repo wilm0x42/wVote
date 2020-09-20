@@ -95,9 +95,20 @@ async def notify_admins(msg: str) -> CoroutineType:
 
 
 async def submission_message(entry: dict) -> CoroutineType:
+    """
+    Prepares a message to be sent to the admin channel based on an entry that
+    was submitted to the website.
+
+    Parameters
+    ----------
+    entry : dict
+        The entry that was submitted.
+    """
     notification_message = "%s submitted \"%s\":\n" % (
         entry["entrantName"], entry["entryName"])
 
+    # If a music file was attached (including in the form of an external link),
+    # make note of it in the message
     if "mp3" in entry:
         if entry["mp3Format"] == "mp3":
             notification_message += "MP3: %s/files/%s/%s %d KB\n" \
@@ -106,11 +117,13 @@ async def submission_message(entry: dict) -> CoroutineType:
         elif entry["mp3Format"] == "external":
             notification_message += "MP3: %s\n" % entry["mp3"]
 
+    # If a score was attached, make note of it in the message
     if "pdf" in entry:
         notification_message += "PDF: %s/files/%s/%s %d KB\n" \
             % (url_prefix(), entry["uuid"], entry["pdfFilename"],
                 len(entry["pdf"]) / 1000)
 
+    # Lastly, make sure to mention whether the entry is valid
     if compo.entry_valid(entry):
         notification_message += "This entry is valid, and good to go!"
     else:
@@ -121,6 +134,16 @@ async def submission_message(entry: dict) -> CoroutineType:
 
 
 def help_message() -> str:
+    """
+    Creates and returns a help message for guiding users in the right direction.
+    Additionally lets users know whether the submissions for this week are
+    currently open.
+
+    Returns
+    -------
+    str
+        The generated help message.
+    """
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
@@ -138,11 +161,24 @@ def help_message() -> str:
 
 
 def expiry_message() -> str:
+    """
+    Returns a message to be sent to a user based to inform them that the
+    submission link will expire.
+
+    Returns
+    -------
+    str
+        The message itself
+    """
     return "\nThis link will expire in %d minutes" % http_server.default_ttl
 
 
 @client.event
 async def on_ready() -> CoroutineType:
+    """
+    Connects/logs in the bot to discord. Also outputs to the console that the
+    connection was successful.
+    """
     print("DISCORD: Logged in as %s (ID: %s)" %
           (client.user.name, client.user.id))
     print("DISCORD: Connected to %s servers, and %s users" %
@@ -156,6 +192,14 @@ async def on_ready() -> CoroutineType:
 
 @client.event
 async def on_message(message: discord.message.Message) -> CoroutineType:
+    """
+    Processes a message that is seen by the bot.
+
+    Parameters
+    ----------
+    message : discord.message.Message
+        The message seen by the bot
+    """
     if message.author.id != client.user.id:
         if message.content.startswith(client.command_prefix):
             command = message.content[len(client.command_prefix):].lower()
