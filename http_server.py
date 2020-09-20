@@ -2,13 +2,14 @@
 
 import datetime
 import html as html_lib
-import string
 import random
+import string
+from types import CoroutineType
 
-from aiohttp import web
+from aiohttp import web, web_request
 
-import compo
 import bot
+import compo
 
 vote_template = open("vote.html", "r").read()
 submit_template = open("submit.html", "r").read()
@@ -45,7 +46,7 @@ admin_keys = {
 }
 
 
-def key_valid(key, keystore):
+def key_valid(key: str, keystore: dict) -> bool:
     if key not in keystore:
         return False
 
@@ -59,14 +60,14 @@ def key_valid(key, keystore):
         return False
 
 
-def create_key(length=8):
+def create_key(length: int = 8) -> str:
     key_characters = string.ascii_letters + string.digits
     key = ''.join(random.SystemRandom().choice(key_characters)
                   for _ in range(length))
     return key
 
 
-def create_edit_key(entry_uuid):
+def create_edit_key(entry_uuid: str) -> str:
     key = create_key()
 
     edit_keys[key] = {
@@ -78,7 +79,7 @@ def create_edit_key(entry_uuid):
     return key
 
 
-def create_admin_key():
+def create_admin_key() -> str:
     key = create_key()
 
     admin_keys[key] = {
@@ -89,13 +90,13 @@ def create_admin_key():
     return key
 
 
-def get_admin_controls(auth_key):
+def get_admin_controls(auth_key: str) -> str:
     this_week = compo.get_week(False)
     next_week = compo.get_week(True)
 
     html = ""
 
-    def text_field(field, label, value):
+    def text_field(field: str, label: str, value: str) -> None:
         nonlocal html
         html += "<form action='/admin/edit/%s' " % auth_key
         html += ("onsubmit='setTimeout(function()"
@@ -164,7 +165,7 @@ def get_admin_controls(auth_key):
     return html
 
 
-async def admin_control_handler(request):
+async def admin_control_handler(request: web_request.Request) -> CoroutineType:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
@@ -216,7 +217,7 @@ async def admin_control_handler(request):
         return web.Response(status=404, text="File not found")
 
 
-async def vote_handler(request):
+async def vote_handler(request: web_request.Request) -> CoroutineType:
     html = None
 
     html = vote_template.replace(
@@ -225,7 +226,7 @@ async def vote_handler(request):
     return web.Response(text=html, content_type="text/html")
 
 
-async def week_files_handler(request):
+async def week_files_handler(request: web_request.Request) -> CoroutineType:
     data, content_type = compo.get_entry_file(request.match_info["uuid"],
                                               request.match_info["filename"])
 
@@ -235,11 +236,11 @@ async def week_files_handler(request):
     return web.Response(status=200, body=data, content_type=content_type)
 
 
-async def favicon_handler(request):
+async def favicon_handler(request: web_request.Request) -> CoroutineType:
     return web.Response(body=favicon)
 
 
-async def edit_handler(request):
+async def edit_handler(request: web_request.Request) -> CoroutineType:
     auth_key = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
@@ -259,7 +260,7 @@ async def edit_handler(request):
         return web.Response(status=404, text="File not found")
 
 
-async def admin_handler(request):
+async def admin_handler(request: web_request.Request) -> CoroutineType:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
@@ -279,7 +280,7 @@ async def admin_handler(request):
 # TODO: Break this down to simpler functions
 # In particular, doubly-nested while loops contained in doubly-nested
 # for loops should probably to be approached differently
-async def file_post_handler(request):
+async def file_post_handler(request: web_request.Request) -> CoroutineType:
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
@@ -363,9 +364,9 @@ async def file_post_handler(request):
                                 entry[field.name] += chunk
 
                 compo.save_weeks()
-                
+
                 await bot.submission_message(entry)
-                
+
                 return web.Response(status=200,
                                     body=submit_success,
                                     content_type="text/html")
@@ -403,7 +404,7 @@ server.add_routes([web.get("/", vote_handler),
                    ])
 
 
-async def start_http():
+async def start_http() -> CoroutineType:
     runner = web.AppRunner(server)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8251)

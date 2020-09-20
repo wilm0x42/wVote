@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import io
 import asyncio
+import io
+from types import CoroutineType
 
 import discord
 from discord.ext.commands import Bot
@@ -17,18 +18,35 @@ postentries_channel = 0
 notify_admins_channel = 0
 
 
-def url_prefix():
+def url_prefix() -> str:
+    """
+    Returns a URL prefix that changes depending on whether the bot is being
+    tested or is being used in production.
+
+    Returns
+    -------
+    bool
+        The URL of the test server if in test mode, and the production server
+        URL otherwise.
+    """
     if test_mode:
         return "http://0.0.0.0:8251"
     else:
         return "https://%s" % http_server.server_domain
 
 
-def load_config():
+def load_config() -> None:
+    """
+    Loads configuration information from bot.conf.
+    Specifically, bot.conf contains all information on what prefix is used
+    to call the bot, which channel entries are posted in each week, which
+    channel updates should be posted in, the bot key used to log in with
+    discord.py, and which IDs are treated as admins.
+    """
     global test_mode
     global postentries_channel
     global notify_admins_channel
-    
+
     conf = open("bot.conf", "r")
 
     client.admins = []
@@ -62,36 +80,47 @@ def load_config():
 
     print("DISCORD: Loaded bot.conf")
 
-async def notify_admins(msg):
-    if notify_admins_channel == 0:
-        return
-    
-    await client.get_channel(notify_admins_channel).send(msg)
 
-async def submission_message(entry):
-    notif = "%s submitted \"%s\":\n" % (entry["entrantName"], entry["entryName"])
-    
+async def notify_admins(msg: str) -> CoroutineType:
+    """
+    Sends a message to an admin channel if it has been specified in bot.conf
+
+    Parameters
+    ----------
+    msg : str
+        The message that should be sent
+    """
+    if notify_admins_channel:
+        await client.get_channel(notify_admins_channel).send(msg)
+
+
+async def submission_message(entry: dict) -> CoroutineType:
+    notification_message = "%s submitted \"%s\":\n" % (
+        entry["entrantName"], entry["entryName"])
+
     if "mp3" in entry:
         if entry["mp3Format"] == "mp3":
-            notif += "MP3: %s/files/%s/%s %d KB\n" \
-                % (url_prefix(), entry["uuid"], entry["mp3Filename"], \
+            notification_message += "MP3: %s/files/%s/%s %d KB\n" \
+                % (url_prefix(), entry["uuid"], entry["mp3Filename"],
                     len(entry["mp3"]) / 1000)
         elif entry["mp3Format"] == "external":
-            notif += "MP3: %s\n" % entry["mp3"]
-    
-    if "pdf" in entry:
-        notif += "PDF: %s/files/%s/%s %d KB\n" \
-            % (url_prefix(), entry["uuid"], entry["pdfFilename"], \
-                len(entry["pdf"]) / 1000)
-    
-    if compo.entry_valid(entry):
-        notif += "This entry is valid, and good to go!"
-    else:
-        notif += "This entry isn't valid! (Something is missing or broken!)"
-    
-    await notify_admins(notif)
+            notification_message += "MP3: %s\n" % entry["mp3"]
 
-def help_message():
+    if "pdf" in entry:
+        notification_message += "PDF: %s/files/%s/%s %d KB\n" \
+            % (url_prefix(), entry["uuid"], entry["pdfFilename"],
+                len(entry["pdf"]) / 1000)
+
+    if compo.entry_valid(entry):
+        notification_message += "This entry is valid, and good to go!"
+    else:
+        notification_message += ("This entry isn't valid! "
+                                 "(Something is missing or broken!)")
+
+    await notify_admins(notification_message)
+
+
+def help_message() -> str:
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
@@ -108,12 +137,12 @@ def help_message():
     return msg
 
 
-def expiry_message():
+def expiry_message() -> str:
     return "\nThis link will expire in %d minutes" % http_server.default_ttl
 
 
 @client.event
-async def on_ready():
+async def on_ready() -> CoroutineType:
     print("DISCORD: Logged in as %s (ID: %s)" %
           (client.user.name, client.user.id))
     print("DISCORD: Connected to %s servers, and %s users" %
@@ -126,7 +155,7 @@ async def on_ready():
 
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.message.Message) -> CoroutineType:
     if message.author.id != client.user.id:
         if message.content.startswith(client.command_prefix):
             command = message.content[len(client.command_prefix):].lower()
@@ -140,7 +169,7 @@ async def on_message(message):
                         await message.channel.send(dm_reminder)
                         return
                     week = compo.get_week(True)
-                
+
                 if command == "postentries" \
                         and postentries_channel != 0 \
                         and message.channel.id != postentries_channel \
@@ -148,7 +177,6 @@ async def on_message(message):
                     await message.channel.send("This isn't the right channel"
                                                " for this!")
                     return
-                        
 
                 async with message.channel.typing():
                     for entry in week["entries"]:

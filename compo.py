@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import datetime
-import uuid
 import html as html_lib
+import uuid
+from typing import Optional
 
 try:
     import cPickle as pickle
@@ -103,7 +104,7 @@ def move_to_next_week() -> None:
 
 
 def create_blank_entry(entrant_name: str,
-                       discord_id: int,
+                       discord_id: Optional[int],
                        get_next_week: bool = True) -> str:
     """
     Create a blank entry for an entrant and returns a UUID
@@ -112,7 +113,7 @@ def create_blank_entry(entrant_name: str,
     ----------
     entrant_name : str
         The name of the entrant
-    discord_id : int
+    discord_id : Optional[int]
         The entrant's Discord ID
     get_next_week : bool, optional
         Whether the entry should be for the folowing week, by default True
@@ -132,7 +133,8 @@ def create_blank_entry(entrant_name: str,
 
     return entry["uuid"]
 
-def get_admin_form_for_entry(uuid: str, auth_key):
+
+def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
     for which_week in [True, False]:
         week = get_week(which_week)
 
@@ -150,19 +152,19 @@ def get_admin_form_for_entry(uuid: str, auth_key):
                 else:
                     form_class = "form-current-week admin-entry-form"
                     alert_header = "Entry for CURRENT week"
-                    header_color = "orange";
+                    header_color = "orange"
 
                 if entry_valid(entry):
                     alert_header += " (valid)"
                 else:
                     alert_header += " (invalid!)"
                     form_class = "form-invalid admin-entry-form"
-                    header_color = "red";
+                    header_color = "red"
 
                 html = "<form class='%s' action='%s' " % (form_class, post_url)
                 html += ("method='post' accept-charset='utf-8' "
                          "enctype='multipart/form-data'>")
-                
+
                 html += "<h3 style='color: %s;' " \
                         "onclick='foldForm(this.parentElement)'>%s</h3>" \
                     % (header_color, alert_header)
@@ -188,7 +190,7 @@ def get_admin_form_for_entry(uuid: str, auth_key):
                         if which_file == "mp3":
                             if entry["mp3Format"] == "external":
                                 file_url = entry["mp3"]
-                        
+
                         html += "<a href='%s'>Link to %s</a>" % (
                             file_url, which_file)
                     else:
@@ -235,7 +237,8 @@ def get_admin_form_for_entry(uuid: str, auth_key):
     return ("<p>I'm not sure how to tell you this, "
             "but that entry doesn't exist.</p>")
 
-def get_edit_form_for_entry(uuid: str, auth_key):
+
+def get_edit_form_for_entry(uuid: str, auth_key: str) -> str:
     for which_week in [True, False]:
         week = get_week(which_week)
 
@@ -287,7 +290,7 @@ def get_edit_form_for_entry(uuid: str, auth_key):
             "but that entry doesn't exist.</p>")
 
 
-def get_all_admin_forms(auth_key):
+def get_all_admin_forms(auth_key: str) -> str:
     html = ""
 
     for which_week in [True, False]:
@@ -295,19 +298,19 @@ def get_all_admin_forms(auth_key):
 
         for entry in week["entries"]:
             html += get_admin_form_for_entry(entry["uuid"],
-                                            auth_key)
+                                             auth_key)
 
     return html
 
 
-def get_entrant_name(uuid):
+def get_entrant_name(uuid: str) -> str:
     for which_week in [True, False]:
         for entry in get_week(which_week)["entries"]:
             if entry["uuid"] == uuid:
                 return entry["entrantName"]
 
 
-def entry_valid(entry):
+def entry_valid(entry: dict) -> bool:
     requirements = [
         "uuid",
         "pdf",
@@ -330,7 +333,7 @@ def entry_valid(entry):
     return True
 
 
-def count_valid_entries(which_week):
+def count_valid_entries(which_week: bool) -> int:
     count = 0
 
     for e in get_week(which_week)["entries"]:
@@ -340,7 +343,7 @@ def count_valid_entries(which_week):
     return count
 
 
-def get_entry_file(uuid, filename):
+def get_entry_file(uuid: str, filename: str) -> tuple:
     for which_week in [True, False]:
         week = get_week(which_week)
 
@@ -351,7 +354,7 @@ def get_entry_file(uuid, filename):
                     return entry[param]
                 else:
                     return ""
-        
+
             if entry["uuid"] == uuid:
                 if filename == param_if_exists("mp3Filename"):
                     return entry["mp3"], "audio/mpeg"
@@ -361,7 +364,7 @@ def get_entry_file(uuid, filename):
     return None, None
 
 
-def get_vote_controls_for_week(which_week):
+def get_vote_controls_for_week(which_week: bool) -> str:
     w = get_week(which_week)
 
     html = "<h2 class=\"week-title\">%s</h2>" % html_lib.escape(w["theme"])
@@ -371,14 +374,14 @@ def get_vote_controls_for_week(which_week):
 
     html += "<table cellpadding='0' class='vote-controls'>\n"
 
-    def add_node(tag, data):
+    def add_node(tag: str, data: str) -> None:
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
-    def add_th(data):
+    def add_th(data: str) -> str:
         add_node("th", data)
 
-    def add_td(data):
+    def add_td(data: str) -> str:
         add_node("td", data)
 
     html += "<tr>"
