@@ -13,3 +13,37 @@ class TestCreateBlankEntry:
             uuid.UUID(result)
         except ValueError:
             pytest.fail("create_blank_entry did not return a valid uuid.")
+
+class TestEntryValid:
+    valid_entry = {
+        "uuid": 'test',
+        "pdf": 'test',
+        "pdfFilename": 'test',
+        "mp3": 'test',
+        "mp3Format": 'test',
+        "mp3Filename": 'test',
+        "entryName": 'test',
+        "entrantName": 'test'
+    }
+
+    def test_valid_entry(self):
+        assert(compo.entry_valid(self.valid_entry)) == True
+
+    def test_missing_requirements(self):
+        for k, _ in self.valid_entry.items():
+            invalid_entry = self.valid_entry.copy()
+            del invalid_entry[k]
+
+            assert(compo.entry_valid(invalid_entry)) == False
+
+    def test_none_mp3(self):
+        invalid_entry = self.valid_entry.copy()
+        invalid_entry["mp3"] = None
+
+        assert(compo.entry_valid(invalid_entry)) == False
+
+    def test_none_pdf(self):
+        invalid_entry = self.valid_entry.copy()
+        invalid_entry["pdf"] = None
+
+        assert(compo.entry_valid(invalid_entry)) == False
