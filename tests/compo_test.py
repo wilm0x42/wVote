@@ -16,14 +16,14 @@ class TestCreateBlankEntry:
 
 class TestEntryValid:
     valid_entry = {
-        "uuid": 'test',
-        "pdf": 'test',
-        "pdfFilename": 'test',
-        "mp3": 'test',
-        "mp3Format": 'test',
-        "mp3Filename": 'test',
-        "entryName": 'test',
-        "entrantName": 'test'
+        "uuid": "totally",
+        "pdf": "not",
+        "pdfFilename": "trying",
+        "mp3": "to",
+        "mp3Format": "overthrow",
+        "mp3Filename": "the",
+        "entryName": "mods",
+        "entrantName": "in #confetti"
     }
 
     def test_valid_entry(self):
