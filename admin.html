@@ -36,15 +36,15 @@
 			[ENTRY-LIST]
 		</div>
 	</div>
-	
+
 	<script>
 	    function foldForm(form)
 	    {
 	        var params = form.getElementsByClassName("admin-entry-param");
 	        var breaks = form.getElementsByTagName("br");
-	        
+
 	        var setTo = !params[0].hidden;
-	        
+
 	        for (var i = 0; i < params.length; i++)
 	        {
 	            // We skip the second parameter, as it indentifies
@@ -53,21 +53,21 @@
 	                continue
 	            params[i].hidden = setTo;
 	        }
-	        
+
 	        for (var i = 0; i < breaks.length; i++)
 	        {
 	            breaks[i].hidden = setTo;
 	        }
 	    }
-	    
+
 	    adminForms = document.getElementsByClassName("admin-entry-form")
-	    
+
 	    for (var i = 0; i < adminForms.length; i++)
 	    {
 	        foldForm(adminForms[i])
 	    }
 	</script>
-	
+
 	<script>
 		function viewPDF(url)
 		{
