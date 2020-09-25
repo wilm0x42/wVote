@@ -27,23 +27,23 @@ class TestEntryValid:
     }
 
     def test_valid_entry(self):
-        assert(compo.entry_valid(self.valid_entry)) == True
+        assert compo.entry_valid(self.valid_entry) == True
 
     def test_missing_requirements(self):
         for k, _ in self.valid_entry.items():
             invalid_entry = self.valid_entry.copy()
             del invalid_entry[k]
 
-            assert(compo.entry_valid(invalid_entry)) == False
+            assert compo.entry_valid(invalid_entry) == False
 
     def test_none_mp3(self):
         invalid_entry = self.valid_entry.copy()
         invalid_entry["mp3"] = None
 
-        assert(compo.entry_valid(invalid_entry)) == False
+        assert compo.entry_valid(invalid_entry) == False
 
     def test_none_pdf(self):
         invalid_entry = self.valid_entry.copy()
         invalid_entry["pdf"] = None
 
-        assert(compo.entry_valid(invalid_entry)) == False
+        assert compo.entry_valid(invalid_entry) == False
