@@ -50,35 +50,36 @@ class TestEntryValid:
         assert compo.entry_valid(invalid_entry) == False
 
 class TestSaveWeeks:
-    def test_valid_write(self, mocker):
-        compo.current_week = "solid"
-        compo.next_week = "snake"
-
+    def mock_pickle(self, mocker):
         mocker.patch("compo.pickle.dump")
         mocker.patch("compo.open")
+
+    def test_valid_write(self, mocker):
+        self.mock_pickle(mocker)
+
+        compo.current_week = "Solid"
+        compo.next_week = "Snake"
 
         compo.save_weeks()
 
-        pickle.dump.assert_called
+        pickle.dump.assert_called()
         assert pickle.dump.call_count == 2
 
     def test_current_week_none(self, mocker):
+        self.mock_pickle(mocker)
+
         compo.current_week = None
         compo.next_week = "Raiden"
-
-        mocker.patch("compo.pickle.dump")
-        mocker.patch("compo.open")
 
         compo.save_weeks()
 
         pickle.dump.assert_not_called()
 
     def test_next_week_none(self, mocker):
+        self.mock_pickle(mocker)
+
         compo.current_week = "Big Boss"
         compo.next_week = None
-
-        mocker.patch("compo.pickle.dump")
-        mocker.patch("compo.open")
 
         compo.save_weeks()
 
