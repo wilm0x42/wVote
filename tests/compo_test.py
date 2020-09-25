@@ -59,7 +59,8 @@ class TestSaveWeeks:
 
         compo.save_weeks()
 
-        pickle.dump.assert_called()
+        pickle.dump.assert_called
+        assert pickle.dump.call_count == 2
 
     def test_current_week_none(self, mocker):
         compo.current_week = None
