@@ -3,6 +3,7 @@
 import asyncio
 import io
 from types import CoroutineType
+import html as html_lib
 
 import discord
 from discord.ext.commands import Bot
@@ -112,16 +113,20 @@ async def submission_message(entry: dict) -> CoroutineType:
     if "mp3" in entry:
         if entry["mp3Format"] == "mp3":
             notification_message += "MP3: %s/files/%s/%s %d KB\n" \
-                % (url_prefix(), entry["uuid"], entry["mp3Filename"],
-                    len(entry["mp3"]) / 1000)
+                % (url_prefix(),
+                   entry["uuid"],
+                   html_lib.escape(entry["mp3Filename"]),
+                   len(entry["mp3"]) / 1000)
         elif entry["mp3Format"] == "external":
             notification_message += "MP3: %s\n" % entry["mp3"]
 
     # If a score was attached, make note of it in the message
     if "pdf" in entry:
         notification_message += "PDF: %s/files/%s/%s %d KB\n" \
-            % (url_prefix(), entry["uuid"], entry["pdfFilename"],
-                len(entry["pdf"]) / 1000)
+            % (url_prefix(),
+               entry["uuid"],
+               html_lib.escape(entry["pdfFilename"]),
+               len(entry["pdf"]) / 1000)
 
     # Lastly, make sure to mention whether the entry is valid
     if compo.entry_valid(entry):

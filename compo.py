@@ -184,9 +184,9 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
                     html += "<div class='admin-entry-param'>"
 
                     if (which_file + "Filename") in entry:
-                        file_url = "/files/%s/%s" % (entry["uuid"],
-                                                     entry[which_file
-                                                           + "Filename"])
+                        file_url = "/files/%s/%s" % \
+                        	(entry["uuid"],
+                        	 html_lib.escape(entry[which_file + "Filename"]))
                         if which_file == "mp3":
                             if entry["mp3Format"] == "external":
                                 file_url = entry["mp3"]
@@ -401,10 +401,11 @@ def get_vote_controls_for_week(which_week: bool) -> str:
         add_td(html_lib.escape(entry["entrantName"]))
         add_td(html_lib.escape(entry["entryName"]))
         add_td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
-               (entry["uuid"], entry["pdfFilename"]))
+               (entry["uuid"], html_lib.escape(entry["pdfFilename"])))
 
         if entry["mp3Format"] == "mp3":
-            mp3Url = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
+            mp3Url = "/files/%s/%s" % \
+            	(entry["uuid"], html_lib.escape(entry["mp3Filename"]))
 
             add_td("<audio controls>"
                    "<source src=\"%s\" type=\"audio/mpeg\">"
