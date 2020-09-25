@@ -1,5 +1,6 @@
 import compo
 import uuid
+import pickle
 
 class TestCreateBlankEntry:
     def test_create_blank_entry_returns_string(self):
@@ -47,3 +48,37 @@ class TestEntryValid:
         invalid_entry["pdf"] = None
 
         assert compo.entry_valid(invalid_entry) == False
+
+class TestSaveWeeks:
+    def test_valid_write(self, mocker):
+        compo.current_week = "solid"
+        compo.next_week = "snake"
+
+        mocker.patch("compo.pickle.dump")
+        mocker.patch("compo.open")
+
+        compo.save_weeks()
+
+        pickle.dump.assert_called()
+
+    def test_current_week_none(self, mocker):
+        compo.current_week = None
+        compo.next_week = "Raiden"
+
+        mocker.patch("compo.pickle.dump")
+        mocker.patch("compo.open")
+
+        compo.save_weeks()
+
+        pickle.dump.assert_not_called()
+
+    def test_next_week_none(self, mocker):
+        compo.current_week = "Big Boss"
+        compo.next_week = None
+
+        mocker.patch("compo.pickle.dump")
+        mocker.patch("compo.open")
+
+        compo.save_weeks()
+
+        pickle.dump.assert_not_called()

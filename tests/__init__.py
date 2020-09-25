@@ -1,4 +1,5 @@
 import pytest
+import pytest_mock
 
 import os
 import sys
