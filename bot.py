@@ -4,6 +4,7 @@ import asyncio
 import io
 from types import CoroutineType
 import html as html_lib
+import urllib
 
 import discord
 from discord.ext.commands import Bot
@@ -119,7 +120,7 @@ async def submission_message(entry: dict,
             notification_message += "MP3: %s/files/%s/%s %d KB\n" \
                 % (url_prefix(),
                    entry["uuid"],
-                   html_lib.escape(entry["mp3Filename"]),
+                   urllib.parse.quote(entry["mp3Filename"]),
                    len(entry["mp3"]) / 1000)
         elif entry["mp3Format"] == "external":
             notification_message += "MP3: %s\n" % entry["mp3"]
@@ -129,7 +130,7 @@ async def submission_message(entry: dict,
         notification_message += "PDF: %s/files/%s/%s %d KB\n" \
             % (url_prefix(),
                entry["uuid"],
-               html_lib.escape(entry["pdfFilename"]),
+               urllib.parse.quote(entry["pdfFilename"]),
                len(entry["pdf"]) / 1000)
 
     # Mention whether the entry is valid
