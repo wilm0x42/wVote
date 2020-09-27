@@ -365,7 +365,8 @@ async def file_post_handler(request: web_request.Request) -> CoroutineType:
 
                 compo.save_weeks()
 
-                await bot.submission_message(entry)
+                await bot.submission_message(entry,
+                                             key_valid(auth_key, admin_keys))
 
                 return web.Response(status=200,
                                     body=submit_success,

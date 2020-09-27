@@ -95,7 +95,8 @@ async def notify_admins(msg: str) -> CoroutineType:
         await client.get_channel(notify_admins_channel).send(msg)
 
 
-async def submission_message(entry: dict) -> CoroutineType:
+async def submission_message(entry: dict,
+                             user_was_admin: bool) -> CoroutineType:
     """
     Prepares a message to be sent to the admin channel based on an entry that
     was submitted to the website.
@@ -104,6 +105,9 @@ async def submission_message(entry: dict) -> CoroutineType:
     ----------
     entry : dict
         The entry that was submitted.
+    user_was_admin : bool
+        True if this edit was performed via the admin interface, False if this
+        edit was performed via a civilian submission link.
     """
     notification_message = "%s submitted \"%s\":\n" % (
         entry["entrantName"], entry["entryName"])
@@ -128,12 +132,15 @@ async def submission_message(entry: dict) -> CoroutineType:
                html_lib.escape(entry["pdfFilename"]),
                len(entry["pdf"]) / 1000)
 
-    # Lastly, make sure to mention whether the entry is valid
+    # Mention whether the entry is valid
     if compo.entry_valid(entry):
-        notification_message += "This entry is valid, and good to go!"
+        notification_message += "This entry is valid, and good to go!\n"
     else:
         notification_message += ("This entry isn't valid! "
-                                 "(Something is missing or broken!)")
+                                 "(Something is missing or broken!)\n")
+
+    if user_was_admin:
+        notification_message += "(This edit was performed by an admin)"
 
     await notify_admins(notification_message)
 
