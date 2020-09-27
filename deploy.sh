@@ -1,6 +1,6 @@
 #!/bin/sh
 
-excludes="--exclude=bot.conf --exclude=devAssets --exclude=weeks --exclude=__pycache__ --exclude=.git --exclude=.gitignore"
+excludes="--exclude=bot.conf --exclude=devAssets --exclude=weeks --exclude=__pycache__"
 
 
 if [ -z "$1" ]; then
