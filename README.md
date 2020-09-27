@@ -42,6 +42,16 @@ root
 	'-uuid: UUID assigned to each entry, so they can be unambiguously addressed.
 ```
 
+## Running tests
+
+To run the automated test suite, first install the test requirements using `pip`, then run the `pytest` command.
+
+```sh
+pip install -r requirements-test.txt
+
+pytest
+```
+
 ## Workflow:
 
 !submit
