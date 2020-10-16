@@ -352,7 +352,7 @@ async def file_post_handler(request: web_request.Request) -> CoroutineType:
 
                             size += len(chunk)
 
-                            if size > 1024 * 1024 * 8:  # 8MB limit
+                            if size > 1000 * 1000 * 8:  # 8MB limit
                                 entry[field.name] = None
                                 entry[field.name + "Filename"] = None
                                 return web.Response(status=413,
