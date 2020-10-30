@@ -314,6 +314,19 @@ async def on_message(message: discord.message.Message) -> CoroutineType:
                 else:
                     await message.channel.send(dm_reminder)
                     return
+            
+            if command == "googleformslist" \
+                    and str(message.author.id) in client.admins:
+                
+                response = "```\n"
+                
+                for e in compo.get_week(False)["entries"]:
+                    response += "%s - %s\n" % (e["entrantName"], e["entryName"])
+                
+                response += "\n```"
+                
+                await message.channel.send(response)
+                return
 
             if command == "help":
                 await message.channel.send(help_message())
