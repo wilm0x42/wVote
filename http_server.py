@@ -56,7 +56,7 @@ def key_valid(key: str, keystore: dict) -> bool:
     if now - keystore[key]["creationTime"] < ttl:
         return True
     else:
-        keystore.pop(key)
+        del keystore[key]
         return False
 
 
