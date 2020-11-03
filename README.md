@@ -6,8 +6,7 @@ Voting time!
 
 On the server host:
 
-* `sudo python3 -m pip install discord.py`
-* `sudo python3 -m pip install aiohttp`
+* `sudo python3 -m pip install -r requirements.txt`
 
 From home:
 
