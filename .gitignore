@@ -5,4 +5,4 @@
 /weeks/archive/*.pickle
 /devAssets
 /.vscode
-
+/venv
