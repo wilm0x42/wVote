@@ -7,13 +7,13 @@ import html as html_lib
 import urllib
 
 import discord
-from discord.ext.commands import Bot
+from discord.ext import commands
 
 import compo
 import http_server
 
 dm_reminder = "_Ahem._ DM me to use this command."
-client = Bot(description="Musical Voting Platform",
+client = commands.Bot(description="Musical Voting Platform",
              pm_help=False, command_prefix="vote!")
 test_mode = False
 postentries_channel = 0
@@ -173,6 +173,16 @@ def help_message() -> str:
     return msg
 
 
+class IsNotAdminError(commands.CheckFailure):
+    """Class to represent the `is_admin` check failure."""
+    pass
+
+
+class WrongChannelError(commands.CheckFailure):
+    """Class to represent the `is_channel` check failure."""
+    pass
+
+
 def expiry_message() -> str:
     """
     Returns a message to be sent to a user based to inform them that the
@@ -203,142 +213,174 @@ async def on_ready() -> CoroutineType:
     return await client.change_presence(activity=activity)
 
 
-# TODO: Break this so that it is a smaller function
 @client.event
-async def on_message(message: discord.message.Message) -> CoroutineType:
+async def on_command_error(context: discord.ext.commands.Context,
+    error: discord.ext.commands.CommandError) -> CoroutineType:
+    """Notifies the user on a failed command."""
+    if isinstance(error, discord.ext.commands.errors.CommandNotFound):
+        if context.channel.type == discord.ChannelType.private:
+            await context.send(help_message())
+            return
+
+    if isinstance(error, discord.ext.commands.errors.PrivateMessageOnly):
+        await context.send(dm_reminder)
+        return
+
+    if isinstance(error, IsNotAdminError):
+        print("DISCORD: %s (%d) attempted to use an admin command: %s" %
+                (context.author.name, context.author.id, context.command.name))
+        return
+
+    if isinstance(error, WrongChannelError):
+        await context.send("This isn't the right channel"
+                                   " for this!")
+        return
+
+    print("DISCORD: Unhandled command error: %s" % str(error))
+
+
+async def is_admin(context: discord.ext.commands.Context) -> CoroutineType:
     """
-    Processes a message that is seen by the bot.
-
-    Parameters
-    ----------
-    message : discord.message.Message
-        The message seen by the bot
+    Bot command check: Returns `true` if the user is an admin.
+    Throws `IsNotAdminError()` on failure.
     """
-    if message.author.id != client.user.id:
-        if message.content.startswith(client.command_prefix):
-            command = message.content[len(client.command_prefix):].lower()
 
-            if command in ["postentries", "postentriespreview"] \
-                    and str(message.author.id) in client.admins:
-                week = compo.get_week(False)
+    if str(context.author.id) not in client.admins:
+        raise IsNotAdminError()
 
-                if command == "postentriespreview":
-                    if not message.channel.type == discord.ChannelType.private:
-                        await message.channel.send(dm_reminder)
-                        return
-                    week = compo.get_week(True)
+    return True
 
-                if command == "postentries" \
-                        and postentries_channel != 0 \
-                        and message.channel.id != postentries_channel \
-                        and message.channel.type != discord.ChannelType.private:
-                    await message.channel.send("This isn't the right channel"
-                                               " for this!")
-                    return
 
-                async with message.channel.typing():
-                    for entry in week["entries"]:
-                        if not compo.entry_valid(entry):
-                            continue
+def is_postentries_channel():
+    """
+    Bot command check: Returns `true` if the message is sent to the
+    proper channel.
+    Throws `WrongChannelError` on failure.
+    """
+    def predicate(context: discord.ext.commands.Context):
+        if postentries_channel != 0 and context.channel.id == postentries_channel:
+            return True
 
-                        discord_user = client.get_user(entry["discordID"])
+        raise WrongChannelError()
+    return commands.check(predicate)
 
-                        if discord_user is None:
-                            entrant_ping = "@" + entry["entrantName"]
-                        else:
-                            entrant_ping = discord_user.mention
 
-                        upload_files = []
-                        upload_message = "%s - %s" % (entrant_ping,
-                                                      entry["entryName"])
+@client.command()
+@commands.check(is_admin)
+@commands.check_any(is_postentries_channel(), commands.dm_only())
+async def postentries(context: discord.ext.commands.Context) -> CoroutineType:
+    """
+    Post the entries of the week to the current channel.
+    Works in the postentries channel or in DMs.
+    """
+    week = compo.get_week(False)
+    await publish_entries(context, week)
 
-                        if "entryNotes" in entry:
-                            upload_message += "\n" + entry["entryNotes"]
 
-                        if entry["mp3Format"] == "mp3":
-                            upload_files.append(
-                                discord.File(io.BytesIO(bytes(entry["mp3"])),
-                                             filename=entry["mp3Filename"]))
-                        elif entry["mp3Format"] == "external":
-                            upload_message += "\n" + entry["mp3"]
+@client.command()
+@commands.check(is_admin)
+@commands.dm_only()
+async def postentriespreview(context: discord.ext.commands.Context) -> CoroutineType:
+    """
+    Post the entries of the next week. Only works in DMs.
+    """
+    week = compo.get_week(True)
+    await publish_entries(context, week)
 
-                        upload_files.append(
-                            discord.File(io.BytesIO(bytes(entry["pdf"])),
-                                         filename=entry["pdfFilename"]))
 
-                        await message.channel.send(upload_message,
-                                                   files=upload_files)
+async def publish_entries(context: discord.ext.commands.Context, week: dict) -> CoroutineType:
+    """
+    Actually posts the entries of the chosen week into the proper channel.
+    """
+    async with context.channel.typing():
+        for entry in week["entries"]:
+            if not compo.entry_valid(entry):
+                continue
 
-            if command == "manage" and str(message.author.id) in client.admins:
-                if message.channel.type == discord.ChannelType.private:
-                    key = http_server.create_admin_key()
+            discord_user = client.get_user(entry["discordID"])
 
-                    url = "%s/admin/%s" % (url_prefix(), key)
-                    await message.channel.send("Admin interface: " + url
-                                               + expiry_message())
-                    return
+            if discord_user is None:
+                entrant_ping = "@" + entry["entrantName"]
+            else:
+                entrant_ping = discord_user.mention
 
-                else:
+            upload_files = []
+            upload_message = "%s - %s" % (entrant_ping,
+                                          entry["entryName"])
 
-                    await message.channel.send(dm_reminder)
-                    return
+            if "entryNotes" in entry:
+                upload_message += "\n" + entry["entryNotes"]
 
-            if command == "submit":
-                if message.channel.type == discord.ChannelType.private:
-                    if not compo.get_week(True)["submissionsOpen"]:
-                        closed_info = "Sorry! Submissions are currently closed."
-                        await message.channel.send(closed_info)
-                        return
+            if entry["mp3Format"] == "mp3":
+                upload_files.append(
+                    discord.File(io.BytesIO(bytes(entry["mp3"])),
+                                 filename=entry["mp3Filename"]))
+            elif entry["mp3Format"] == "external":
+                upload_message += "\n" + entry["mp3"]
 
-                    week = compo.get_week(True)
+            upload_files.append(
+                discord.File(io.BytesIO(bytes(entry["pdf"])),
+                             filename=entry["pdfFilename"]))
 
-                    for entry in week["entries"]:
-                        if entry["discordID"] == message.author.id:
-                            key = http_server.create_edit_key(entry["uuid"])
-                            url = "%s/edit/%s" % (url_prefix(), key)
-                            edit_info = ("Link to edit your existing "
-                                         "submission: " + url
-                                         + expiry_message())
-                            await message.channel.send(edit_info)
-                            return
+            await context.send(upload_message,
+                               files=upload_files)
 
-                    new_entry = compo.create_blank_entry(
-                        message.author.name, message.author.id)
-                    key = http_server.create_edit_key(new_entry)
-                    url = "%s/edit/%s" % (url_prefix(), key)
+@client.command()
+@commands.check(is_admin)
+@commands.dm_only()
+async def manage(context: discord.ext.commands.Context) -> CoroutineType:
+    """Shows link to management panel"""
+    key = http_server.create_admin_key()
 
-                    await message.channel.send("Submission form: " + url
-                                               + expiry_message())
-                    return
+    url = "%s/admin/%s" % (url_prefix(), key)
+    await context.send("Admin interface: " + url + expiry_message())
 
-                else:
-                    await message.channel.send(dm_reminder)
-                    return
-            
-            if command == "googleformslist" \
-                    and str(message.author.id) in client.admins:
-                
-                response = "```\n"
-                
-                for e in compo.get_week(False)["entries"]:
-                    response += "%s - %s\n" % (e["entrantName"], e["entryName"])
-                
-                response += "\n```"
-                
-                await message.channel.send(response)
-                return
 
-            if command == "help":
-                await message.channel.send(help_message())
-                return
-        else:
-            if message.channel.type == discord.ChannelType.private:
-                await message.channel.send(help_message())
-                return
+@client.command()
+@commands.dm_only()
+async def submit(context: discord.ext.commands.Context) -> CoroutineType:
+    """
+    Creates a submission entry for the user.
+    Replies with a link to the management panel with options to create or edit.
+    """
+    week = compo.get_week(True)
 
-            if str(client.user.id) in message.content:
-                await message.channel.send(help_message())
-                return
+    if not week["submissionsOpen"]:
+        closed_info = "Sorry! Submissions are currently closed."
+        await context.send(closed_info)
+        return
+
+    for entry in week["entries"]:
+        if entry["discordID"] == context.author.id:
+            key = http_server.create_edit_key(entry["uuid"])
+            url = "%s/edit/%s" % (url_prefix(), key)
+            edit_info = ("Link to edit your existing "
+                         "submission: " + url
+                         + expiry_message())
+            await context.send(edit_info)
+            return
+
+    new_entry = compo.create_blank_entry(
+        context.author.name, context.author.id)
+    key = http_server.create_edit_key(new_entry)
+    url = "%s/edit/%s" % (url_prefix(), key)
+
+    await context.send("Submission form: " + url + expiry_message())
+
+
+@client.command()
+@commands.check(is_admin)
+async def googleformslist(context: discord.ext.commands.Context) -> CoroutineType:
+    """
+    Generates the list of Google forms for the entries.
+    """
+    entries =  compo.get_week(False)["entries"]
+
+    response = "```\n"
+    response += "\n".join("%s - %s" % (e["entrantName"], e["entryName"]) for e in entries)
+    response += "\n```"
+
+    await context.channel.send(response)
 
 
 if __name__ == "__main__":

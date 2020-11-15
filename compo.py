@@ -186,8 +186,8 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
 
                     if (which_file + "Filename") in entry:
                         file_url = "/files/%s/%s" % \
-                        	(entry["uuid"],
-                        	 urllib.parse.quote(entry[which_file + "Filename"]))
+                            (entry["uuid"],
+                             urllib.parse.quote(entry[which_file + "Filename"]))
                         if which_file == "mp3":
                             if entry["mp3Format"] == "external":
                                 file_url = entry["mp3"]
@@ -407,8 +407,8 @@ def get_vote_controls_for_week(which_week: bool) -> str:
 
         if entry["mp3Format"] == "mp3":
             mp3Url = "/files/%s/%s" % \
-            	(entry["uuid"],
-            	 urllib.parse.quote(entry["mp3Filename"]))
+                (entry["uuid"],
+                 urllib.parse.quote(entry["mp3Filename"]))
 
             add_td("<audio controls>"
                    "<source src=\"%s\" type=\"audio/mpeg\">"
@@ -417,12 +417,25 @@ def get_vote_controls_for_week(which_week: bool) -> str:
                    % (mp3Url, mp3Url))
         elif entry["mp3Format"] == "external":
             # TODO: embed soundcloud players
-            if "soundcloud.com" in entry["mp3"]:
+            # Sanitize url to prevent against bad times
+            url = entry["mp3"]
+            if url.startswith('http://'):
+                sanitized = url[:7] + urllib.parse.quote(url[7:])
+            elif url.startswith('https://'):
+                sanitized = url[:8] + urllib.parse.quote(url[8:])
+            else:
+                sanitized = urllib.parse.quote(url)
+
+            # Check for soundcloud/bandcamp
+            if "soundcloud.com" in sanitized:
                 add_td("<a href=%s>Listen on SoundCloud</a>" %
-                       urllib.parse.quote(entry["mp3"]))
+                       sanitized)
+            elif "bandcamp.com" in sanitized:
+                add_td("<a href=%s>Listen on Bandcamp</a>" %
+                       sanitized)
             else:
                 add_td("<a href=%s>Listen here!</a>" %
-                       urllib.parse.quote(entry["mp3"]))
+                       sanitized)
         else:
             add_td("Audio format not recognized D:")
 

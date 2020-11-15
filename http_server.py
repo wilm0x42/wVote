@@ -11,10 +11,10 @@ from aiohttp import web, web_request
 import bot
 import compo
 
-vote_template = open("vote.html", "r").read()
-submit_template = open("submit.html", "r").read()
-submit_success = open("submitted.html", "r").read()
-admin_template = open("admin.html", "r").read()
+vote_template = open("templates/vote.html", "r").read()
+submit_template = open("templates/submit.html", "r").read()
+submit_success = open("templates/submitted.html", "r").read()
+admin_template = open("templates/admin.html", "r").read()
 
 favicon = open("static/favicon.ico", "rb").read()
 
@@ -56,7 +56,7 @@ def key_valid(key: str, keystore: dict) -> bool:
     if now - keystore[key]["creationTime"] < ttl:
         return True
     else:
-        keystore.pop(key)
+        del keystore[key]
         return False
 
 
