@@ -381,7 +381,17 @@ async def googleformslist(context: discord.ext.commands.Context) -> CoroutineTyp
     response += "\n```"
 
     await context.channel.send(response)
+    
+@client.command()
+async def howmany(context: discord.ext.commands.Context) -> CoroutineType:
+    """
+    Prints how many entries are currently submitted for the upcoming week.
+    """
+    entries = compo.get_week(True)["entries"]
+    
+    response = "%d, so far." % len(entries)
 
+    await context.channel.send(response)
 
 if __name__ == "__main__":
     load_config()
