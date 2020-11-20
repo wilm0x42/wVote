@@ -387,9 +387,8 @@ async def howmany(context: discord.ext.commands.Context) -> CoroutineType:
     """
     Prints how many entries are currently submitted for the upcoming week.
     """
-    entries = compo.get_week(True)["entries"]
     
-    response = "%d, so far." % len(entries)
+    response = "%d, so far." % compo.count_valid_entries(True)
 
     await context.channel.send(response)
 
