@@ -32,7 +32,7 @@ def url_prefix() -> str:
         URL otherwise.
     """
     if test_mode:
-        return "http://0.0.0.0:8251"
+        return "http://localhost:8251"
     else:
         return "https://%s" % http_server.server_domain
 
