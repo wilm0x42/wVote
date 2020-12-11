@@ -377,7 +377,12 @@ async def googleformslist(context: discord.ext.commands.Context) -> CoroutineTyp
     entries =  compo.get_week(False)["entries"]
 
     response = "```\n"
-    response += "\n".join("%s - %s" % (e["entrantName"], e["entryName"]) for e in entries)
+    
+    for e in entries:
+        if not compo.entry_valid(e):
+            continue
+        response += "%s - %s\n" % (e["entrantName"], e["entryName"])
+    
     response += "\n```"
 
     await context.channel.send(response)
