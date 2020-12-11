@@ -14,7 +14,7 @@ import http_server
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
-             pm_help=False, command_prefix="vote!", case_insensitive=True)
+             pm_help=False, command_prefix=[], case_insensitive=True)
 test_mode = False
 postentries_channel = 0
 notify_admins_channel = 0
@@ -68,7 +68,7 @@ def load_config() -> None:
         key = arguments[0]
 
         if key == "command_prefix":
-            client.command_prefix = arguments[1]
+            client.command_prefix.append(arguments[1])
             if arguments[1] == "test!":
                 test_mode = True
         if key == "postentries_channel":
