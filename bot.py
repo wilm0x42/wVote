@@ -69,8 +69,8 @@ def load_config() -> None:
 
         if key == "command_prefix":
             client.command_prefix.append(arguments[1])
-            if arguments[1] == "test!":
-                test_mode = True
+        if key == "test_mode":
+            test_mode = (arguments[1] == "True")
         if key == "postentries_channel":
             postentries_channel = int(arguments[1])
         if key == "notify_admins_channel":
