@@ -14,7 +14,7 @@ import http_server
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
-             pm_help=False, command_prefix="vote!")
+             pm_help=False, command_prefix="vote!", case_insensitive=True)
 test_mode = False
 postentries_channel = 0
 notify_admins_channel = 0
@@ -32,7 +32,7 @@ def url_prefix() -> str:
         URL otherwise.
     """
     if test_mode:
-        return "http://0.0.0.0:8251"
+        return "http://localhost:8251"
     else:
         return "https://%s" % http_server.server_domain
 
