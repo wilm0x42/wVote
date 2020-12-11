@@ -426,6 +426,10 @@ def get_vote_controls_for_week(which_week: bool) -> str:
             else:
                 sanitized = urllib.parse.quote(url)
 
+            sanitized = sanitized.replace("%3F", "?")
+            sanitized = sanitized.replace("%3D", "=")
+            sanitized = sanitized.replace("%26", "&")
+
             # Check for soundcloud/bandcamp
             if "soundcloud.com" in sanitized:
                 add_td("<a href=%s>Listen on SoundCloud</a>" %
