@@ -287,8 +287,7 @@ async def postentriespreview(context: commands.Context) -> None:
     await publish_entries(context, week)
 
 
-async def publish_entries(context: commands.Context,
-                          week: dict) -> None:
+async def publish_entries(context: commands.Context, week: dict) -> None:
     """
     Actually posts the entries of the chosen week into the proper channel.
     """
