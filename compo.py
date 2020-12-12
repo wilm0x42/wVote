@@ -6,12 +6,7 @@ import urllib.parse
 import uuid
 from typing import Optional
 
-try:
-    import cPickle as pickle
-# Should this be `except ImportError` instead?
-# But also, I think pickle uses cPickle underneath in Python 3.x
-except:
-    import pickle
+import pickle
 
 current_week = None
 next_week = None
