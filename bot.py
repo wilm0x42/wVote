@@ -2,7 +2,6 @@
 
 import asyncio
 import io
-from types import CoroutineType
 import urllib.parse
 
 import discord
@@ -84,7 +83,7 @@ def load_config() -> None:
     print("DISCORD: Loaded bot.conf")
 
 
-async def notify_admins(msg: str) -> CoroutineType:
+async def notify_admins(msg: str) -> None:
     """
     Sends a message to an admin channel if it has been specified in bot.conf
 
@@ -97,8 +96,7 @@ async def notify_admins(msg: str) -> CoroutineType:
         await client.get_channel(notify_admins_channel).send(msg)
 
 
-async def submission_message(entry: dict,
-                             user_was_admin: bool) -> CoroutineType:
+async def submission_message(entry: dict, user_was_admin: bool) -> None:
     """
     Prepares a message to be sent to the admin channel based on an entry that
     was submitted to the website.
@@ -198,7 +196,7 @@ def expiry_message() -> str:
 
 
 @client.event
-async def on_ready() -> CoroutineType:
+async def on_ready() -> None:
     """
     Connects/logs in the bot to discord. Also outputs to the console that the
     connection was successful.
@@ -215,9 +213,8 @@ async def on_ready() -> CoroutineType:
 
 
 @client.event
-async def on_command_error(
-        context: discord.ext.commands.Context,
-        error: discord.ext.commands.CommandError) -> CoroutineType:
+async def on_command_error(context: discord.ext.commands.Context,
+                           error: discord.ext.commands.CommandError) -> None:
     """Notifies the user on a failed command."""
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
         if context.channel.type == discord.ChannelType.private:
@@ -240,7 +237,7 @@ async def on_command_error(
     print("DISCORD: Unhandled command error: %s" % str(error))
 
 
-async def is_admin(context: discord.ext.commands.Context) -> CoroutineType:
+async def is_admin(context: discord.ext.commands.Context) -> bool:
     """
     Bot command check: Returns `true` if the user is an admin.
     Throws `IsNotAdminError()` on failure.
@@ -270,7 +267,7 @@ def is_postentries_channel():
 @client.command()
 @commands.check(is_admin)
 @commands.check_any(is_postentries_channel(), commands.dm_only())
-async def postentries(context: discord.ext.commands.Context) -> CoroutineType:
+async def postentries(context: discord.ext.commands.Context) -> None:
     """
     Post the entries of the week to the current channel.
     Works in the postentries channel or in DMs.
@@ -282,8 +279,7 @@ async def postentries(context: discord.ext.commands.Context) -> CoroutineType:
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
-async def postentriespreview(
-        context: discord.ext.commands.Context) -> CoroutineType:
+async def postentriespreview(context: discord.ext.commands.Context) -> None:
     """
     Post the entries of the next week. Only works in DMs.
     """
@@ -292,7 +288,7 @@ async def postentriespreview(
 
 
 async def publish_entries(context: discord.ext.commands.Context,
-                          week: dict) -> CoroutineType:
+                          week: dict) -> None:
     """
     Actually posts the entries of the chosen week into the proper channel.
     """
@@ -331,7 +327,7 @@ async def publish_entries(context: discord.ext.commands.Context,
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
-async def manage(context: discord.ext.commands.Context) -> CoroutineType:
+async def manage(context: discord.ext.commands.Context) -> None:
     """Shows link to management panel"""
     key = http_server.create_admin_key()
 
@@ -341,7 +337,7 @@ async def manage(context: discord.ext.commands.Context) -> CoroutineType:
 
 @client.command()
 @commands.dm_only()
-async def submit(context: discord.ext.commands.Context) -> CoroutineType:
+async def submit(context: discord.ext.commands.Context) -> None:
     """
     Creates a submission entry for the user.
     Replies with a link to the management panel with options to create or edit.
@@ -372,8 +368,7 @@ async def submit(context: discord.ext.commands.Context) -> CoroutineType:
 
 @client.command()
 @commands.check(is_admin)
-async def googleformslist(
-        context: discord.ext.commands.Context) -> CoroutineType:
+async def googleformslist(context: discord.ext.commands.Context) -> None:
     """
     Generates the list of Google forms for the entries.
     """
@@ -392,7 +387,7 @@ async def googleformslist(
 
 
 @client.command()
-async def howmany(context: discord.ext.commands.Context) -> CoroutineType:
+async def howmany(context: discord.ext.commands.Context) -> None:
     """
     Prints how many entries are currently submitted for the upcoming week.
     """

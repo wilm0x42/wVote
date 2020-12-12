@@ -4,7 +4,6 @@ import datetime
 import html as html_lib
 import random
 import string
-from types import CoroutineType
 
 from aiohttp import web, web_request
 
@@ -165,7 +164,7 @@ def get_admin_controls(auth_key: str) -> str:
     return html
 
 
-async def admin_control_handler(request: web_request.Request) -> CoroutineType:
+async def admin_control_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
@@ -216,7 +215,7 @@ async def admin_control_handler(request: web_request.Request) -> CoroutineType:
         return web.Response(status=404, text="File not found")
 
 
-async def vote_handler(request: web_request.Request) -> CoroutineType:
+async def vote_handler(request: web_request.Request) -> web.Response:
     html = None
 
     html = vote_template.replace("[VOTE-CONTROLS]",
@@ -225,7 +224,7 @@ async def vote_handler(request: web_request.Request) -> CoroutineType:
     return web.Response(text=html, content_type="text/html")
 
 
-async def week_files_handler(request: web_request.Request) -> CoroutineType:
+async def week_files_handler(request: web_request.Request) -> web.Response:
     data, content_type = compo.get_entry_file(request.match_info["uuid"],
                                               request.match_info["filename"])
 
@@ -235,11 +234,11 @@ async def week_files_handler(request: web_request.Request) -> CoroutineType:
     return web.Response(status=200, body=data, content_type=content_type)
 
 
-async def favicon_handler(request: web_request.Request) -> CoroutineType:
+async def favicon_handler(request: web_request.Request) -> web.Response:
     return web.Response(body=favicon)
 
 
-async def edit_handler(request: web_request.Request) -> CoroutineType:
+async def edit_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
@@ -259,7 +258,7 @@ async def edit_handler(request: web_request.Request) -> CoroutineType:
         return web.Response(status=404, text="File not found")
 
 
-async def admin_handler(request: web_request.Request) -> CoroutineType:
+async def admin_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
@@ -279,7 +278,7 @@ async def admin_handler(request: web_request.Request) -> CoroutineType:
 # TODO: Break this down to simpler functions
 # In particular, doubly-nested while loops contained in doubly-nested
 # for loops should probably to be approached differently
-async def file_post_handler(request: web_request.Request) -> CoroutineType:
+async def file_post_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
@@ -407,7 +406,7 @@ server.add_routes([
 ])
 
 
-async def start_http() -> CoroutineType:
+async def start_http() -> None:
     runner = web.AppRunner(server)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8251)

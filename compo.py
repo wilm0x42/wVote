@@ -304,7 +304,7 @@ def get_all_admin_forms(auth_key: str) -> str:
     return html
 
 
-def get_entrant_name(uuid: str) -> str:
+def get_entrant_name(uuid: str) -> Optional[str]:
     for which_week in [True, False]:
         for entry in get_week(which_week)["entries"]:
             if entry["uuid"] == uuid:
@@ -380,10 +380,10 @@ def get_vote_controls_for_week(which_week: bool) -> str:
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
-    def add_th(data: str) -> str:
+    def add_th(data: str) -> None:
         add_node("th", data)
 
-    def add_td(data: str) -> str:
+    def add_td(data: str) -> None:
         add_node("td", data)
 
     html += "<tr>"
