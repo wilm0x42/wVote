@@ -110,8 +110,8 @@ def get_admin_controls(auth_key: str) -> str:
         html += "<input type='submit' value='Submit'/>"
         html += "</form><br>"
 
-    text_field("currentWeekTheme",
-               "Theme/title of current week", this_week["theme"])
+    text_field("currentWeekTheme", "Theme/title of current week",
+               this_week["theme"])
     text_field("currentWeekDate", "Date of current week", this_week["date"])
     text_field("nextWeekTheme", "Theme/title of next week", next_week["theme"])
     text_field("nextWeekDate", "Date of next week", next_week["date"])
@@ -209,8 +209,7 @@ async def admin_control_handler(request: web_request.Request) -> CoroutineType:
                         new_entry_discord_id = None
 
             compo.create_blank_entry(data["newEntryEntrant"],
-                                     new_entry_discord_id,
-                                     new_entry_week)
+                                     new_entry_discord_id, new_entry_week)
         compo.save_weeks()
         return web.Response(status=204, text="Nice")
     else:
@@ -220,8 +219,8 @@ async def admin_control_handler(request: web_request.Request) -> CoroutineType:
 async def vote_handler(request: web_request.Request) -> CoroutineType:
     html = None
 
-    html = vote_template.replace(
-        "[VOTE-CONTROLS]", compo.get_vote_controls_for_week(False))
+    html = vote_template.replace("[VOTE-CONTROLS]",
+                                 compo.get_vote_controls_for_week(False))
 
     return web.Response(text=html, content_type="text/html")
 
@@ -252,8 +251,8 @@ async def edit_handler(request: web_request.Request) -> CoroutineType:
 
         form = compo.get_edit_form_for_entry(key["entryUUID"], auth_key)
         html = submit_template.replace("[ENTRY-FORM]", form)
-        html = html.replace(
-            "[ENTRANT-NAME]", compo.get_entrant_name(key["entryUUID"]))
+        html = html.replace("[ENTRANT-NAME]",
+                            compo.get_entrant_name(key["entryUUID"]))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
@@ -266,8 +265,8 @@ async def admin_handler(request: web_request.Request) -> CoroutineType:
     if key_valid(auth_key, admin_keys):
         # key = admin_keys[auth_key]
 
-        html = admin_template.replace(
-            "[ENTRY-LIST]", compo.get_all_admin_forms(auth_key))
+        html = admin_template.replace("[ENTRY-LIST]",
+                                      compo.get_all_admin_forms(auth_key))
         html = html.replace("[VOTE-CONTROLS]",
                             compo.get_vote_controls_for_week(True))
         html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))
@@ -372,10 +371,12 @@ async def file_post_handler(request: web_request.Request) -> CoroutineType:
                                     body=submit_success,
                                     content_type="text/html")
 
-        return web.Response(status=400, text="That entry doesn't seem to exist")
+        return web.Response(status=400,
+                            text="That entry doesn't seem to exist")
 
     else:
         return web.Response(status=403, text="Not happening babe")
+
 
 # async def debug_handler(request):
 #   cmd = request.match_info["command"]
@@ -393,16 +394,17 @@ async def file_post_handler(request: web_request.Request) -> CoroutineType:
 
 server = web.Application()
 
-server.add_routes([web.get("/", vote_handler),
-                   web.get("/files/{uuid}/{filename}", week_files_handler),
-                   web.get("/favicon.ico", favicon_handler),
-                   web.get("/edit/{authKey}", edit_handler),
-                   web.get("/admin/{authKey}", admin_handler),
-                   web.post("/admin/edit/{authKey}", admin_control_handler),
-                   web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
-                   # web.get("/debug/{command}", debug_handler),
-                   web.static("/static", "static")
-                   ])
+server.add_routes([
+    web.get("/", vote_handler),
+    web.get("/files/{uuid}/{filename}", week_files_handler),
+    web.get("/favicon.ico", favicon_handler),
+    web.get("/edit/{authKey}", edit_handler),
+    web.get("/admin/{authKey}", admin_handler),
+    web.post("/admin/edit/{authKey}", admin_control_handler),
+    web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
+    # web.get("/debug/{command}", debug_handler),
+    web.static("/static", "static")
+])
 
 
 async def start_http() -> CoroutineType:
@@ -411,6 +413,7 @@ async def start_http() -> CoroutineType:
     site = web.TCPSite(runner, "0.0.0.0", 8251)
     await site.start()
     print("HTTP: Started server")
+
 
 if __name__ == "__main__":
     web.run_app(server)

@@ -14,7 +14,9 @@ import http_server
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
-             pm_help=False, command_prefix=[], case_insensitive=True)
+                      pm_help=False,
+                      command_prefix=[],
+                      case_insensitive=True)
 test_mode = False
 postentries_channel = 0
 notify_admins_channel = 0
@@ -110,8 +112,8 @@ async def submission_message(entry: dict,
         True if this edit was performed via the admin interface, False if this
         edit was performed via a civilian submission link.
     """
-    notification_message = "%s submitted \"%s\":\n" % (
-        entry["entrantName"], entry["entryName"])
+    notification_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
+                                                       entry["entryName"])
 
     # If a music file was attached (including in the form of an external link),
     # make note of it in the message
@@ -214,8 +216,9 @@ async def on_ready() -> CoroutineType:
 
 
 @client.event
-async def on_command_error(context: discord.ext.commands.Context,
-    error: discord.ext.commands.CommandError) -> CoroutineType:
+async def on_command_error(
+        context: discord.ext.commands.Context,
+        error: discord.ext.commands.CommandError) -> CoroutineType:
     """Notifies the user on a failed command."""
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
         if context.channel.type == discord.ChannelType.private:
@@ -228,12 +231,11 @@ async def on_command_error(context: discord.ext.commands.Context,
 
     if isinstance(error, IsNotAdminError):
         print("DISCORD: %s (%d) attempted to use an admin command: %s" %
-                (context.author.name, context.author.id, context.command.name))
+              (context.author.name, context.author.id, context.command.name))
         return
 
     if isinstance(error, WrongChannelError):
-        await context.send("This isn't the right channel"
-                                   " for this!")
+        await context.send("This isn't the right channel" " for this!")
         return
 
     print("DISCORD: Unhandled command error: %s" % str(error))
@@ -262,6 +264,7 @@ def is_postentries_channel():
             return True
 
         raise WrongChannelError()
+
     return commands.check(predicate)
 
 
@@ -280,7 +283,8 @@ async def postentries(context: discord.ext.commands.Context) -> CoroutineType:
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
-async def postentriespreview(context: discord.ext.commands.Context) -> CoroutineType:
+async def postentriespreview(
+        context: discord.ext.commands.Context) -> CoroutineType:
     """
     Post the entries of the next week. Only works in DMs.
     """
@@ -288,7 +292,8 @@ async def postentriespreview(context: discord.ext.commands.Context) -> Coroutine
     await publish_entries(context, week)
 
 
-async def publish_entries(context: discord.ext.commands.Context, week: dict) -> CoroutineType:
+async def publish_entries(context: discord.ext.commands.Context,
+                          week: dict) -> CoroutineType:
     """
     Actually posts the entries of the chosen week into the proper channel.
     """
@@ -305,8 +310,7 @@ async def publish_entries(context: discord.ext.commands.Context, week: dict) -> 
                 entrant_ping = discord_user.mention
 
             upload_files = []
-            upload_message = "%s - %s" % (entrant_ping,
-                                          entry["entryName"])
+            upload_message = "%s - %s" % (entrant_ping, entry["entryName"])
 
             if "entryNotes" in entry:
                 upload_message += "\n" + entry["entryNotes"]
@@ -322,8 +326,8 @@ async def publish_entries(context: discord.ext.commands.Context, week: dict) -> 
                 discord.File(io.BytesIO(bytes(entry["pdf"])),
                              filename=entry["pdfFilename"]))
 
-            await context.send(upload_message,
-                               files=upload_files)
+            await context.send(upload_message, files=upload_files)
+
 
 @client.command()
 @commands.check(is_admin)
@@ -355,13 +359,12 @@ async def submit(context: discord.ext.commands.Context) -> CoroutineType:
             key = http_server.create_edit_key(entry["uuid"])
             url = "%s/edit/%s" % (url_prefix(), key)
             edit_info = ("Link to edit your existing "
-                         "submission: " + url
-                         + expiry_message())
+                         "submission: " + url + expiry_message())
             await context.send(edit_info)
             return
 
-    new_entry = compo.create_blank_entry(
-        context.author.name, context.author.id)
+    new_entry = compo.create_blank_entry(context.author.name,
+                                         context.author.id)
     key = http_server.create_edit_key(new_entry)
     url = "%s/edit/%s" % (url_prefix(), key)
 
@@ -370,32 +373,35 @@ async def submit(context: discord.ext.commands.Context) -> CoroutineType:
 
 @client.command()
 @commands.check(is_admin)
-async def googleformslist(context: discord.ext.commands.Context) -> CoroutineType:
+async def googleformslist(
+        context: discord.ext.commands.Context) -> CoroutineType:
     """
     Generates the list of Google forms for the entries.
     """
-    entries =  compo.get_week(False)["entries"]
+    entries = compo.get_week(False)["entries"]
 
     response = "```\n"
-    
+
     for e in entries:
         if not compo.entry_valid(e):
             continue
         response += "%s - %s\n" % (e["entrantName"], e["entryName"])
-    
+
     response += "\n```"
 
     await context.channel.send(response)
-    
+
+
 @client.command()
 async def howmany(context: discord.ext.commands.Context) -> CoroutineType:
     """
     Prints how many entries are currently submitted for the upcoming week.
     """
-    
+
     response = "%d, so far." % compo.count_valid_entries(True)
 
     await context.channel.send(response)
+
 
 if __name__ == "__main__":
     load_config()
