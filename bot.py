@@ -14,7 +14,7 @@ import http_server
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
-             pm_help=False, command_prefix="vote!")
+             pm_help=False, command_prefix=[], case_insensitive=True)
 test_mode = False
 postentries_channel = 0
 notify_admins_channel = 0
@@ -68,9 +68,9 @@ def load_config() -> None:
         key = arguments[0]
 
         if key == "command_prefix":
-            client.command_prefix = arguments[1]
-            if arguments[1] == "test!":
-                test_mode = True
+            client.command_prefix.append(arguments[1])
+        if key == "test_mode":
+            test_mode = (arguments[1] == "True")
         if key == "postentries_channel":
             postentries_channel = int(arguments[1])
         if key == "notify_admins_channel":
@@ -377,7 +377,12 @@ async def googleformslist(context: discord.ext.commands.Context) -> CoroutineTyp
     entries =  compo.get_week(False)["entries"]
 
     response = "```\n"
-    response += "\n".join("%s - %s" % (e["entrantName"], e["entryName"]) for e in entries)
+    
+    for e in entries:
+        if not compo.entry_valid(e):
+            continue
+        response += "%s - %s\n" % (e["entrantName"], e["entryName"])
+    
     response += "\n```"
 
     await context.channel.send(response)
