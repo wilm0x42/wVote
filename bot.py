@@ -3,7 +3,6 @@
 import asyncio
 import io
 from types import CoroutineType
-import html as html_lib
 import urllib.parse
 
 import discord
