@@ -282,99 +282,94 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
-    if (key_valid(auth_key, edit_keys)
-        and edit_keys[auth_key]["entryUUID"] == uuid
-        and compo.get_week(True)["submissionsOpen"]) \
-            or key_valid(auth_key, admin_keys):
-        for which_week in [True, False]:
-            week = compo.get_week(which_week)
+    user_authorized = (key_valid(auth_key, edit_keys)
+                       and edit_keys[auth_key]["entryUUID"] == uuid
+                       and compo.get_week(True)["submissionsOpen"])
 
-            for entry in week["entries"]:
-                if entry["uuid"] != uuid:
-                    continue
-
-                reader = await request.multipart()
-
-                if reader is None:
-                    return web.Response(status=400, text="Not happening babe")
-
-                while True:
-                    field = await reader.next()
-
-                    if field is None:
-                        break
-
-                    if field.name == "entryName":
-                        entry["entryName"] = \
-                            (await field.read(decode=True)).decode("utf-8")
-                    elif (field.name == "entrantName"
-                          and key_valid(auth_key, admin_keys)):
-                        entry["entrantName"] = \
-                            (await field.read(decode=True)).decode("utf-8")
-                    elif (field.name == "entryNotes"
-                          and key_valid(auth_key, admin_keys)):
-                        entry["entryNotes"] = \
-                            (await field.read(decode=True)).decode("utf-8")
-
-                    elif (field.name == "deleteEntry"
-                          and key_valid(auth_key, admin_keys)):
-                        week["entries"].remove(entry)
-                        compo.save_weeks()
-                        return web.Response(status=200,
-                                            text="Entry successfully deleted.")
-
-                    elif field.name == "mp3Link":
-                        url = (await field.read(decode=True)).decode("utf-8")
-                        if len(url) > 1:
-                            entry["mp3"] = url
-                            entry["mp3Format"] = "external"
-                            entry["mp3Filename"] = ""
-
-                    elif field.name == "mp3" or field.name == "pdf":
-                        if field.filename == "":
-                            continue
-
-                        size = 0
-                        entry[field.name] = None
-
-                        entry[field.name + "Filename"] = field.filename
-
-                        if field.name == "mp3":
-                            entry["mp3Format"] = "mp3"
-
-                        while True:
-                            chunk = await field.read_chunk()
-
-                            if not chunk:
-                                break
-
-                            size += len(chunk)
-
-                            if size > 1000 * 1000 * 8:  # 8MB limit
-                                entry[field.name] = None
-                                entry[field.name + "Filename"] = None
-                                return web.Response(status=413,
-                                                    text=too_big_text)
-
-                            if entry[field.name] is None:
-                                entry[field.name] = chunk
-                            else:
-                                entry[field.name] += chunk
-
-                compo.save_weeks()
-
-                await bot.submission_message(entry,
-                                             key_valid(auth_key, admin_keys))
-
-                return web.Response(status=200,
-                                    body=submit_success,
-                                    content_type="text/html")
-
-        return web.Response(status=400,
-                            text="That entry doesn't seem to exist")
-
-    else:
+    authorized = user_authorized or key_valid(auth_key, admin_keys)
+    if not authorized:
         return web.Response(status=403, text="Not happening babe")
+
+    for which_week in [True, False]:
+        week = compo.get_week(which_week)
+
+        for entry in week["entries"]:
+            if entry["uuid"] != uuid:
+                continue
+
+            reader = await request.multipart()
+
+            if reader is None:
+                return web.Response(status=400, text="Not happening babe")
+
+            while True:
+                field = await reader.next()
+
+                if field is None:
+                    break
+
+                if field.name == "entryName":
+                    entry["entryName"] = \
+                        (await field.read(decode=True)).decode("utf-8")
+                elif (field.name == "entrantName"
+                      and key_valid(auth_key, admin_keys)):
+                    entry["entrantName"] = \
+                        (await field.read(decode=True)).decode("utf-8")
+                elif (field.name == "entryNotes"
+                      and key_valid(auth_key, admin_keys)):
+                    entry["entryNotes"] = \
+                        (await field.read(decode=True)).decode("utf-8")
+
+                elif (field.name == "deleteEntry"
+                      and key_valid(auth_key, admin_keys)):
+                    week["entries"].remove(entry)
+                    compo.save_weeks()
+                    return web.Response(status=200,
+                                        text="Entry successfully deleted.")
+
+                elif field.name == "mp3Link":
+                    url = (await field.read(decode=True)).decode("utf-8")
+                    if len(url) > 1:
+                        entry["mp3"] = url
+                        entry["mp3Format"] = "external"
+                        entry["mp3Filename"] = ""
+
+                elif field.name == "mp3" or field.name == "pdf":
+                    if field.filename == "":
+                        continue
+
+                    size = 0
+                    entry[field.name] = None
+
+                    entry[field.name + "Filename"] = field.filename
+
+                    if field.name == "mp3":
+                        entry["mp3Format"] = "mp3"
+
+                    while True:
+                        chunk = await field.read_chunk()
+                        if not chunk:
+                            break
+                        size += len(chunk)
+                        if size > 1000 * 1000 * 8:  # 8MB limit
+                            entry[field.name] = None
+                            entry[field.name + "Filename"] = None
+                            return web.Response(status=413, text=too_big_text)
+                        if entry[field.name] is None:
+                            entry[field.name] = chunk
+                        else:
+                            entry[field.name] += chunk
+
+            compo.save_weeks()
+
+            await bot.submission_message(entry,
+                                         key_valid(auth_key, admin_keys))
+
+            return web.Response(status=200,
+                                body=submit_success,
+                                content_type="text/html")
+
+    return web.Response(status=400, text="That entry doesn't seem to exist")
 
 
 # async def debug_handler(request):
