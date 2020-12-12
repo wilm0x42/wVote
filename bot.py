@@ -213,15 +213,15 @@ async def on_ready() -> None:
 
 
 @client.event
-async def on_command_error(context: discord.ext.commands.Context,
-                           error: discord.ext.commands.CommandError) -> None:
+async def on_command_error(context: commands.Context,
+                           error: commands.CommandError) -> None:
     """Notifies the user on a failed command."""
-    if isinstance(error, discord.ext.commands.errors.CommandNotFound):
+    if isinstance(error, commands.errors.CommandNotFound):
         if context.channel.type == discord.ChannelType.private:
             await context.send(help_message())
             return
 
-    if isinstance(error, discord.ext.commands.errors.PrivateMessageOnly):
+    if isinstance(error, commands.errors.PrivateMessageOnly):
         await context.send(dm_reminder)
         return
 
@@ -237,7 +237,7 @@ async def on_command_error(context: discord.ext.commands.Context,
     print("DISCORD: Unhandled command error: %s" % str(error))
 
 
-async def is_admin(context: discord.ext.commands.Context) -> bool:
+async def is_admin(context: commands.Context) -> bool:
     """
     Bot command check: Returns `true` if the user is an admin.
     Throws `IsNotAdminError()` on failure.
@@ -255,7 +255,7 @@ def is_postentries_channel():
     proper channel.
     Throws `WrongChannelError` on failure.
     """
-    def predicate(context: discord.ext.commands.Context):
+    def predicate(context: commands.Context):
         if postentries_channel != 0 and context.channel.id == postentries_channel:
             return True
 
@@ -267,7 +267,7 @@ def is_postentries_channel():
 @client.command()
 @commands.check(is_admin)
 @commands.check_any(is_postentries_channel(), commands.dm_only())
-async def postentries(context: discord.ext.commands.Context) -> None:
+async def postentries(context: commands.Context) -> None:
     """
     Post the entries of the week to the current channel.
     Works in the postentries channel or in DMs.
@@ -279,7 +279,7 @@ async def postentries(context: discord.ext.commands.Context) -> None:
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
-async def postentriespreview(context: discord.ext.commands.Context) -> None:
+async def postentriespreview(context: commands.Context) -> None:
     """
     Post the entries of the next week. Only works in DMs.
     """
@@ -287,7 +287,7 @@ async def postentriespreview(context: discord.ext.commands.Context) -> None:
     await publish_entries(context, week)
 
 
-async def publish_entries(context: discord.ext.commands.Context,
+async def publish_entries(context: commands.Context,
                           week: dict) -> None:
     """
     Actually posts the entries of the chosen week into the proper channel.
@@ -327,7 +327,7 @@ async def publish_entries(context: discord.ext.commands.Context,
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
-async def manage(context: discord.ext.commands.Context) -> None:
+async def manage(context: commands.Context) -> None:
     """Shows link to management panel"""
     key = http_server.create_admin_key()
 
@@ -337,7 +337,7 @@ async def manage(context: discord.ext.commands.Context) -> None:
 
 @client.command()
 @commands.dm_only()
-async def submit(context: discord.ext.commands.Context) -> None:
+async def submit(context: commands.Context) -> None:
     """
     Creates a submission entry for the user.
     Replies with a link to the management panel with options to create or edit.
@@ -368,7 +368,7 @@ async def submit(context: discord.ext.commands.Context) -> None:
 
 @client.command()
 @commands.check(is_admin)
-async def googleformslist(context: discord.ext.commands.Context) -> None:
+async def googleformslist(context: commands.Context) -> None:
     """
     Generates the list of Google forms for the entries.
     """
@@ -387,7 +387,7 @@ async def googleformslist(context: discord.ext.commands.Context) -> None:
 
 
 @client.command()
-async def howmany(context: discord.ext.commands.Context) -> None:
+async def howmany(context: commands.Context) -> None:
     """
     Prints how many entries are currently submitted for the upcoming week.
     """
