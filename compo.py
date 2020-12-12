@@ -244,7 +244,6 @@ def get_edit_form_for_entry(uuid: str, auth_key: str) -> str:
                 post_url = "/edit/post/%s/%s" % (uuid, auth_key)
 
                 form_class = "entry-form"
-                alert_header = ""
 
                 html = "<form class='%s' action='%s' " % (form_class, post_url)
                 html += ("method='post' accept-charset='utf-8' "
