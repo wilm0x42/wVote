@@ -2,7 +2,7 @@
 
 import datetime
 import html as html_lib
-import urllib
+import urllib.parse
 import uuid
 from typing import Optional
 
