@@ -184,7 +184,8 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
 
                     html += "<div class='admin-entry-param'>"
 
-                    if (which_file + "Filename") in entry:
+                    if (which_file + "Filename") in entry \
+                            and entry[which_file + "Filename"] != None:
                         file_url = "/files/%s/%s" % \
                             (entry["uuid"],
                              urllib.parse.quote(entry[which_file + "Filename"]))
