@@ -4,7 +4,6 @@ import datetime
 import html as html_lib
 import random
 import string
-from types import CoroutineType
 
 from aiohttp import web, web_request
 
@@ -110,8 +109,8 @@ def get_admin_controls(auth_key: str) -> str:
         html += "<input type='submit' value='Submit'/>"
         html += "</form><br>"
 
-    text_field("currentWeekTheme",
-               "Theme/title of current week", this_week["theme"])
+    text_field("currentWeekTheme", "Theme/title of current week",
+               this_week["theme"])
     text_field("currentWeekDate", "Date of current week", this_week["date"])
     text_field("nextWeekTheme", "Theme/title of next week", next_week["theme"])
     text_field("nextWeekDate", "Date of next week", next_week["date"])
@@ -165,7 +164,7 @@ def get_admin_controls(auth_key: str) -> str:
     return html
 
 
-async def admin_control_handler(request: web_request.Request) -> CoroutineType:
+async def admin_control_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
@@ -209,24 +208,23 @@ async def admin_control_handler(request: web_request.Request) -> CoroutineType:
                         new_entry_discord_id = None
 
             compo.create_blank_entry(data["newEntryEntrant"],
-                                     new_entry_discord_id,
-                                     new_entry_week)
+                                     new_entry_discord_id, new_entry_week)
         compo.save_weeks()
         return web.Response(status=204, text="Nice")
     else:
         return web.Response(status=404, text="File not found")
 
 
-async def vote_handler(request: web_request.Request) -> CoroutineType:
+async def vote_handler(request: web_request.Request) -> web.Response:
     html = None
 
-    html = vote_template.replace(
-        "[VOTE-CONTROLS]", compo.get_vote_controls_for_week(False))
+    html = vote_template.replace("[VOTE-CONTROLS]",
+                                 compo.get_vote_controls_for_week(False))
 
     return web.Response(text=html, content_type="text/html")
 
 
-async def week_files_handler(request: web_request.Request) -> CoroutineType:
+async def week_files_handler(request: web_request.Request) -> web.Response:
     data, content_type = compo.get_entry_file(request.match_info["uuid"],
                                               request.match_info["filename"])
 
@@ -236,11 +234,11 @@ async def week_files_handler(request: web_request.Request) -> CoroutineType:
     return web.Response(status=200, body=data, content_type=content_type)
 
 
-async def favicon_handler(request: web_request.Request) -> CoroutineType:
+async def favicon_handler(request: web_request.Request) -> web.Response:
     return web.Response(body=favicon)
 
 
-async def edit_handler(request: web_request.Request) -> CoroutineType:
+async def edit_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
@@ -252,22 +250,22 @@ async def edit_handler(request: web_request.Request) -> CoroutineType:
 
         form = compo.get_edit_form_for_entry(key["entryUUID"], auth_key)
         html = submit_template.replace("[ENTRY-FORM]", form)
-        html = html.replace(
-            "[ENTRANT-NAME]", compo.get_entrant_name(key["entryUUID"]))
+        html = html.replace("[ENTRANT-NAME]",
+                            compo.get_entrant_name(key["entryUUID"]))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
         return web.Response(status=404, text="File not found")
 
 
-async def admin_handler(request: web_request.Request) -> CoroutineType:
+async def admin_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
         # key = admin_keys[auth_key]
 
-        html = admin_template.replace(
-            "[ENTRY-LIST]", compo.get_all_admin_forms(auth_key))
+        html = admin_template.replace("[ENTRY-LIST]",
+                                      compo.get_all_admin_forms(auth_key))
         html = html.replace("[VOTE-CONTROLS]",
                             compo.get_vote_controls_for_week(True))
         html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))
@@ -280,102 +278,99 @@ async def admin_handler(request: web_request.Request) -> CoroutineType:
 # TODO: Break this down to simpler functions
 # In particular, doubly-nested while loops contained in doubly-nested
 # for loops should probably to be approached differently
-async def file_post_handler(request: web_request.Request) -> CoroutineType:
+async def file_post_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
-    if (key_valid(auth_key, edit_keys)
-        and edit_keys[auth_key]["entryUUID"] == uuid
-        and compo.get_week(True)["submissionsOpen"]) \
-            or key_valid(auth_key, admin_keys):
-        for which_week in [True, False]:
-            week = compo.get_week(which_week)
+    user_authorized = (key_valid(auth_key, edit_keys)
+                       and edit_keys[auth_key]["entryUUID"] == uuid
+                       and compo.get_week(True)["submissionsOpen"])
 
-            for entry in week["entries"]:
-                if entry["uuid"] != uuid:
-                    continue
-
-                reader = await request.multipart()
-
-                if reader is None:
-                    return web.Response(status=400, text="Not happening babe")
-
-                while True:
-                    field = await reader.next()
-
-                    if field is None:
-                        break
-
-                    if field.name == "entryName":
-                        entry["entryName"] = \
-                            (await field.read(decode=True)).decode("utf-8")
-                    elif (field.name == "entrantName"
-                          and key_valid(auth_key, admin_keys)):
-                        entry["entrantName"] = \
-                            (await field.read(decode=True)).decode("utf-8")
-                    elif (field.name == "entryNotes"
-                          and key_valid(auth_key, admin_keys)):
-                        entry["entryNotes"] = \
-                            (await field.read(decode=True)).decode("utf-8")
-
-                    elif (field.name == "deleteEntry"
-                          and key_valid(auth_key, admin_keys)):
-                        week["entries"].remove(entry)
-                        compo.save_weeks()
-                        return web.Response(status=200,
-                                            text="Entry successfully deleted.")
-
-                    elif field.name == "mp3Link":
-                        url = (await field.read(decode=True)).decode("utf-8")
-                        if len(url) > 1:
-                            entry["mp3"] = url
-                            entry["mp3Format"] = "external"
-                            entry["mp3Filename"] = ""
-
-                    elif field.name == "mp3" or field.name == "pdf":
-                        if field.filename == "":
-                            continue
-
-                        size = 0
-                        entry[field.name] = None
-
-                        entry[field.name + "Filename"] = field.filename
-
-                        if field.name == "mp3":
-                            entry["mp3Format"] = "mp3"
-
-                        while True:
-                            chunk = await field.read_chunk()
-
-                            if not chunk:
-                                break
-
-                            size += len(chunk)
-
-                            if size > 1000 * 1000 * 8:  # 8MB limit
-                                entry[field.name] = None
-                                entry[field.name + "Filename"] = None
-                                return web.Response(status=413,
-                                                    text=too_big_text)
-
-                            if entry[field.name] is None:
-                                entry[field.name] = chunk
-                            else:
-                                entry[field.name] += chunk
-
-                compo.save_weeks()
-
-                await bot.submission_message(entry,
-                                             key_valid(auth_key, admin_keys))
-
-                return web.Response(status=200,
-                                    body=submit_success,
-                                    content_type="text/html")
-
-        return web.Response(status=400, text="That entry doesn't seem to exist")
-
-    else:
+    authorized = user_authorized or key_valid(auth_key, admin_keys)
+    if not authorized:
         return web.Response(status=403, text="Not happening babe")
+
+    for which_week in [True, False]:
+        week = compo.get_week(which_week)
+
+        for entry in week["entries"]:
+            if entry["uuid"] != uuid:
+                continue
+
+            reader = await request.multipart()
+
+            if reader is None:
+                return web.Response(status=400, text="Not happening babe")
+
+            while True:
+                field = await reader.next()
+
+                if field is None:
+                    break
+
+                if field.name == "entryName":
+                    entry["entryName"] = \
+                        (await field.read(decode=True)).decode("utf-8")
+                elif (field.name == "entrantName"
+                      and key_valid(auth_key, admin_keys)):
+                    entry["entrantName"] = \
+                        (await field.read(decode=True)).decode("utf-8")
+                elif (field.name == "entryNotes"
+                      and key_valid(auth_key, admin_keys)):
+                    entry["entryNotes"] = \
+                        (await field.read(decode=True)).decode("utf-8")
+
+                elif (field.name == "deleteEntry"
+                      and key_valid(auth_key, admin_keys)):
+                    week["entries"].remove(entry)
+                    compo.save_weeks()
+                    return web.Response(status=200,
+                                        text="Entry successfully deleted.")
+
+                elif field.name == "mp3Link":
+                    url = (await field.read(decode=True)).decode("utf-8")
+                    if len(url) > 1:
+                        entry["mp3"] = url
+                        entry["mp3Format"] = "external"
+                        entry["mp3Filename"] = ""
+
+                elif field.name == "mp3" or field.name == "pdf":
+                    if field.filename == "":
+                        continue
+
+                    size = 0
+                    entry[field.name] = None
+
+                    entry[field.name + "Filename"] = field.filename
+
+                    if field.name == "mp3":
+                        entry["mp3Format"] = "mp3"
+
+                    while True:
+                        chunk = await field.read_chunk()
+                        if not chunk:
+                            break
+                        size += len(chunk)
+                        if size > 1000 * 1000 * 8:  # 8MB limit
+                            entry[field.name] = None
+                            entry[field.name + "Filename"] = None
+                            return web.Response(status=413, text=too_big_text)
+                        if entry[field.name] is None:
+                            entry[field.name] = chunk
+                        else:
+                            entry[field.name] += chunk
+
+            compo.save_weeks()
+
+            await bot.submission_message(entry,
+                                         key_valid(auth_key, admin_keys))
+
+            return web.Response(status=200,
+                                body=submit_success,
+                                content_type="text/html")
+
+    return web.Response(status=400, text="That entry doesn't seem to exist")
+
 
 # async def debug_handler(request):
 #   cmd = request.match_info["command"]
@@ -393,24 +388,26 @@ async def file_post_handler(request: web_request.Request) -> CoroutineType:
 
 server = web.Application()
 
-server.add_routes([web.get("/", vote_handler),
-                   web.get("/files/{uuid}/{filename}", week_files_handler),
-                   web.get("/favicon.ico", favicon_handler),
-                   web.get("/edit/{authKey}", edit_handler),
-                   web.get("/admin/{authKey}", admin_handler),
-                   web.post("/admin/edit/{authKey}", admin_control_handler),
-                   web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
-                   # web.get("/debug/{command}", debug_handler),
-                   web.static("/static", "static")
-                   ])
+server.add_routes([
+    web.get("/", vote_handler),
+    web.get("/files/{uuid}/{filename}", week_files_handler),
+    web.get("/favicon.ico", favicon_handler),
+    web.get("/edit/{authKey}", edit_handler),
+    web.get("/admin/{authKey}", admin_handler),
+    web.post("/admin/edit/{authKey}", admin_control_handler),
+    web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
+    # web.get("/debug/{command}", debug_handler),
+    web.static("/static", "static")
+])
 
 
-async def start_http() -> CoroutineType:
+async def start_http() -> None:
     runner = web.AppRunner(server)
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8251)
     await site.start()
     print("HTTP: Started server")
+
 
 if __name__ == "__main__":
     web.run_app(server)

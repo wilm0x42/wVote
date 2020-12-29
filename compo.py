@@ -2,16 +2,11 @@
 
 import datetime
 import html as html_lib
-import urllib
+import urllib.parse
 import uuid
 from typing import Optional
 
-try:
-    import cPickle as pickle
-# Should this be `except ImportError` instead?
-# But also, I think pickle uses cPickle underneath in Python 3.x
-except:
-    import pickle
+import pickle
 
 current_week = None
 next_week = None
@@ -192,8 +187,8 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
                             if entry["mp3Format"] == "external":
                                 file_url = entry["mp3"]
 
-                        html += "<a href='%s'>Link to %s</a>" % (
-                            file_url, which_file)
+                        html += "<a href='%s'>Link to %s</a>" % (file_url,
+                                                                 which_file)
                     else:
                         html += "<p>%s not uploaded.<p>" % which_file
 
@@ -207,8 +202,8 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
 
                 html_input("entryName", "Entry Name", "text",
                            html_lib.escape(entry["entryName"]))
-                html_input("entrantName", "Discord Username",
-                           "text", html_lib.escape(entry["entrantName"]))
+                html_input("entrantName", "Discord Username", "text",
+                           html_lib.escape(entry["entrantName"]))
                 html_input("entryNotes", "Additional Notes", "text",
                            html_lib.escape(param_if_exists("entryNotes")))
 
@@ -229,8 +224,9 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
                          "value='true'/>")
                 html += "</div><br>"
 
-                html += ("<input class='admin-entry-param admin-submit-button' "
-                         "type='submit' value='Submit Entry'/>")
+                html += (
+                    "<input class='admin-entry-param admin-submit-button' "
+                    "type='submit' value='Submit Entry'/>")
                 html += "</form>"
 
                 return html
@@ -248,7 +244,6 @@ def get_edit_form_for_entry(uuid: str, auth_key: str) -> str:
                 post_url = "/edit/post/%s/%s" % (uuid, auth_key)
 
                 form_class = "entry-form"
-                alert_header = ""
 
                 html = "<form class='%s' action='%s' " % (form_class, post_url)
                 html += ("method='post' accept-charset='utf-8' "
@@ -298,13 +293,12 @@ def get_all_admin_forms(auth_key: str) -> str:
         week = get_week(which_week)
 
         for entry in week["entries"]:
-            html += get_admin_form_for_entry(entry["uuid"],
-                                             auth_key)
+            html += get_admin_form_for_entry(entry["uuid"], auth_key)
 
     return html
 
 
-def get_entrant_name(uuid: str) -> str:
+def get_entrant_name(uuid: str) -> Optional[str]:
     for which_week in [True, False]:
         for entry in get_week(which_week)["entries"]:
             if entry["uuid"] == uuid:
@@ -349,6 +343,7 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
         week = get_week(which_week)
 
         for entry in week["entries"]:
+
             def param_if_exists(param):
                 nonlocal entry
                 if param in entry:
@@ -379,10 +374,10 @@ def get_vote_controls_for_week(which_week: bool) -> str:
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
-    def add_th(data: str) -> str:
+    def add_th(data: str) -> None:
         add_node("th", data)
 
-    def add_td(data: str) -> str:
+    def add_td(data: str) -> None:
         add_node("td", data)
 
     html += "<tr>"
@@ -401,9 +396,9 @@ def get_vote_controls_for_week(which_week: bool) -> str:
 
         add_td(html_lib.escape(entry["entrantName"]))
         add_td(html_lib.escape(entry["entryName"]))
-        add_td("<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
-               (entry["uuid"],
-                urllib.parse.quote(entry["pdfFilename"])))
+        add_td(
+            "<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
+            (entry["uuid"], urllib.parse.quote(entry["pdfFilename"])))
 
         if entry["mp3Format"] == "mp3":
             mp3Url = "/files/%s/%s" % \
@@ -413,8 +408,7 @@ def get_vote_controls_for_week(which_week: bool) -> str:
             add_td("<audio controls>"
                    "<source src=\"%s\" type=\"audio/mpeg\">"
                    "<a href=\"%s\">mp3 link</a>"
-                   "</audio>"
-                   % (mp3Url, mp3Url))
+                   "</audio>" % (mp3Url, mp3Url))
         elif entry["mp3Format"] == "external":
             # TODO: embed soundcloud players
             # Sanitize url to prevent against bad times
@@ -432,14 +426,11 @@ def get_vote_controls_for_week(which_week: bool) -> str:
 
             # Check for soundcloud/bandcamp
             if "soundcloud.com" in sanitized:
-                add_td("<a href=%s>Listen on SoundCloud</a>" %
-                       sanitized)
+                add_td("<a href=%s>Listen on SoundCloud</a>" % sanitized)
             elif "bandcamp.com" in sanitized:
-                add_td("<a href=%s>Listen on Bandcamp</a>" %
-                       sanitized)
+                add_td("<a href=%s>Listen on Bandcamp</a>" % sanitized)
             else:
-                add_td("<a href=%s>Listen here!</a>" %
-                       sanitized)
+                add_td("<a href=%s>Listen here!</a>" % sanitized)
         else:
             add_td("Audio format not recognized D:")
 
