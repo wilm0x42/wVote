@@ -296,7 +296,8 @@ def get_all_admin_forms(auth_key: str) -> str:
         for entry in week["entries"]:
             try:
                 html += get_admin_form_for_entry(entry["uuid"], auth_key)
-            except:
+            except Exception as e:
+                print("COMPO: Error in get_all_admin_forms: %s" % str(e))
                 html += ("<h3>This entry seems to have caused an error, "
                          "so we can't display it.  Inform the nerds!</h3>")
                 continue
