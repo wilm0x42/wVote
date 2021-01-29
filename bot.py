@@ -293,34 +293,39 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
     """
     async with context.channel.typing():
         for entry in week["entries"]:
-            if not compo.entry_valid(entry):
-                continue
+            try:
+                if not compo.entry_valid(entry):
+                    continue
 
-            discord_user = client.get_user(entry["discordID"])
+                discord_user = client.get_user(entry["discordID"])
 
-            if discord_user is None:
-                entrant_ping = "@" + entry["entrantName"]
-            else:
-                entrant_ping = discord_user.mention
+                if discord_user is None:
+                    entrant_ping = "@" + entry["entrantName"]
+                else:
+                    entrant_ping = discord_user.mention
 
-            upload_files = []
-            upload_message = "%s - %s" % (entrant_ping, entry["entryName"])
+                upload_files = []
+                upload_message = "%s - %s" % (entrant_ping, entry["entryName"])
 
-            if "entryNotes" in entry:
-                upload_message += "\n" + entry["entryNotes"]
+                if "entryNotes" in entry:
+                    upload_message += "\n" + entry["entryNotes"]
 
-            if entry["mp3Format"] == "mp3":
+                if entry["mp3Format"] == "mp3":
+                    upload_files.append(
+                        discord.File(io.BytesIO(bytes(entry["mp3"])),
+                                     filename=entry["mp3Filename"]))
+                elif entry["mp3Format"] == "external":
+                    upload_message += "\n" + entry["mp3"]
+
                 upload_files.append(
-                    discord.File(io.BytesIO(bytes(entry["mp3"])),
-                                 filename=entry["mp3Filename"]))
-            elif entry["mp3Format"] == "external":
-                upload_message += "\n" + entry["mp3"]
+                    discord.File(io.BytesIO(bytes(entry["pdf"])),
+                                 filename=entry["pdfFilename"]))
 
-            upload_files.append(
-                discord.File(io.BytesIO(bytes(entry["pdf"])),
-                             filename=entry["pdfFilename"]))
-
-            await context.send(upload_message, files=upload_files)
+                await context.send(upload_message, files=upload_files)
+            except Exception as e:
+                print("DISCORD: Failed to upload entry: %s" % str(e))
+                await context.send("(Failed to upload this entry!)")
+                continue
 
 
 @client.command()
