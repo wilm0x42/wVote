@@ -316,12 +316,19 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                                      filename=entry["mp3Filename"]))
                 elif entry["mp3Format"] == "external":
                     upload_message += "\n" + entry["mp3"]
-
+                
                 upload_files.append(
                     discord.File(io.BytesIO(bytes(entry["pdf"])),
                                  filename=entry["pdfFilename"]))
-
-                await context.send(upload_message, files=upload_files)
+                
+                if len(bytes(entry["pdf"])) + len(bytes(entry["mp3"])) \
+                        < 8000 * 1000: # >8MB
+                    await context.send(upload_message, files=upload_files)
+                else:
+                    # Upload mp3 and pdf separately if they're too big together
+                    await context.send(upload_message, files=[upload_files[0]])
+                    await context.send("", files=[upload_files[1]])
+                    
             except Exception as e:
                 print("DISCORD: Failed to upload entry: %s" % str(e))
                 await context.send("(Failed to upload this entry!)")
