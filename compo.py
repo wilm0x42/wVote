@@ -4,6 +4,7 @@ import datetime
 import html as html_lib
 import urllib.parse
 import uuid
+import logging
 from typing import Optional
 
 import pickle
@@ -72,7 +73,7 @@ def save_weeks() -> None:
         # open("week.json", "w").write(json.dumps(current_week))
         pickle.dump(current_week, open("weeks/current-week.pickle", "wb"))
         pickle.dump(next_week, open("weeks/next-week.pickle", "wb"))
-        print("COMPO: current-week.pickle and next-week.pickle overwritten")
+        logging.info("COMPO: current-week.pickle and next-week.pickle overwritten")
 
 
 def move_to_next_week() -> None:
@@ -297,7 +298,7 @@ def get_all_admin_forms(auth_key: str) -> str:
             try:
                 html += get_admin_form_for_entry(entry["uuid"], auth_key)
             except Exception as e:
-                print("COMPO: Error in get_all_admin_forms: %s" % str(e))
+                logging.error("COMPO: Error in get_all_admin_forms: %s" % str(e))
                 html += ("<h3>This entry seems to have caused an error, "
                          "so we can't display it.  Inform the nerds!</h3>")
                 continue

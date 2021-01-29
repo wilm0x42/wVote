@@ -3,6 +3,7 @@
 import asyncio
 import io
 import urllib.parse
+import logging
 
 import discord
 from discord.ext import commands
@@ -80,7 +81,7 @@ def load_config() -> None:
         if key == "admin":
             client.admins.append(arguments[1])
 
-    print("DISCORD: Loaded bot.conf")
+    logging.info("DISCORD: Loaded bot.conf")
 
 
 async def notify_admins(msg: str) -> None:
@@ -201,11 +202,11 @@ async def on_ready() -> None:
     Connects/logs in the bot to discord. Also outputs to the console that the
     connection was successful.
     """
-    print("DISCORD: Logged in as %s (ID: %s)" %
+    logging.info("DISCORD: Logged in as %s (ID: %s)" %
           (client.user.name, client.user.id))
-    print("DISCORD: Connected to %s servers, and %s users" %
+    logging.info("DISCORD: Connected to %s servers, and %s users" %
           (str(len(client.guilds)), str(len(set(client.get_all_members())))))
-    print(("DISCORD: Invite link: "
+    logging.info(("DISCORD: Invite link: "
            "https://discordapp.com/oauth2/authorize?client_id="
            "%s&scope=bot&permissions=335936592" % str(client.user.id)))
     activity = discord.Game(name="Preventing Voter Fraud")
@@ -226,7 +227,8 @@ async def on_command_error(context: commands.Context,
         return
 
     if isinstance(error, IsNotAdminError):
-        print("DISCORD: %s (%d) attempted to use an admin command: %s" %
+        logging.warning(
+              "DISCORD: %s (%d) attempted to use an admin command: %s" %
               (context.author.name, context.author.id, context.command.name))
         return
 
@@ -234,7 +236,7 @@ async def on_command_error(context: commands.Context,
         await context.send("This isn't the right channel" " for this!")
         return
 
-    print("DISCORD: Unhandled command error: %s" % str(error))
+    logging.error("DISCORD: Unhandled command error: %s" % str(error))
 
 
 async def is_admin(context: commands.Context) -> bool:
@@ -330,7 +332,7 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                     await context.send("", files=[upload_files[1]])
                     
             except Exception as e:
-                print("DISCORD: Failed to upload entry: %s" % str(e))
+                logging.error("DISCORD: Failed to upload entry: %s" % str(e))
                 await context.send("(Failed to upload this entry!)")
                 continue
 

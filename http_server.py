@@ -4,6 +4,7 @@ import datetime
 import html as html_lib
 import random
 import string
+import logging
 
 from aiohttp import web, web_request
 
@@ -406,7 +407,7 @@ async def start_http() -> None:
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 8251)
     await site.start()
-    print("HTTP: Started server")
+    logging.info("HTTP: Started server")
 
 
 if __name__ == "__main__":
