@@ -415,6 +415,9 @@ async def howmany(context: commands.Context) -> None:
 
     await context.channel.send(response)
 
+@client.command()
+async def help(context):
+    await context.send(help_message())
 
 if __name__ == "__main__":
     load_config()
