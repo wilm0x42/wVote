@@ -3,6 +3,7 @@
 import asyncio
 import io
 import urllib.parse
+import logging
 
 import discord
 from discord.ext import commands
@@ -80,7 +81,7 @@ def load_config() -> None:
         if key == "admin":
             client.admins.append(arguments[1])
 
-    print("DISCORD: Loaded bot.conf")
+    logging.info("DISCORD: Loaded bot.conf")
 
 
 async def notify_admins(msg: str) -> None:
@@ -201,11 +202,11 @@ async def on_ready() -> None:
     Connects/logs in the bot to discord. Also outputs to the console that the
     connection was successful.
     """
-    print("DISCORD: Logged in as %s (ID: %s)" %
+    logging.info("DISCORD: Logged in as %s (ID: %s)" %
           (client.user.name, client.user.id))
-    print("DISCORD: Connected to %s servers, and %s users" %
+    logging.info("DISCORD: Connected to %s servers, and %s users" %
           (str(len(client.guilds)), str(len(set(client.get_all_members())))))
-    print(("DISCORD: Invite link: "
+    logging.info(("DISCORD: Invite link: "
            "https://discordapp.com/oauth2/authorize?client_id="
            "%s&scope=bot&permissions=335936592" % str(client.user.id)))
     activity = discord.Game(name="Preventing Voter Fraud")
@@ -226,7 +227,8 @@ async def on_command_error(context: commands.Context,
         return
 
     if isinstance(error, IsNotAdminError):
-        print("DISCORD: %s (%d) attempted to use an admin command: %s" %
+        logging.warning(
+              "DISCORD: %s (%d) attempted to use an admin command: %s" %
               (context.author.name, context.author.id, context.command.name))
         return
 
@@ -234,7 +236,7 @@ async def on_command_error(context: commands.Context,
         await context.send("This isn't the right channel" " for this!")
         return
 
-    print("DISCORD: Unhandled command error: %s" % str(error))
+    logging.error("DISCORD: Unhandled command error: %s" % str(error))
 
 
 async def is_admin(context: commands.Context) -> bool:
@@ -293,34 +295,51 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
     """
     async with context.channel.typing():
         for entry in week["entries"]:
-            if not compo.entry_valid(entry):
-                continue
+            try:
+                if not compo.entry_valid(entry):
+                    continue
 
-            discord_user = client.get_user(entry["discordID"])
+                discord_user = client.get_user(entry["discordID"])
 
-            if discord_user is None:
-                entrant_ping = "@" + entry["entrantName"]
-            else:
-                entrant_ping = discord_user.mention
+                if discord_user is None:
+                    entrant_ping = "@" + entry["entrantName"]
+                else:
+                    entrant_ping = discord_user.mention
 
-            upload_files = []
-            upload_message = "%s - %s" % (entrant_ping, entry["entryName"])
+                upload_files = []
+                upload_message = "%s - %s" % (entrant_ping, entry["entryName"])
 
-            if "entryNotes" in entry:
-                upload_message += "\n" + entry["entryNotes"]
+                if "entryNotes" in entry:
+                    upload_message += "\n" + entry["entryNotes"]
 
-            if entry["mp3Format"] == "mp3":
+                if entry["mp3Format"] == "mp3":
+                    upload_files.append(
+                        discord.File(io.BytesIO(bytes(entry["mp3"])),
+                                     filename=entry["mp3Filename"]))
+                elif entry["mp3Format"] == "external":
+                    upload_message += "\n" + str(entry["mp3"])
+                
                 upload_files.append(
-                    discord.File(io.BytesIO(bytes(entry["mp3"])),
-                                 filename=entry["mp3Filename"]))
-            elif entry["mp3Format"] == "external":
-                upload_message += "\n" + entry["mp3"]
-
-            upload_files.append(
-                discord.File(io.BytesIO(bytes(entry["pdf"])),
-                             filename=entry["pdfFilename"]))
-
-            await context.send(upload_message, files=upload_files)
+                    discord.File(io.BytesIO(bytes(entry["pdf"])),
+                                 filename=entry["pdfFilename"]))
+                
+                total_len = len(bytes(entry["pdf"]))
+                
+                if entry["mp3Format"] == "mp3":
+                    total_len += len(bytes(entry["mp3"]))
+                
+                # 8MB limit
+                if total_len < 8000 * 1000 or entry["mp3Format"] == "mp3":
+                    await context.send(upload_message, files=upload_files)
+                else:
+                    # Upload mp3 and pdf separately if they're too big together
+                    await context.send(upload_message, files=[upload_files[0]])
+                    await context.send("", files=[upload_files[1]])
+                    
+            except Exception as e:
+                logging.error("DISCORD: Failed to upload entry: %s" % str(e))
+                await context.send("(Failed to upload this entry!)")
+                continue
 
 
 @client.command()

@@ -6,3 +6,5 @@
 /devAssets
 /.vscode
 /venv
+/logs/*.log
+/logs/*.log.*

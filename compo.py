@@ -4,6 +4,8 @@ import datetime
 import html as html_lib
 import urllib.parse
 import uuid
+import logging
+import json
 from typing import Optional
 
 import pickle
@@ -72,7 +74,7 @@ def save_weeks() -> None:
         # open("week.json", "w").write(json.dumps(current_week))
         pickle.dump(current_week, open("weeks/current-week.pickle", "wb"))
         pickle.dump(next_week, open("weeks/next-week.pickle", "wb"))
-        print("COMPO: current-week.pickle and next-week.pickle overwritten")
+        logging.info("COMPO: current-week.pickle and next-week.pickle overwritten")
 
 
 def move_to_next_week() -> None:
@@ -298,7 +300,8 @@ def get_all_admin_forms(auth_key: str) -> str:
         for entry in week["entries"]:
             try:
                 html += get_admin_form_for_entry(entry["uuid"], auth_key)
-            except:
+            except Exception as e:
+                logging.error("COMPO: Error in get_all_admin_forms: %s" % str(e))
                 html += ("<h3>This entry seems to have caused an error, "
                          "so we can't display it.  Inform the nerds!</h3>")
                 continue
@@ -367,6 +370,63 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
     return None, None
 
+def get_tablerow_for_entry(entry: dict) -> str:
+    html = ""
+    
+    def add_node(tag: str, data: str) -> None:
+        nonlocal html
+        html += "<%s>%s</%s>" % (tag, data, tag)
+
+    def add_td(data: str) -> None:
+        add_node("td", data)
+    
+    html += "<tr>"
+
+    add_td(html_lib.escape(entry["entrantName"]))
+    
+    add_td(html_lib.escape(entry["entryName"]))
+    
+    add_td(
+        "<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
+        (entry["uuid"], urllib.parse.quote(entry["pdfFilename"])))
+
+    if entry["mp3Format"] == "mp3":
+        mp3Url = "/files/%s/%s" % \
+            (entry["uuid"],
+             urllib.parse.quote(entry["mp3Filename"]))
+
+        add_td("<audio controls>"
+               "<source src=\"%s\" type=\"audio/mpeg\">"
+               "<a href=\"%s\">mp3 link</a>"
+               "</audio>" % (mp3Url, mp3Url))
+    elif entry["mp3Format"] == "external":
+        # TODO: embed soundcloud players
+        # Sanitize url to prevent against bad times
+        url = entry["mp3"]
+        if url.startswith('http://'):
+            sanitized = url[:7] + urllib.parse.quote(url[7:])
+        elif url.startswith('https://'):
+            sanitized = url[:8] + urllib.parse.quote(url[8:])
+        else:
+            sanitized = urllib.parse.quote(url)
+
+        sanitized = sanitized.replace("%3F", "?")
+        sanitized = sanitized.replace("%3D", "=")
+        sanitized = sanitized.replace("%26", "&")
+
+        # Check for soundcloud/bandcamp
+        if "soundcloud.com" in sanitized:
+            add_td("<a href=%s>Listen on SoundCloud</a>" % sanitized)
+        elif "bandcamp.com" in sanitized:
+            add_td("<a href=%s>Listen on Bandcamp</a>" % sanitized)
+        else:
+            add_td("<a href=%s>Listen here!</a>" % sanitized)
+    else:
+        add_td("Audio format not recognized D:")
+
+    html += "</tr>"
+    
+    return html
 
 def get_vote_controls_for_week(which_week: bool) -> str:
     w = get_week(which_week)
@@ -382,67 +442,19 @@ def get_vote_controls_for_week(which_week: bool) -> str:
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
-    def add_th(data: str) -> None:
-        add_node("th", data)
-
-    def add_td(data: str) -> None:
-        add_node("td", data)
-
     html += "<tr>"
-    add_th("Entrant")
-    add_th("Composition Title")
-    add_th("PDF")
-    add_th("MP3")
+    add_node("th", "Entrant")
+    add_node("th", "Composition Title")
+    add_node("th", "PDF")
+    add_node("th", "MP3")
     html += "</tr>"
 
     for entry in w["entries"]:
 
         if not entry_valid(entry):
             continue
-
-        html += "<tr>"
-
-        add_td(html_lib.escape(entry["entrantName"]))
-        add_td(html_lib.escape(entry["entryName"]))
-        add_td(
-            "<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
-            (entry["uuid"], urllib.parse.quote(entry["pdfFilename"])))
-
-        if entry["mp3Format"] == "mp3":
-            mp3Url = "/files/%s/%s" % \
-                (entry["uuid"],
-                 urllib.parse.quote(entry["mp3Filename"]))
-
-            add_td("<audio controls>"
-                   "<source src=\"%s\" type=\"audio/mpeg\">"
-                   "<a href=\"%s\">mp3 link</a>"
-                   "</audio>" % (mp3Url, mp3Url))
-        elif entry["mp3Format"] == "external":
-            # TODO: embed soundcloud players
-            # Sanitize url to prevent against bad times
-            url = entry["mp3"]
-            if url.startswith('http://'):
-                sanitized = url[:7] + urllib.parse.quote(url[7:])
-            elif url.startswith('https://'):
-                sanitized = url[:8] + urllib.parse.quote(url[8:])
-            else:
-                sanitized = urllib.parse.quote(url)
-
-            sanitized = sanitized.replace("%3F", "?")
-            sanitized = sanitized.replace("%3D", "=")
-            sanitized = sanitized.replace("%26", "&")
-
-            # Check for soundcloud/bandcamp
-            if "soundcloud.com" in sanitized:
-                add_td("<a href=%s>Listen on SoundCloud</a>" % sanitized)
-            elif "bandcamp.com" in sanitized:
-                add_td("<a href=%s>Listen on Bandcamp</a>" % sanitized)
-            else:
-                add_td("<a href=%s>Listen here!</a>" % sanitized)
-        else:
-            add_td("Audio format not recognized D:")
-
-        html += "</tr>"
+        
+        html += get_tablerow_for_entry(entry)
 
     html += "</table>"
 
