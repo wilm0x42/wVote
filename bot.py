@@ -15,7 +15,8 @@ dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
                       pm_help=False,
                       command_prefix=[],
-                      case_insensitive=True)
+                      case_insensitive=True,
+                      help_command=None)
 test_mode = False
 postentries_channel = 0
 notify_admins_channel = 0
