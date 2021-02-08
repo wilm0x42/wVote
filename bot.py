@@ -164,7 +164,7 @@ def help_message() -> str:
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
-            client.command_prefix + "submit`, and I'll give you "
+            client.command_prefix[0] + "submit`, and I'll give you "
         msg += "a secret link to a personal submission form."
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
