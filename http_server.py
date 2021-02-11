@@ -368,7 +368,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                                          key_valid(auth_key, admin_keys))
 
             if is_admin:
-                return web.Response(status=303, headers={"Location": f"{bot.url_prefix()}/admin/{auth_key}"})
+                return web.Response(status=303, headers={"Location": "%s/admin/%s" % (bot.url_prefix(), auth_key)})
 
             return web.Response(status=200,
                                 body=submit_success,
