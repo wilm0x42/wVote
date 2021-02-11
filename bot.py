@@ -98,24 +98,24 @@ async def notify_admins(msg: str) -> None:
         await client.get_channel(notify_admins_channel).send(msg)
 
 def entry_info_message(entry: dict) -> str:
-    notification_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
+    entry_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
                                                        entry["entryName"])
 
     # If a music file was attached (including in the form of an external link),
     # make note of it in the message
     if "mp3" in entry:
         if entry["mp3Format"] == "mp3":
-            notification_message += "MP3: %s/files/%s/%s %d KB\n" \
+            entry_message += "MP3: %s/files/%s/%s %d KB\n" \
                 % (url_prefix(),
                    entry["uuid"],
                    urllib.parse.quote(entry["mp3Filename"]),
                    len(entry["mp3"]) / 1000)
         elif entry["mp3Format"] == "external":
-            notification_message += "MP3: %s\n" % entry["mp3"]
+            entry_message += "MP3: %s\n" % entry["mp3"]
 
     # If a score was attached, make note of it in the message
     if "pdf" in entry:
-        notification_message += "PDF: %s/files/%s/%s %d KB\n" \
+        entry_message += "PDF: %s/files/%s/%s %d KB\n" \
             % (url_prefix(),
                entry["uuid"],
                urllib.parse.quote(entry["pdfFilename"]),
@@ -123,11 +123,11 @@ def entry_info_message(entry: dict) -> str:
 
     # Mention whether the entry is valid
     if compo.entry_valid(entry):
-        notification_message += "This entry is valid, and good to go!\n"
+        entry_message += "This entry is valid, and good to go!\n"
     else:
-        notification_message += ("This entry isn't valid! "
+        entry_message += ("This entry isn't valid! "
                                  "(Something is missing or broken!)\n")
-    return notification_message
+    return entry_message
 
 async def submission_message(entry: dict, user_was_admin: bool) -> None:
     """
