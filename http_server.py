@@ -287,7 +287,8 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                        and edit_keys[auth_key]["entryUUID"] == uuid
                        and compo.get_week(True)["submissionsOpen"])
 
-    authorized = user_authorized or key_valid(auth_key, admin_keys)
+    is_admin = key_valid(auth_key, admin_keys) #and extracted this to a var
+    authorized = user_authorized or is_admin
     if not authorized:
         return web.Response(status=403, text="Not happening babe")
 
@@ -365,6 +366,9 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
 
             await bot.submission_message(entry,
                                          key_valid(auth_key, admin_keys))
+
+            if is_admin:
+                return web.Response(status=303, headers={"Location": f"{bot.url_prefix()}/admin/{auth_key}"})
 
             return web.Response(status=200,
                                 body=submit_success,
