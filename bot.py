@@ -97,20 +97,7 @@ async def notify_admins(msg: str) -> None:
     if notify_admins_channel:
         await client.get_channel(notify_admins_channel).send(msg)
 
-
-async def submission_message(entry: dict, user_was_admin: bool) -> None:
-    """
-    Prepares a message to be sent to the admin channel based on an entry that
-    was submitted to the website.
-
-    Parameters
-    ----------
-    entry : dict
-        The entry that was submitted.
-    user_was_admin : bool
-        True if this edit was performed via the admin interface, False if this
-        edit was performed via a civilian submission link.
-    """
+def entry_info_message(entry: dict):
     notification_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
                                                        entry["entryName"])
 
@@ -140,6 +127,22 @@ async def submission_message(entry: dict, user_was_admin: bool) -> None:
     else:
         notification_message += ("This entry isn't valid! "
                                  "(Something is missing or broken!)\n")
+    return notification_message
+
+async def submission_message(entry: dict, user_was_admin: bool) -> None:
+    """
+    Prepares a message to be sent to the admin channel based on an entry that
+    was submitted to the website.
+
+    Parameters
+    ----------
+    entry : dict
+        The entry that was submitted.
+    user_was_admin : bool
+        True if this edit was performed via the admin interface, False if this
+        edit was performed via a civilian submission link.
+    """
+    notification_message = entry_info_message(entry)
 
     if user_was_admin:
         notification_message += "(This edit was performed by an admin)"
