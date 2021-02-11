@@ -422,6 +422,19 @@ async def howmany(context: commands.Context) -> None:
 async def help(context: commands.Context):
     await context.send(help_message())
 
+@client.command()
+@commands.dm_only()
+async def status(context: commands.Context):
+    
+    week = compo.get_week(True)
+
+    for entry in week["entries"]:
+        if entry["discordID"] == context.author.id:
+            await context.send(entry_info_message(entry))
+            return
+    
+    await context.send(f"You haven't submitted anything yet! But if you want to you can with {client.command_prefix[0]}submit !")
+
 if __name__ == "__main__":
     load_config()
 
