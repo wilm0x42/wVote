@@ -287,7 +287,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                        and edit_keys[auth_key]["entryUUID"] == uuid
                        and compo.get_week(True)["submissionsOpen"])
 
-    is_admin = key_valid(auth_key, admin_keys) #and extracted this to a var
+    is_admin = key_valid(auth_key, admin_keys)
     authorized = user_authorized or is_admin
     if not authorized:
         return web.Response(status=403, text="Not happening babe")

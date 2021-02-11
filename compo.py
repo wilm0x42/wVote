@@ -159,8 +159,6 @@ def get_admin_form_for_entry(uuid: str, auth_key: str) -> str:
                     form_class = "form-invalid admin-entry-form"
                     header_color = "red"
 
-                # Like the admin controls, it looks like this is generating a lot of mostly static html, put in html file with some replace tags? - Myastan
-
                 html = "<form class='%s' action='%s' " % (form_class, post_url)
                 html += ("method='post' accept-charset='utf-8' "
                          "enctype='multipart/form-data'>")
