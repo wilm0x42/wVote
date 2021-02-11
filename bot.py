@@ -97,7 +97,7 @@ async def notify_admins(msg: str) -> None:
     if notify_admins_channel:
         await client.get_channel(notify_admins_channel).send(msg)
 
-def entry_info_message(entry: dict):
+def entry_info_message(entry: dict) -> str:
     notification_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
                                                        entry["entryName"])
 
@@ -419,12 +419,12 @@ async def howmany(context: commands.Context) -> None:
     await context.channel.send(response)
 
 @client.command()
-async def help(context: commands.Context):
+async def help(context: commands.Context) -> None:
     await context.send(help_message())
 
 @client.command()
 @commands.dm_only()
-async def status(context: commands.Context):
+async def status(context: commands.Context) -> None:
     
     week = compo.get_week(True)
 
