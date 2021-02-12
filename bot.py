@@ -329,7 +329,7 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                     total_len += len(bytes(entry["mp3"]))
                 
                 # 8MB limit
-                if total_len < 8000 * 1000 or entry["mp3Format"] == "mp3":
+                if total_len < 8000 * 1000 or entry["mp3Format"] != "mp3":
                     await context.send(upload_message, files=upload_files)
                 else:
                     # Upload mp3 and pdf separately if they're too big together
