@@ -15,7 +15,8 @@ dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
                       pm_help=False,
                       command_prefix=[],
-                      case_insensitive=True)
+                      case_insensitive=True,
+                      help_command=None)
 test_mode = False
 postentries_channel = 0
 notify_admins_channel = 0
@@ -33,7 +34,7 @@ def url_prefix() -> str:
         URL otherwise.
     """
     if test_mode:
-        return "http://localhost:8251"
+        return "http://127.0.0.1:8251"
     else:
         return "https://%s" % http_server.server_domain
 
@@ -96,6 +97,37 @@ async def notify_admins(msg: str) -> None:
     if notify_admins_channel:
         await client.get_channel(notify_admins_channel).send(msg)
 
+def entry_info_message(entry: dict) -> str:
+    entry_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
+                                                       entry["entryName"])
+
+    # If a music file was attached (including in the form of an external link),
+    # make note of it in the message
+    if "mp3" in entry:
+        if entry["mp3Format"] == "mp3":
+            entry_message += "MP3: %s/files/%s/%s %d KB\n" \
+                % (url_prefix(),
+                   entry["uuid"],
+                   urllib.parse.quote(entry["mp3Filename"]),
+                   len(entry["mp3"]) / 1000)
+        elif entry["mp3Format"] == "external":
+            entry_message += "MP3: %s\n" % entry["mp3"]
+
+    # If a score was attached, make note of it in the message
+    if "pdf" in entry:
+        entry_message += "PDF: %s/files/%s/%s %d KB\n" \
+            % (url_prefix(),
+               entry["uuid"],
+               urllib.parse.quote(entry["pdfFilename"]),
+               len(entry["pdf"]) / 1000)
+
+    # Mention whether the entry is valid
+    if compo.entry_valid(entry):
+        entry_message += "This entry is valid, and good to go!\n"
+    else:
+        entry_message += ("This entry isn't valid! "
+                                 "(Something is missing or broken!)\n")
+    return entry_message
 
 async def submission_message(entry: dict, user_was_admin: bool) -> None:
     """
@@ -110,35 +142,7 @@ async def submission_message(entry: dict, user_was_admin: bool) -> None:
         True if this edit was performed via the admin interface, False if this
         edit was performed via a civilian submission link.
     """
-    notification_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
-                                                       entry["entryName"])
-
-    # If a music file was attached (including in the form of an external link),
-    # make note of it in the message
-    if "mp3" in entry:
-        if entry["mp3Format"] == "mp3":
-            notification_message += "MP3: %s/files/%s/%s %d KB\n" \
-                % (url_prefix(),
-                   entry["uuid"],
-                   urllib.parse.quote(entry["mp3Filename"]),
-                   len(entry["mp3"]) / 1000)
-        elif entry["mp3Format"] == "external":
-            notification_message += "MP3: %s\n" % entry["mp3"]
-
-    # If a score was attached, make note of it in the message
-    if "pdf" in entry:
-        notification_message += "PDF: %s/files/%s/%s %d KB\n" \
-            % (url_prefix(),
-               entry["uuid"],
-               urllib.parse.quote(entry["pdfFilename"]),
-               len(entry["pdf"]) / 1000)
-
-    # Mention whether the entry is valid
-    if compo.entry_valid(entry):
-        notification_message += "This entry is valid, and good to go!\n"
-    else:
-        notification_message += ("This entry isn't valid! "
-                                 "(Something is missing or broken!)\n")
+    notification_message = entry_info_message(entry)
 
     if user_was_admin:
         notification_message += "(This edit was performed by an admin)"
@@ -163,7 +167,7 @@ def help_message() -> str:
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
-            client.command_prefix + "submit`, and I'll give you "
+            client.command_prefix[0] + "submit`, and I'll give you "
         msg += "a secret link to a personal submission form."
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
@@ -414,6 +418,22 @@ async def howmany(context: commands.Context) -> None:
 
     await context.channel.send(response)
 
+@client.command()
+async def help(context: commands.Context) -> None:
+    await context.send(help_message())
+
+@client.command()
+@commands.dm_only()
+async def status(context: commands.Context) -> None:
+    
+    week = compo.get_week(True)
+
+    for entry in week["entries"]:
+        if entry["discordID"] == context.author.id:
+            await context.send(entry_info_message(entry))
+            return
+    
+    await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % client.command_prefix[0])
 
 if __name__ == "__main__":
     load_config()
