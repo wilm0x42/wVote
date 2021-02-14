@@ -433,7 +433,7 @@ async def status(context: commands.Context) -> None:
             await context.send(entry_info_message(entry))
             return
     
-    await context.send(f"You haven't submitted anything yet! But if you want to you can with %ssubmit !" % client.command_prefix[0])
+    await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % client.command_prefix[0])
 
 if __name__ == "__main__":
     load_config()
