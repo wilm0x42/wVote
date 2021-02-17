@@ -368,6 +368,53 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
     return None, None
 
+def sanitize_url_for_client(url: str) -> str:
+    if url.startswith('http://'):
+        sanitized = url[:7] + urllib.parse.quote(url[7:])
+    elif url.startswith('https://'):
+        sanitized = url[:8] + urllib.parse.quote(url[8:])
+    else:
+        sanitized = urllib.parse.quote(url)
+
+    sanitized = sanitized.replace("%3F", "?")
+    sanitized = sanitized.replace("%3D", "=")
+    sanitized = sanitized.replace("%26", "&")
+    
+    return sanitized
+
+def get_week_viewer_json(which_week: bool) -> str:
+    week = get_week(which_week)
+    
+    entryData = []
+    
+    for e in week["entries"]:
+        if not entry_valid(e):
+            continue
+        
+        prunedEntry = {
+            "uuid": e["uuid"],
+            "pdfUrl": "/files/%s/%s" % (e["uuid"], e["pdfFilename"]),
+            "mp3Format": e["mp3Format"],
+            "entryName": e["entryName"],
+            "entrantName": e["entrantName"]
+        }
+        
+        if e["mp3Format"] == "mp3":
+            prunedEntry["mp3Url"] = "/files/%s/%s" % \
+                (e["uuid"], e["mp3Filename"])
+        else:
+            prunedEntry["mp3Url"] = e["mp3"]
+        
+        entryData.append(prunedEntry)
+    
+    data = {
+        "entries": entryData,
+        "theme": week["theme"],
+        "date": week["date"]
+    }
+    
+    return json.dumps(data)
+
 def get_tablerow_for_entry(entry: dict) -> str:
     html = ""
     
@@ -400,17 +447,7 @@ def get_tablerow_for_entry(entry: dict) -> str:
     elif entry["mp3Format"] == "external":
         # TODO: embed soundcloud players
         # Sanitize url to prevent against bad times
-        url = entry["mp3"]
-        if url.startswith('http://'):
-            sanitized = url[:7] + urllib.parse.quote(url[7:])
-        elif url.startswith('https://'):
-            sanitized = url[:8] + urllib.parse.quote(url[8:])
-        else:
-            sanitized = urllib.parse.quote(url)
-
-        sanitized = sanitized.replace("%3F", "?")
-        sanitized = sanitized.replace("%3D", "=")
-        sanitized = sanitized.replace("%26", "&")
+        sanitized = sanitize_url_for_client(entry["mp3"])
 
         # Check for soundcloud/bandcamp
         if "soundcloud.com" in sanitized:

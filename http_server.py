@@ -45,6 +45,11 @@ admin_keys = {
     # }
 }
 
+def get_vue_url() -> str:
+    if bot.test_mode:
+        return "https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"
+    else:
+        return "https://cdn.jsdelivr.net/npm/vue@2"
 
 def key_valid(key: str, keystore: dict) -> bool:
     if key not in keystore:
@@ -219,8 +224,10 @@ async def admin_control_handler(request: web_request.Request) -> web.Response:
 async def vote_handler(request: web_request.Request) -> web.Response:
     html = None
 
-    html = vote_template.replace("[VOTE-CONTROLS]",
-                                 compo.get_vote_controls_for_week(False))
+    html = vote_template.replace("[WEEK-DATA]",
+                                 compo.get_week_viewer_json(False))
+
+    html = html.replace("[VUE-URL]", get_vue_url())
 
     return web.Response(text=html, content_type="text/html")
 

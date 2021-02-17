@@ -4,6 +4,7 @@
 	<meta charset="utf-8" />
 	<title>8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
+	<script src="[VUE-URL]"></script>
 </head>
 <body>
 	<h1>
@@ -11,30 +12,69 @@
 	</h1>
 	<div id="content">
 		<div class="entries-container">
-			[VOTE-CONTROLS]
+			<h2 class="week-title">{{ theme }}</h2><h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
+			<table cellpadding='0' class='vote-controls'>
+				<tr>
+					<th>Entrant</th>
+					<th>Composition Title</th>
+					<th>PDF</th>
+					<th>MP3</th>
+				</tr>
+				<tr v-for="entry in entries">
+					<td>{{ entry.entrantName }}</td>
+					<td>{{ entry.entryName }}</td>
+					<td><button @click="viewPDF(entry.pdfUrl)">View PDF</button></td>
+					
+					<td v-if="entry.mp3Format == 'mp3'">
+					    <audio controls><source :src="entry.mp3Url" type="audio/mpeg"><a :href="entry.mp3Url">mp3 link</a></audio>
+					</td>
+					<td v-else>
+					    <a :href="entry.mp3Url">Listen Here!</a>
+					</td>
+				</tr>
+			</table>
 		</div>
 
 		<div class="pdf-container" id="pdf-container">
-			<div id="pdf-viewer" class="pdf-viewer-welcome">
+			<div v-if="pdfShowWelcome" id="pdf-viewer" class="pdf-viewer-welcome">
 				<div id="pdf-alt" class="pdf-alt">
 					<img width="100%" src="/static/kirb_phones.png" />
 					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
 				</div>
 			</div>
+			<object v-else id="pdf-viewer" class="pdf-viewer-live" :data="pdfViewingFilename" type="application/pdf">
+				<div id="pdf-alt" class="pdf-alt">
+					<img width="100%" src="/static/kirb_think.png">
+					<h2><a :href="pdfViewingFilename">Link to PDF (embedded viewer failed)</a></h2>
+				</div>
+			</object>
 		</div>
 	</div>
 
 	<script>
-		function viewPDF(url)
-		{
-			document.getElementById("pdf-container").innerHTML =
-				`<object id="pdf-viewer" class="pdf-viewer-live" data="${url}" type="application/pdf">
-					<div id="pdf-alt" class="pdf-alt">
-						<img width="100%" src="/static/kirb_think.png">
-						<h2><a href="${url}">Link to PDF (embedded viewer failed)</a></h2>
-					</div>
-				</object>`;
-		}
+		var app = new Vue({
+			el: '#content',
+			data: function()
+			{
+			    weekData = [WEEK-DATA]
+			
+			    var ret = {
+				    pdfShowWelcome: true,
+				    pdfViewingFilename: "https://www.youtube.com/watch/dQw4w9WgXcQ",
+				    entries: weekData.entries,
+				    theme: weekData.theme,
+				    date: weekData.date
+				}
+				
+				return ret
+			},
+			methods: {
+				viewPDF: function(url) {
+					this.pdfShowWelcome = false
+					this.pdfViewingFilename = url
+				}
+			}
+		})
 	</script>
 </body>
 </html>
