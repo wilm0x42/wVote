@@ -14,11 +14,6 @@ body
 	background-color: #ffccff;
 }
 
-content
-{
-	padding: auto;
-}
-
 h1
 {
 	background-color: #FF00FF;
@@ -29,7 +24,7 @@ h1
 	margin: 0px;
 	padding: 0px;
 	width: 100%;
-	height: 87px;
+	height: 48px;
 	text-shadow: 2px 2px black;
 }
 
@@ -74,13 +69,35 @@ button:hover
 	background-repeat: no-repeat;
 	background-size: cover;
 	background-position: left top;
+	
 	float: left;
-	width: 50%;
-	height: calc(100vh - 87px);
+	width: 80%;
+	height: calc(100vh - 48px - 64px);
 	overflow: scroll;
+	
+	position: relative;
 }
 
-.vote-controls
+@media not screen and (min-width: 1024px) and (orientation: landscape)
+{
+	.entries-container
+	{
+		width: 100%;
+	}
+}
+
+.entry-list-toggle-enter-active, .entry-list-toggle-leave-active
+{
+	transition: opacity 0.15s, transform 0.15s;
+}
+
+.entry-list-toggle-enter, .entry-list-toggle-leave-to
+{
+	opacity: 0;
+	transform: translateX(-50vw);
+}
+
+.entry-table
 {
 	margin: auto;
 	margin-top: 25px;
@@ -90,9 +107,31 @@ button:hover
 .pdf-container
 {
 	float: right;
-	width: 50%;
-	height: calc(100vh - 87px);
+	height: calc(100vh - 48px - 64px);
 	background-image: linear-gradient(to bottom left, #ff66ff, #eaaeea);
+	position: absolute;
+	right: 0px;
+	z-index: -1;
+}
+
+.pdf-container-small
+{
+	display: none;
+}
+
+@media only screen and (min-width: 1024px) and (orientation: landscape)
+{ 
+	.pdf-container-small
+	{
+		width: 20%;
+		display: block;
+	}
+}
+
+.pdf-container-full
+{
+	width: 100%;
+	display: block;
 }
 
 .pdf-viewer-welcome
@@ -100,7 +139,6 @@ button:hover
 	display: block;
 	margin: auto;
 	width: 50%;
-	height: 100px;
 	text-align: center;
 }
 
@@ -110,4 +148,14 @@ button:hover
 	margin: auto;
 	width: 100%;
 	height: 100%;
+}
+
+.viewer-controls
+{
+	margin: auto;
+	padding: 0px;
+	height: 64px;
+	width: 100vw;
+	position: fixed;
+	top: calc(100vh - 64px);
 }
