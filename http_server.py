@@ -265,6 +265,20 @@ async def edit_handler(request: web_request.Request) -> web.Response:
     else:
         return web.Response(status=404, text="File not found")
 
+async def admin_preview_handler(request: web_request.Request) -> web.Response:
+    auth_key = request.match_info["authKey"]
+    
+    if key_valid(auth_key, admin_keys):
+        html = None
+
+        html = vote_template.replace("[WEEK-DATA]",
+                                     compo.get_week_viewer_json(True))
+
+        html = html.replace("[VUE-URL]", get_vue_url())
+
+        return web.Response(text=html, content_type="text/html")
+    else:
+        return web.Response(status=404, text="File not found")
 
 async def admin_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
@@ -274,8 +288,7 @@ async def admin_handler(request: web_request.Request) -> web.Response:
 
         html = admin_template.replace("[ENTRY-LIST]",
                                       compo.get_all_admin_forms(auth_key))
-        html = html.replace("[VOTE-CONTROLS]",
-                            compo.get_vote_controls_for_week(True))
+        html = html.replace("[ADMIN-KEY]", auth_key)
         html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))
 
         return web.Response(status=200, body=html, content_type="text/html")
@@ -406,6 +419,7 @@ server.add_routes([
     web.get("/favicon.ico", favicon_handler),
     web.get("/edit/{authKey}", edit_handler),
     web.get("/admin/{authKey}", admin_handler),
+    web.get("/admin/preview/{authKey}", admin_preview_handler),
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
     # web.get("/debug/{command}", debug_handler),

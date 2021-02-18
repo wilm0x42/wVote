@@ -24,7 +24,7 @@ h3:hover
 
 .admin-entry-form
 {
-	background: linear-gradient(to bottom left, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.5));
+	background: linear-gradient(to bottom left, rgba(141, 80, 141, 1), rgba(141, 80, 141, 0.5));
 	width: 500px;
 	border: 1px solid black;
 }
@@ -43,7 +43,7 @@ h3:hover
 .admin-submit-button
 {
 	background-color: white;
-	box-shadow: 0px 3px 5px gray;
+	box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
 	border: 1px solid black;
 	padding: 8px;
 	width: 150px;
@@ -67,7 +67,7 @@ h3:hover
 
 .form-invalid
 {
-	background: rgb(255, 180, 180);
+	background: rgb(255, 100, 100);
 }
 
 .admin-controls
@@ -75,5 +75,11 @@ h3:hover
 	text-align: center;
 	padding: 32px;
 	border: 1px solid black;
-	background: rgba(255, 255, 255, 0.5)
+	background: rgba(141, 80, 141, 0.5)
+}
+
+.entries-preview
+{
+    width: 90vw;
+    height: 90vh;
 }
