@@ -24,7 +24,7 @@
 						<th class="entry-table-header">Score Quality</th>
 						<th class="entry-table-header">Overall Rating</th>
 					</tr>
-					<tr v-for="entry in entries">
+					<tr v-for="(entry, entryIndex) in entries">
 						<td class="entry-cell">{{ entry.entrantName }}</td>
 						<td class="entry-cell">{{ entry.entryName }}</td>
 						<td class="entry-cell" :class="{ 'entry-cell-selected': viewedEntry != null && entry.uuid == viewedEntry.uuid }">
@@ -36,11 +36,12 @@
 							<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
 							<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
 						</td>
-						<td class="entry-cell" v-for="ratingName in ['prompt', 'score', 'overall']" style="margin: auto; width: 6em;">
+						<td class="entry-cell" v-for="ratingName in voteParams" style="margin: auto; width: 6em;">
 							<table cellpadding='0' class="vote-star-widget">
 								<td v-for="starNum in [0, 1, 2, 3, 4]" class="vote-star-cell">
-									<button class="vote-star">
-										<img class="vote-star-img" :src="getStar(entry, ratingName, starNum)">
+									<button @click="setRating(entry.uuid, ratingName, starNum)" class="vote-star">
+										<img class="vote-star-img" v-if="visibleStars[entryIndex][ratingName][starNum]" src="/static/interface-star-yes.svg" />
+										<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
 									</button>
 								</td>
 							</table>
@@ -111,6 +112,8 @@
 			    weekData = [WEEK-DATA]
 			
 			    var ret = {
+			    	voteParams: ["votePrompt", "voteScore", "voteOverall"],
+			    	visibleStars: [],
 			    	showEntryList: true,
 			    	pdfColorInvert: true,
 				    pdfShowWelcome: true,
@@ -119,6 +122,23 @@
 				    viewedEntry: null,
 				    theme: weekData.theme,
 				    date: weekData.date
+				}
+				
+				
+				// JavaScript, now with dicts/multidimentional arrays!
+				// (some assembly required)
+				// (kill me)
+				for (e = 0; e < ret.entries.length; e++)
+				{
+					ret.visibleStars[e] = {}
+					for (p = 0; p < ret.voteParams.length; p++)
+					{
+						ret.visibleStars[e][ret.voteParams[p]] = []
+						for (s = 0; s < 5; s++)
+						{
+							ret.visibleStars[e][ret.voteParams[p]][s]
+						}
+					}
 				}
 				
 				return ret
@@ -170,9 +190,18 @@
 					
 					return null
 				},
-				getStar: function(entry, star)
+				setRating: function(uuid, voteParam, stars)
 				{
-					return "/static/interface-star-no.svg"
+					var index = this.getEntryIndex(uuid)
+					this.entries[index][voteParam] = stars
+					
+					for (var i = 0; i < 5; i++)
+					{
+						if (i < stars)
+							this.visibleStars[index][voteParam][i] = true
+						else
+							this.visibleStars[index][voteParam][i] = false
+					}
 				},
 				truncateString: function(s, length)
 				{

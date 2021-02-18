@@ -405,6 +405,10 @@ def get_week_viewer_json(which_week: bool) -> str:
         else:
             prunedEntry["mp3Url"] = e["mp3"]
         
+        for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
+            if voteParam in e:
+                prunedEntry[voteParam] = e[voteParam]
+        
         entryData.append(prunedEntry)
     
     data = {
