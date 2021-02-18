@@ -15,11 +15,14 @@
 			<div class="entries-container" v-show="showEntryList">
 				<h2 class="week-title">{{ theme }}</h2><h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
 				<table cellpadding='0' class='entry-table'>
-					<tr>
-						<th>Entrant</th>
-						<th>Composition Title</th>
-						<th>View & Listen</th>
-						<th>Download</th>
+					<tr class="entry-table-header-row">
+						<th class="entry-table-header">Entrant</th>
+						<th class="entry-table-header">Composition Title</th>
+						<th class="entry-table-header">View & Listen</th>
+						<th class="entry-table-header">Download</th>
+						<th class="entry-table-header">Use Of Prompt Theme</th>
+						<th class="entry-table-header">Score Quality</th>
+						<th class="entry-table-header">Overall Rating</th>
 					</tr>
 					<tr v-for="entry in entries">
 						<td class="entry-cell">{{ entry.entrantName }}</td>
@@ -32,6 +35,15 @@
 						<td class="entry-cell">
 							<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
 							<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
+						</td>
+						<td class="entry-cell" v-for="ratingName in ['prompt', 'score', 'overall']" style="margin: auto; width: 6em;">
+							<table cellpadding='0' class="vote-star-widget">
+								<td v-for="starNum in [0, 1, 2, 3, 4]" class="vote-star-cell">
+									<button class="vote-star">
+										<img class="vote-star-img" :src="getStar(entry, ratingName, starNum)">
+									</button>
+								</td>
+							</table>
 						</td>
 					</tr>
 				</table>
@@ -157,6 +169,10 @@
 					}
 					
 					return null
+				},
+				getStar: function(entry, star)
+				{
+					return "/static/interface-star-no.svg"
 				},
 				truncateString: function(s, length)
 				{

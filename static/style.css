@@ -117,6 +117,19 @@ button:hover
 	border-collapse: collapse;
 }
 
+.entry-table-header-row
+{
+	position: sticky;
+	top: 0px;
+	background: rgba(141, 80, 141, 0.85);
+	border: 1px solid #683168;
+}
+
+.entry-table-header
+{
+	margin-right: 32px;
+}
+
 .entry-cell
 {
 	font-size: 0.9em;
@@ -216,4 +229,42 @@ button:hover
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.vote-star-widget
+{
+	border-collapse: collapse;
+}
+
+.vote-star-cell
+{
+	margin: 0px;
+	padding: 0px;
+}
+
+.vote-star
+{
+	background: none;
+	border: none;
+	font-size: 1.2em;
+	padding: 0px;
+	margin-right: 1px;
+	width: 1.2em;
+	height: 1.2em;
+	overflow: hidden;
+}
+
+.vote-star-img
+{
+	width: 1.2em;
+	margin: 0px;
+	padding: 0px;
+}
+
+.vote-label
+{
+	margin: 0px;
+	padding: 2px;
+	white-space: nowrap;
+	float: right;
 }
