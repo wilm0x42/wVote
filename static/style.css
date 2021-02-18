@@ -8,10 +8,15 @@ body
 {
 	font-family: font-ubuntu, Arial;
 	font-size: 1.1em;
-	color: black;
+	color: white;
 	margin: 0;
 	padding: 0;
-	background-color: #ffccff;
+	background-color: #361536;
+}
+
+a
+{
+	color: #ccccff;
 }
 
 h1
@@ -39,7 +44,7 @@ h1
 
 .icon-button
 {
-	background-color: white;
+	background-color: #f9b3f1;
 	box-shadow: 0px 3px 3px gray;
 	border: 1px solid gray;
 	border-radius: 2px;
@@ -49,6 +54,11 @@ h1
 button:hover
 {
 	cursor: pointer;
+}
+
+#content
+{
+	color: white;
 }
 
 .week-title
@@ -66,7 +76,7 @@ button:hover
 
 .entries-container
 {
-	background-image: url("/static/vote_background.png"), linear-gradient(to bottom left, #f0c1f0, #e085e0);
+	background-image: url("/static/vote_background.png"), linear-gradient(to bottom left, #8d508d, #683168);
 	background-attachment: fixed;
 	background-repeat: no-repeat;
 	background-size: cover;
@@ -104,14 +114,16 @@ button:hover
 	margin: auto;
 	margin-top: 25px;
 	overflow: auto;
+	border-collapse: collapse;
 }
 
 .entry-cell
 {
 	font-size: 0.9em;
 	padding: 0.25em;
-	background-color: white;
+	background-color: #361536;
 	text-align: center;
+	border: 1px solid #8d508d;
 }
 
 .entry-cell-selected
@@ -125,7 +137,7 @@ button:hover
 {
 	float: right;
 	height: calc(100vh - 48px - 48px);
-	background-image: linear-gradient(to bottom left, #ff66ff, #eaaeea);
+	background-image: linear-gradient(to bottom left, #8d508d, #683168);
 	position: absolute;
 	right: 0px;
 	z-index: -1;
@@ -157,6 +169,17 @@ button:hover
 }
 
 .pdf-viewer-welcome
+{
+	display: block;
+	margin: auto;
+	width: 100%;
+	text-align: center;
+	position: relative;
+	top: 50%;
+	transform: translate(0%, -50%);
+}
+
+.pdf-alt
 {
 	display: block;
 	margin: auto;

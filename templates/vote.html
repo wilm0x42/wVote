@@ -30,8 +30,8 @@
 							</button>
 						</td>
 						<td class="entry-cell">
-							<a :href="entry.mp3Url">MP3</a>
-							<a :href="entry.pdfUrl">PDF</a>
+							<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
+							<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
 						</td>
 					</tr>
 				</table>
@@ -41,13 +41,13 @@
 		<div class="pdf-container" :class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
 			<div v-if="pdfShowWelcome" id="pdf-viewer" class="pdf-viewer-welcome">
 				<div id="pdf-alt" class="pdf-alt">
-					<img width="200px" src="/static/kirb_phones.png" />
+					<img width="150px"  src="/static/kirb_phones.png" />
 					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
 				</div>
 			</div>
 			<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }" :data="pdfViewingFilename" type="application/pdf">
 				<div id="pdf-alt" class="pdf-alt">
-					<img width="200px" src="/static/kirb_think.png">
+					<img width="150px" src="/static/kirb_think.png">
 					<h2><a :href="pdfViewingFilename">Link to PDF (embedded viewer failed)</a></h2>
 				</div>
 			</object>
@@ -55,17 +55,17 @@
 		<table cellpadding='0' class="viewer-control-bar">
 			<td width="48px" class="viewer-control">
 				<button class="icon-button" @click="toggleEntryContainer()">
-					<img src="/static/interface-category-grid.png">
+					<img src="/static/interface-category-grid.png" />
 				</button>
 			</td>
 			<td width="48px" class="viewer-control">
 				<button class="icon-button" @click="selectAdjacentEntry(-1)">
-					<img src="/static/interface-up-arrow.png">
+					<img src="/static/interface-up-arrow.png" />
 				</button>
 			</td>
 			<td width="48px" class="viewer-control">
 				<button class="icon-button" @click="selectAdjacentEntry(1)">
-					<img src="/static/interface-down-arrow.png">
+					<img src="/static/interface-down-arrow.png" />
 				</button>
 			</td>
 			<td v-if="viewedEntry != null" class="viewer-control" style="text-align: center;" width="400px">
@@ -76,7 +76,8 @@
 					<audio controls><source :src="viewedEntry.mp3Url" type="audio/mpeg"><a :href="viewedEntry.mp3Url">mp3 link</a></audio>
 				</div>
 				<div v-else>
-					<a :href="viewedEntry.mp3Url">Listen Here!</a>
+					<img src="/static/interface-play.png" />
+					<a :href="viewedEntry.mp3Url" style="position: relative; top: -12px;">Listen Here!</a>
 				</div>
 			</td>
 			<td>
@@ -84,7 +85,7 @@
 			</td>
 			<td width="48px" class="viewer-control">
 				<button class="icon-button" @click="toggleNightMode()">
-					<img src="/static/interface-bulb.png">
+					<img src="/static/interface-bulb.png" />
 				</button>
 			</td>
 		</table>
