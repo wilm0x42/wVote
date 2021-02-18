@@ -18,45 +18,76 @@
 					<tr>
 						<th>Entrant</th>
 						<th>Composition Title</th>
-						<th>PDF</th>
-						<th>MP3</th>
+						<th>View & Listen</th>
+						<th>Download</th>
 					</tr>
 					<tr v-for="entry in entries">
-						<td>{{ entry.entrantName }}</td>
-						<td>{{ entry.entryName }}</td>
-						<td><button @click="viewPDF(entry.pdfUrl)">View PDF</button></td>
-						
-						<td v-if="entry.mp3Format == 'mp3'">
-							<audio controls><source :src="entry.mp3Url" type="audio/mpeg"><a :href="entry.mp3Url">mp3 link</a></audio>
+						<td class="entry-cell">{{ entry.entrantName }}</td>
+						<td class="entry-cell">{{ entry.entryName }}</td>
+						<td class="entry-cell" :class="{ 'entry-cell-selected': viewedEntry != null && entry.uuid == viewedEntry.uuid }">
+							<button class="icon-button" @click="viewEntry(entry)">
+								<img src="/static/interface-video-play.png" alt="Play" />
+							</button>
 						</td>
-						<td v-else>
-							<a :href="entry.mp3Url">Listen Here!</a>
+						<td class="entry-cell">
+							<a :href="entry.mp3Url">MP3</a>
+							<a :href="entry.pdfUrl">PDF</a>
 						</td>
 					</tr>
 				</table>
 			</div>
 		</transition>
 
-		<div class="pdf-container" v-bind:class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
+		<div class="pdf-container" :class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
 			<div v-if="pdfShowWelcome" id="pdf-viewer" class="pdf-viewer-welcome">
 				<div id="pdf-alt" class="pdf-alt">
 					<img width="200px" src="/static/kirb_phones.png" />
 					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
 				</div>
 			</div>
-			<object v-else id="pdf-viewer" class="pdf-viewer-live" :data="pdfViewingFilename" type="application/pdf">
+			<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }" :data="pdfViewingFilename" type="application/pdf">
 				<div id="pdf-alt" class="pdf-alt">
 					<img width="200px" src="/static/kirb_think.png">
 					<h2><a :href="pdfViewingFilename">Link to PDF (embedded viewer failed)</a></h2>
 				</div>
 			</object>
 		</div>
-		
-		<div class="viewer-controls">
-			<button @click="toggleEntryContainer()">
-				<img src="/static/interface-category-grid.png">
-			</button>
-		</div>
+		<table cellpadding='0' class="viewer-control-bar">
+			<td width="48px" class="viewer-control">
+				<button class="icon-button" @click="toggleEntryContainer()">
+					<img src="/static/interface-category-grid.png">
+				</button>
+			</td>
+			<td width="48px" class="viewer-control">
+				<button class="icon-button" @click="selectAdjacentEntry(-1)">
+					<img src="/static/interface-up-arrow.png">
+				</button>
+			</td>
+			<td width="48px" class="viewer-control">
+				<button class="icon-button" @click="selectAdjacentEntry(1)">
+					<img src="/static/interface-down-arrow.png">
+				</button>
+			</td>
+			<td v-if="viewedEntry != null" class="viewer-control" style="text-align: center;" width="400px">
+				<p>{{ truncateString(viewedEntry.entrantName + " - " + viewedEntry.entryName, 60) }}<p>
+			</td>
+			<td v-if="viewedEntry != null" class="viewer-control">
+				<div v-if="viewedEntry.mp3Format == 'mp3'">
+					<audio controls><source :src="viewedEntry.mp3Url" type="audio/mpeg"><a :href="viewedEntry.mp3Url">mp3 link</a></audio>
+				</div>
+				<div v-else>
+					<a :href="viewedEntry.mp3Url">Listen Here!</a>
+				</div>
+			</td>
+			<td>
+				<!-- empty cell to expand and fill space -->
+			</td>
+			<td width="48px" class="viewer-control">
+				<button class="icon-button" @click="toggleNightMode()">
+					<img src="/static/interface-bulb.png">
+				</button>
+			</td>
+		</table>
 	</div>
 
 	<script>
@@ -68,9 +99,11 @@
 			
 			    var ret = {
 			    	showEntryList: true,
+			    	pdfColorInvert: true,
 				    pdfShowWelcome: true,
 				    pdfViewingFilename: "https://www.youtube.com/watch/dQw4w9WgXcQ",
 				    entries: weekData.entries,
+				    viewedEntry: null,
 				    theme: weekData.theme,
 				    date: weekData.date
 				}
@@ -78,13 +111,59 @@
 				return ret
 			},
 			methods: {
-				viewPDF: function(url) {
+				viewEntry: function(entry) {
 					this.pdfShowWelcome = false
-					this.pdfViewingFilename = url
+					this.pdfViewingFilename = entry.pdfUrl
+					this.viewedEntry = entry
 					this.showEntryList = false
 				},
 				toggleEntryContainer: function() {
 					this.showEntryList = !this.showEntryList
+				},
+				toggleNightMode()
+				{
+					this.pdfColorInvert = !this.pdfColorInvert
+				},
+				selectAdjacentEntry: function(offset)
+				{
+					if (this.viewedEntry == null)
+						return
+					
+					var index = this.getEntryIndex(this.viewedEntry.uuid)
+					
+					if (index == null)
+						return
+					
+					index += offset
+					
+					if (index < 0)
+						index = 0
+					else if (index >= this.entries.length)
+						index = this.entries.length - 1
+					
+					this.pdfViewingFilename = this.entries[index].pdfUrl
+					this.viewedEntry = this.entries[index]
+					this.showEntryList = false
+				},
+				getEntryIndex: function(uuid)
+				{
+					for (var e = 0; e < this.entries.length; e++)
+					{
+						if (this.entries[e].uuid == uuid)
+						{
+							return e
+						}
+					}
+					
+					return null
+				},
+				truncateString: function(s, length)
+				{
+					if (s.length > length)
+					{
+						return s.slice(0, length-1) + "..."
+					}
+					return s
 				}
 			}
 		})

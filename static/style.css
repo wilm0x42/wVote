@@ -28,20 +28,22 @@ h1
 	text-shadow: 2px 2px black;
 }
 
-td
+.text-button
 {
-	font-size: 0.9em;
-	padding: 0.5em;
 	background-color: white;
-	text-align: center;
+	box-shadow: 0px 3px 3px gray;
+	border: 1px solid black;
+	border-radius: 2px;
+	padding: 4px;
 }
 
-button
+.icon-button
 {
 	background-color: white;
-	box-shadow: 0px 3px 5px gray;
-	border: 1px solid black;
-	padding: 8px;
+	box-shadow: 0px 3px 3px gray;
+	border: 1px solid gray;
+	border-radius: 2px;
+	padding: 4px 8px 0px 8px;
 }
 
 button:hover
@@ -72,8 +74,8 @@ button:hover
 	
 	float: left;
 	width: 80%;
-	height: calc(100vh - 48px - 64px);
-	overflow: scroll;
+	height: calc(100vh - 48px - 48px);
+	overflow-y: scroll;
 	
 	position: relative;
 }
@@ -104,14 +106,34 @@ button:hover
 	overflow: auto;
 }
 
+.entry-cell
+{
+	font-size: 0.9em;
+	padding: 0.25em;
+	background-color: white;
+	text-align: center;
+}
+
+.entry-cell-selected
+{
+	background-image: url("/static/cat_head_bob.gif");
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
 .pdf-container
 {
 	float: right;
-	height: calc(100vh - 48px - 64px);
+	height: calc(100vh - 48px - 48px);
 	background-image: linear-gradient(to bottom left, #ff66ff, #eaaeea);
 	position: absolute;
 	right: 0px;
 	z-index: -1;
+}
+
+.pdf-color-invert
+{
+	filter: invert(93%)
 }
 
 .pdf-container-small
@@ -150,12 +172,25 @@ button:hover
 	height: 100%;
 }
 
-.viewer-controls
+.viewer-control-bar
 {
-	margin: auto;
+	background-color: #FF00FF;
+	background: url("/static/banner_background.png");
+	background-repeat: repeat-x;
+
+	margin: 0px;
 	padding: 0px;
-	height: 64px;
+	height: 48px;
 	width: 100vw;
 	position: fixed;
-	top: calc(100vh - 64px);
+	top: calc(100vh - 48px);
+}
+
+.viewer-control
+{
+	padding: 0px;
+	font-size: 0.8em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
