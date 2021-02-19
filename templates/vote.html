@@ -36,15 +36,8 @@
 							<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
 							<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
 						</td>
-						<td class="entry-cell" v-for="ratingName in voteParams" style="margin: auto; width: 6em;">
-							<table cellpadding='0' class="vote-star-widget">
-								<td v-for="starNum in [0, 1, 2, 3, 4]" class="vote-star-cell">
-									<button @click="setRating(entry.uuid, ratingName, starNum)" class="vote-star">
-										<img class="vote-star-img" v-if="visibleStars[entryIndex][ratingName][starNum]" src="/static/interface-star-yes.svg" />
-										<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
-									</button>
-								</td>
-							</table>
+						<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
+							<vote-star-widget :uuid="entry.uuid" :param="voteParam" :stars="entry[voteParam]"></vote-star-widget>
 						</td>
 					</tr>
 				</table>
@@ -105,6 +98,24 @@
 	</div>
 
 	<script>
+		
+		Vue.component("vote-star-widget", {
+			props: [
+				"uuid",
+				"param",
+				"stars"
+			],
+			template:
+			`<table cellpadding='0'>
+				<td v-for="starNum in [0, 1, 2, 3, 4]" class="vote-star-cell">
+					<button @click="$root.setRating(uuid, param, starNum + 1)" class="vote-star">
+						<img class="vote-star-img" v-if="stars > starNum" src="/static/interface-star-yes.svg" />
+						<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
+					</button>
+				</td>
+			</table>`
+		})
+		
 		var app = new Vue({
 			el: '#content',
 			data: function()
@@ -124,33 +135,18 @@
 				    date: weekData.date
 				}
 				
-				
-				// JavaScript, now with dicts/multidimentional arrays!
-				// (some assembly required)
-				// (kill me)
-				for (e = 0; e < ret.entries.length; e++)
-				{
-					ret.visibleStars[e] = {}
-					for (p = 0; p < ret.voteParams.length; p++)
-					{
-						ret.visibleStars[e][ret.voteParams[p]] = []
-						for (s = 0; s < 5; s++)
-						{
-							ret.visibleStars[e][ret.voteParams[p]][s]
-						}
-					}
-				}
-				
 				return ret
 			},
 			methods: {
-				viewEntry: function(entry) {
+				viewEntry: function(entry)
+				{
 					this.pdfShowWelcome = false
 					this.pdfViewingFilename = entry.pdfUrl
 					this.viewedEntry = entry
 					this.showEntryList = false
 				},
-				toggleEntryContainer: function() {
+				toggleEntryContainer: function()
+				{
 					this.showEntryList = !this.showEntryList
 				},
 				toggleNightMode()
@@ -193,15 +189,12 @@
 				setRating: function(uuid, voteParam, stars)
 				{
 					var index = this.getEntryIndex(uuid)
-					this.entries[index][voteParam] = stars
 					
-					for (var i = 0; i < 5; i++)
-					{
-						if (i < stars)
-							this.visibleStars[index][voteParam][i] = true
-						else
-							this.visibleStars[index][voteParam][i] = false
-					}
+					// allow user to unset ratings
+					if (this.entries[index][voteParam] == stars)
+						this.entries[index][voteParam] = 0
+					else
+						this.entries[index][voteParam] = stars
 				},
 				truncateString: function(s, length)
 				{
