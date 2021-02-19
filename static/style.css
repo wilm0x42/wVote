@@ -196,8 +196,11 @@ button:hover
 {
 	display: block;
 	margin: auto;
-	width: 50%;
+	width: 100%;
 	text-align: center;
+	position: relative;
+	top: 50%;
+	transform: translate(0%, -50%);
 }
 
 .pdf-viewer-live
