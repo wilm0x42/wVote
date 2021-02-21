@@ -41,6 +41,13 @@
 						</td>
 					</tr>
 				</table>
+				<div class="vote-submit-area">
+					<p>You've rated {{ numEntriesRated }}/{{ entries.length }} entries.</p>
+					<input v-model="userVoteKey" placeholder="Paste your vote token here" /> 
+					<button @click="submitVote()" class="text-button">Submit Vote</button>
+					<br>
+					<p style="font-size: 0.8em;">DM @8Bot the command "vote!vote" to obtain a vote token.</p>
+				</div>
 			</div>
 		</transition>
 
@@ -124,7 +131,6 @@
 			
 			    var ret = {
 			    	voteParams: ["votePrompt", "voteScore", "voteOverall"],
-			    	visibleStars: [],
 			    	showEntryList: true,
 			    	pdfColorInvert: true,
 				    pdfShowWelcome: true,
@@ -132,7 +138,9 @@
 				    entries: weekData.entries,
 				    viewedEntry: null,
 				    theme: weekData.theme,
-				    date: weekData.date
+				    date: weekData.date,
+				    numEntriesRated: 0,
+				    userVoteKey: "",
 				}
 				
 				return ret
@@ -186,6 +194,27 @@
 					
 					return null
 				},
+				updateNumEntriesRated: function()
+				{
+					var total = 0
+					
+					for (var i = 0; i < this.entries.length; i++)
+					{
+						var hasRating = false
+						for (var p = 0; p < this.voteParams.length; p++)
+						{
+							if (this.entries[i][this.voteParams[p]] != 0)
+							{
+								hasRating = true
+								break
+							}
+						}
+						if (hasRating)
+							total++
+					}
+					
+					this.numEntriesRated = total
+				},
 				setRating: function(uuid, voteParam, stars)
 				{
 					var index = this.getEntryIndex(uuid)
@@ -195,6 +224,58 @@
 						this.entries[index][voteParam] = 0
 					else
 						this.entries[index][voteParam] = stars
+					
+					this.updateNumEntriesRated()
+				},
+				submitVote: function()
+				{
+					if (this.userVoteKey == "")
+					{
+						alert("Please enter a vote key! (To obtain a vote key, DM the command \"vote!vote\" to @8Bot on the 8BMT discord server.")
+						return
+					}
+					
+					var voteData = {
+						votes: [],
+						voteKey: this.userVoteKey
+					}
+					
+					for (var e = 0; e < this.entries.length; e++)
+					{
+						for (var p = 0; p < this.voteParams.length; p++)
+						{
+							if (this.entries[e][this.voteParams[p]] != null)
+							{
+								newData = {
+									entryUUID: this.entries[e].uuid,
+									voteParam: this.voteParams[p],
+									rating: this.entries[e][this.voteParams[p]]
+								}
+								voteData.votes.push(newData)
+							}
+						}
+					}
+				
+					var req = new XMLHttpRequest()
+					
+					req.onreadystatechange = function()
+					{
+						if (this.readyState == 4)
+						{
+							if (this.status == 200)
+							{
+								console.log("wooo")
+							}
+							else
+							{
+								alert("Something went wrong :/\nMake sure you entered a valid vote key")
+							}
+						}
+					}
+					
+					req.open("POST", "submit_vote", true)
+					req.setRequestHeader("Content-type", "application/json")
+					req.send(JSON.stringify(voteData))
 				},
 				truncateString: function(s, length)
 				{
