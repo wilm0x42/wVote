@@ -387,6 +387,19 @@ async def submit(context: commands.Context) -> None:
 
     await context.send("Submission form: " + url + expiry_message())
 
+@client.command()
+@commands.dm_only()
+async def vote(context: commands.Context) -> None:
+    """Sends the user a vote key to be used in the voting interface"""
+    key = http_server.create_vote_key(context.author.id, context.author.name)
+    
+    
+    message = "Your key:\n```%s```\nThank you for voting!\n" % key
+    message += "This key will expire in %s minutes. " % http_server.default_ttl
+    message += "If you need another key, including if you want to revise your "
+    message += "vote, you can use this command again to obtain a new one."
+    
+    await context.send(message)
 
 @client.command()
 @commands.check(is_admin)
