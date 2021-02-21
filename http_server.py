@@ -5,6 +5,7 @@ import html as html_lib
 import random
 import string
 import logging
+import json
 
 from aiohttp import web, web_request
 
@@ -43,6 +44,16 @@ admin_keys = {
     # 	"creationTime": datetime.datetime.now(),
     # 	"timeToLive": 200
     # }
+}
+
+vote_keys = {
+    #"a1b2c3d4":
+    #{
+    #  "userID": 336685325231325184,
+    #  "userName": "wilm0x42",
+    #  "creationTime": datetime.datetime.now(),
+    #  "timeToLive": 200
+    #}
 }
 
 def get_vue_url() -> str:
@@ -94,6 +105,17 @@ def create_admin_key() -> str:
 
     return key
 
+def create_vote_key(user_id: int, user_name) -> str:
+    key = create_key()
+    
+    vote_keys[key] = {
+        "userID": user_id,
+        "userName": user_name,
+        "creationTime": datetime.datetime.now(),
+        "timeToLive": default_ttl
+    }
+    
+    return key
 
 def get_admin_controls(auth_key: str) -> str:
     this_week = compo.get_week(False)
@@ -396,6 +418,39 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
 
     return web.Response(status=400, text="That entry doesn't seem to exist")
 
+async def submit_vote_handler(request: web_request.Request) -> web.Response:
+    vote_input = await request.json()
+    
+    auth_key = vote_input["voteKey"]
+    
+    if not key_valid(auth_key, vote_keys):
+        return web.Response(status=403, text="Not happening babe")
+    
+    user_id = vote_keys[auth_key]["userID"]
+    user_name = vote_keys[auth_key]["userName"]
+    
+    week = compo.get_week(False)
+    
+    if not "votes" in week:
+        week["votes"] = []
+    
+    # If user has submitted a vote already, then remove it, so we can
+    # replace it with the new one
+    for v in week["votes"]:
+        if v["userID"] == user_id:
+            week["votes"].remove(v)
+    
+    vote_data = {
+        "ratings": vote_input["votes"],
+        "userID": user_id,
+        "userName": user_name
+    }
+    
+    week["votes"].append(vote_data)
+    
+    compo.save_weeks()
+    
+    return web.Response(status=200, text="FRICK yeah")
 
 # async def debug_handler(request):
 #   cmd = request.match_info["command"]
@@ -422,6 +477,7 @@ server.add_routes([
     web.get("/admin/preview/{authKey}", admin_preview_handler),
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
+    web.post("/submit_vote", submit_vote_handler),
     # web.get("/debug/{command}", debug_handler),
     web.static("/static", "static")
 ])
