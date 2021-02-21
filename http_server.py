@@ -14,7 +14,7 @@ import compo
 
 vote_template = open("templates/vote.html", "r").read()
 submit_template = open("templates/submit.html", "r").read()
-submit_success = open("templates/submitted.html", "r").read()
+thanks_template = open("templates/thanks.html", "r").read()
 admin_template = open("templates/admin.html", "r").read()
 
 favicon = open("static/favicon.ico", "rb").read()
@@ -411,9 +411,16 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
 
             if is_admin:
                 return web.Response(status=303, headers={"Location": "%s/admin/%s" % (bot.url_prefix(), auth_key)})
-
+            
+            thanks = thanks_template.replace("[HEADER]",
+                                  "Your entry has been recorded -- Good luck!")
+            thanks = thanks.replace("[BODY]",
+                "If you have any issues, "
+                "let us know in #weekly-challenge-discussion, "
+                "or DM one of our friendly moderators.")
+            
             return web.Response(status=200,
-                                body=submit_success,
+                                body=thanks,
                                 content_type="text/html")
 
     return web.Response(status=400, text="That entry doesn't seem to exist")
@@ -452,6 +459,12 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     
     return web.Response(status=200, text="FRICK yeah")
 
+async def vote_thanks_handler(request: web_request.Request) -> web.Response:
+    message = thanks_template.replace("[HEADER]", "Thank you for voting!")
+    message = message.replace("[BODY]",
+        "Your vote has been recorded.  I will guard it with my life. :)")
+    return web.Response(status=200, body=message, content_type="text/html")
+
 # async def debug_handler(request):
 #   cmd = request.match_info["command"]
 
@@ -475,6 +488,7 @@ server.add_routes([
     web.get("/edit/{authKey}", edit_handler),
     web.get("/admin/{authKey}", admin_handler),
     web.get("/admin/preview/{authKey}", admin_preview_handler),
+    web.get("/thanks", vote_thanks_handler),
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
     web.post("/submit_vote", submit_vote_handler),
