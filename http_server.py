@@ -429,6 +429,10 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                 elif field.name == "mp3" or field.name == "pdf":
                     if field.filename == "":
                         continue
+                    
+                    if not field.filename.endswith(field.name):
+                        errMsg = "Wrong file format! Expected %s" % field.name
+                        return web.Response(status=400, text=errMsg)
 
                     size = 0
                     entry[field.name] = None
