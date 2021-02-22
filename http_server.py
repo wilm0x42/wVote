@@ -385,7 +385,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
     for which_week in [True, False]:
         week = compo.get_week(which_week)
 
-        for entry in week["entries"]:
+        for entryIndex, entry in enumerate(week["entries"]):
             if entry["uuid"] != uuid:
                 continue
 
@@ -451,7 +451,11 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                             entry[field.name] = chunk
                         else:
                             entry[field.name] += chunk
-
+            
+            if not is_admin:
+                # Move the entry to the end of the list
+                week["entries"].append(week["entries"].pop(entryIndex))
+            
             compo.save_weeks()
 
             await bot.submission_message(entry,
