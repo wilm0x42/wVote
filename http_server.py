@@ -302,16 +302,41 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     else:
         return web.Response(status=404, text="File not found")
 
+async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
+    auth_key = request.match_info["authKey"]
+    user_id = request.match_info["userID"]
+    
+    if key_valid(auth_key, admin_keys):
+        html = None
+
+        week = compo.get_week(False)
+        
+        print("user_id: " + str(user_id))
+        
+        if not "votes" in week:
+            week["votes"] = []
+        
+        for v in week["votes"]:
+            if int(v["userID"]) == int(user_id):
+                return web.Response(status=200,
+                                    body=json.dumps(v),
+                                    content_type="application/json")
+
+        return web.Response(status=404, text="File not found")
+    else:
+        return web.Response(status=404, text="File not found")
+    
 async def admin_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if key_valid(auth_key, admin_keys):
         # key = admin_keys[auth_key]
-
-        html = admin_template.replace("[ENTRY-LIST]",
-                                      compo.get_all_admin_forms(auth_key))
+        
+        html = admin_template.replace("[VUE-URL]", get_vue_url())
+        html = html.replace("[ENTRY-LIST]", compo.get_all_admin_forms(auth_key))
         html = html.replace("[ADMIN-KEY]", auth_key)
         html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))
+        html = html.replace("[VOTE-DATA]", compo.get_week_votes_json(False))
 
         return web.Response(status=200, body=html, content_type="text/html")
     else:
@@ -444,7 +469,7 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     # If user has submitted a vote already, then remove it, so we can
     # replace it with the new one
     for v in week["votes"]:
-        if v["userID"] == user_id:
+        if int(v["userID"]) == int(user_id):
             week["votes"].remove(v)
     
     vote_data = {
@@ -488,6 +513,7 @@ server.add_routes([
     web.get("/edit/{authKey}", edit_handler),
     web.get("/admin/{authKey}", admin_handler),
     web.get("/admin/preview/{authKey}", admin_preview_handler),
+    web.get("/admin/viewvote/{authKey}/{userID}", admin_viewvote_handler),
     web.get("/thanks", vote_thanks_handler),
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),

@@ -5,6 +5,7 @@
 	<title>Admin Interface - 8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
 	<link rel="stylesheet" href="/static/admin.css" type="text/css" media="all">
+	<script src="[VUE-URL]"></script>
 </head>
 <body>
 	<h1>
@@ -26,6 +27,14 @@
 		
 		<div class="entry-list">
 			[ENTRY-LIST]
+		</div>
+		
+		<div class="vote-list">
+		    <div v-for="vote in votes" class="vote-data">
+		    	<a :href="'/admin/viewvote/[ADMIN-KEY]/' + vote.userID.toString()">
+		    		Vote from {{ vote.userName }}
+		    	</a>
+		    </div>
 		</div>
 	</div>
 
@@ -59,18 +68,23 @@
 	        foldForm(adminForms[i])
 	    }
 	</script>
-
+	
 	<script>
-		function viewPDF(url)
-		{
-			document.getElementById("pdf-container").innerHTML =
-				`<object id="pdf-viewer" class="pdf-viewer-live" data="${url}" type="application/pdf">
-					<div id="pdf-alt" class="pdf-alt">
-						<img width="100%" src="/static/kirb_think.png">
-						<h2><a href="${url}">Link to PDF (embedded viewer failed)</a></h2>
-					</div>
-				</object>`;
-		}
+		var adminApp = new Vue({
+			el: "#content",
+			data: function()
+			{
+				voteData = [VOTE-DATA]
+				
+				var ret = {
+					votes: voteData
+				}
+				
+				return ret
+			},
+			methods: {
+			}
+		})
 	</script>
 </body>
 </html>

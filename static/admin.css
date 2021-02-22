@@ -83,3 +83,10 @@ h3:hover
     width: 90vw;
     height: 90vh;
 }
+
+.vote-data
+{
+	background: linear-gradient(to bottom left, rgba(141, 80, 141, 1), rgba(141, 80, 141, 0.5));
+	width: 500px;
+	border: 1px solid black;
+}

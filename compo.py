@@ -419,6 +419,21 @@ def get_week_viewer_json(which_week: bool) -> str:
     
     return json.dumps(data)
 
+def get_week_votes_json(which_week: bool) -> str:
+    week = get_week(which_week)
+    
+    if not "votes" in week:
+        week["votes"] = []
+    
+    adaptedData = week["votes"].copy()
+    
+    # JavaScript is very silly and won't work if we send these huge
+    # numbers as actual numbers, so we have to stringify them first
+    for v in adaptedData:
+        v["userID"] = str(v["userID"])
+    
+    return json.dumps(adaptedData)
+
 def get_tablerow_for_entry(entry: dict) -> str:
     html = ""
     
