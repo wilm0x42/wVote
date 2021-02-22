@@ -127,7 +127,7 @@ def get_admin_controls(auth_key: str) -> str:
         nonlocal html
         html += "<form action='/admin/edit/%s' " % auth_key
         html += ("onsubmit='setTimeout(function()"
-                 "{window.location.reload();},100);' ")
+                 "{window.location.reload();},1000);' ")
         html += ("method='post' accept-charset='utf-8' "
                  "enctype='application/x-www-form-urlencoded'>")
 
@@ -148,10 +148,10 @@ def get_admin_controls(auth_key: str) -> str:
     else:
         html += "<p>Submissions are currently CLOSED</p>"
 
-    # TODO: This is all html code, so it should probably go in a .html ;P
+    # TODO: Convert this garbage to Vue
 
     html += "<form action='/admin/edit/%s' " % auth_key
-    html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
+    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
     html += ("method='post' accept-charset='utf-8' "
              "enctype='application/x-www-form-urlencoded'>")
     html += "<label for='submissionsOpen'>Submissions Open</label>"
@@ -161,10 +161,27 @@ def get_admin_controls(auth_key: str) -> str:
     html += "<label for='No'>No</label>"
     html += "<input type='submit' value='Submit'/>"
     html += "</form><br>"
+    
+    if compo.get_week(False)["votingOpen"]:
+        html += "<p>Voting is currently OPEN</p>"
+    else:
+        html += "<p>Voting is currently CLOSED</p>"
+
+    html += "<form action='/admin/edit/%s' " % auth_key
+    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
+    html += ("method='post' accept-charset='utf-8' "
+             "enctype='application/x-www-form-urlencoded'>")
+    html += "<label for='votingOpen'>Voting Open</label>"
+    html += "<input type='radio' name='votingOpen' value='Yes'>"
+    html += "<label for='Yes'>Yes</label>"
+    html += "<input type='radio' name='votingOpen' value='No'>"
+    html += "<label for='No'>No</label>"
+    html += "<input type='submit' value='Submit'/>"
+    html += "</form><br>"
 
     html += ("<form style='border: 1px solid black;' "
              "action='/admin/edit/%s' " % auth_key)
-    html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
+    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
     html += ("method='post' accept-charset='utf-8' "
              "enctype='application/x-www-form-urlencoded'>")
     html += "<label>Force create an entry</label><br>"
@@ -180,7 +197,7 @@ def get_admin_controls(auth_key: str) -> str:
     html += "</form><br>"
 
     html += "<form action='/admin/edit/%s' " % auth_key
-    html += "onsubmit='setTimeout(function(){window.location.reload();},100);' "
+    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
     html += ("method='post' accept-charset='utf-8' "
              "enctype='application/x-www-form-urlencoded'>")
     html += ("<label for='rolloutWeek'>Archive current week, "
@@ -217,6 +234,12 @@ async def admin_control_handler(request: web_request.Request) -> web.Response:
                 compo.get_week(True)["submissionsOpen"] = True
             if data["submissionsOpen"] == "No":
                 compo.get_week(True)["submissionsOpen"] = False
+        
+        if "votingOpen" in data:
+            if data["votingOpen"] == "Yes":
+                compo.get_week(False)["votingOpen"] = True
+            if data["votingOpen"] == "No":
+                compo.get_week(False)["votingOpen"] = False
 
         if "rolloutWeek" in data:
             if data["rolloutWeek"] == "on":

@@ -46,6 +46,7 @@ def get_week(get_next_week: bool) -> dict:
                 "theme": "Week XYZ: Fill this in by hand!",
                 "date": "Month day'th 20XX",
                 "submissionsOpen": False,
+                "votingOpen": True,
                 "entries": []
             }
     if next_week is None:
@@ -56,6 +57,7 @@ def get_week(get_next_week: bool) -> dict:
                 "theme": "Week XYZ: Fill this in by hand!",
                 "date": "Month day'th 20XX",
                 "submissionsOpen": True,
+                "votingOpen": True,
                 "entries": []
             }
 
