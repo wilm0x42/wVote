@@ -86,7 +86,7 @@
 			</td>
 			<td v-if="viewedEntry != null" class="viewer-control">
 				<div v-if="viewedEntry.mp3Format == 'mp3'">
-					<audio controls><source :src="viewedEntry.mp3Url" type="audio/mpeg"><a :href="viewedEntry.mp3Url">mp3 link</a></audio>
+					<audio controls :src="viewedEntry.mp3Url" type="audio/mpeg"></audio>
 				</div>
 				<div v-else>
 					<img src="/static/interface-play.png" />
