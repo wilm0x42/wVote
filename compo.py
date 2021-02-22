@@ -436,6 +436,84 @@ def get_week_votes_json(which_week: bool) -> str:
     
     return json.dumps(adaptedData)
 
+def get_ranked_entrant_list(which_week: bool) -> str:
+    """Bloc STAR Voting wooooo"""
+    
+    week = get_week(which_week)
+    
+    if not "votes" in week:
+        week["votes"] = []
+    
+    scores = {}
+    userVotes = {}
+    rankedEntrants = {}
+    
+    for v in week["votes"]:
+        for r in v["ratings"]:
+            if not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes:
+                if r["rating"] == 0:
+                    userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
+                        = False
+                else:
+                    userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
+                        = True
+                
+                if not r["entryUUID"] in scores:
+                    scores[r["entryUUID"]] = 0
+                
+                scores[r["entryUUID"]] += r["rating"]
+            else:
+                logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
+                logging.warning("Sus rating: " + str(r))
+                v["ratings"].remove(r)
+    
+    entry_pool = []
+    ranked_entries = []
+    
+    for e in week["entries"]:
+        if entry_valid(e):
+            if e["uuid"] in scores:
+                e["voteScore"] = scores[e["uuid"]]
+            else:
+                e["voteScore"] = 0
+            entry_pool.append(e)
+    
+    while len(entry_pool) > 1:
+        entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"])
+        
+        entryA = entry_pool[0]
+        entryB = entry_pool[1]
+        
+        preferEntryA = 0
+        preferEntryB = 0
+        
+        for v in week["votes"]:
+            scoreA = 0
+            scoreB = 0
+            
+            for r in v["ratings"]:
+                if r["entryUUID"] == entryA["uuid"]:
+                    scoreA += r["rating"]
+                elif r["entryUUID"] == entryB["uuid"]:
+                    scoreB += r["rating"]
+            
+            if scoreA > scoreB:
+                preferEntryA += 1
+            elif scoreB > scoreA:
+                preferEntryB += 1
+        
+        # greater than or equal to, as entryA is the entry with a higher score,
+        # to settle things in the case of a tie
+        if preferEntryA >= preferEntryB:
+            ranked_entries.append(entry_pool.pop(0))
+        else:
+            ranked_entries.append(entry_pool.pop(1))
+    
+    for place, e in enumerate(ranked_entries):
+        e["votePlacement"] = place
+    
+    return ranked_entries
+
 def get_tablerow_for_entry(entry: dict) -> str:
     html = ""
     

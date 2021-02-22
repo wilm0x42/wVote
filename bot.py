@@ -402,6 +402,20 @@ async def vote(context: commands.Context) -> None:
 
 @client.command()
 @commands.check(is_admin)
+@commands.dm_only()
+async def getentryplacements(context: commands.Context) -> None:
+    ranked = compo.get_ranked_entrant_list(False)
+    
+    message = ""
+    
+    for e in ranked:
+        message += "%d - %s - %s\n" \
+            % (e["votePlacement"], e["entrantName"], e["entryName"])
+    
+    await context.send(message)
+    
+@client.command()
+@commands.check(is_admin)
 async def googleformslist(context: commands.Context) -> None:
     """
     Generates the list of Google forms for the entries.
