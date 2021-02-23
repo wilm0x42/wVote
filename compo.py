@@ -509,10 +509,13 @@ def get_ranked_entrant_list(which_week: bool) -> str:
         else:
             ranked_entries.append(entry_pool.pop(1))
     
-    for place, e in enumerate(ranked_entries):
-        e["votePlacement"] = place
+    # Add the one remaining entry
+    ranked_entries.insert(0, entry_pool.pop(0))
     
-    return ranked_entries
+    for place, e in enumerate(reversed(ranked_entries)):
+        e["votePlacement"] = place + 1
+    
+    return list(reversed(ranked_entries))
 
 def get_tablerow_for_entry(entry: dict) -> str:
     html = ""
