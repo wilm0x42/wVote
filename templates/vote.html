@@ -185,7 +185,7 @@
 					if (this.viewedEntryIndex === null)
 						return
 
-					index += offset
+					let index = this.viewedEntryIndex + offset
 
 					if (index < 0) {
 						index = 0
@@ -193,7 +193,7 @@
 						index = this.entries.length - 1
 					}
 
-					this.viewEntry = index
+					this.viewedEntryIndex = index
 					this.showEntryList = false
 				},
 				updateNumEntriesRated: function()
