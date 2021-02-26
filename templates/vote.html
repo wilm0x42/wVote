@@ -1,7 +1,8 @@
 <!doctype html>
-<html>
+<html lang="en_US">
 <head>
-	<meta charset="utf-8" />
+	<meta charset="utf-8">
+	<meta name="theme-color" content="#ee34e7">
 	<title>8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
 	<script src="[VUE-URL]"></script>
@@ -11,146 +12,164 @@
 		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
 	</h1>
 	<div id="content">
-		<transition name="entry-list-toggle">
-			<div class="entries-container" v-show="showEntryList">
-				<h2 class="week-title">{{ theme }}</h2><h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
-				<table cellpadding='0' class='entry-table'>
-					<tr class="entry-table-header-row">
-						<th class="entry-table-header">Entrant</th>
-						<th class="entry-table-header">Composition Title</th>
-						<th class="entry-table-header">View & Listen</th>
-						<th class="entry-table-header">Download</th>
-						<th class="entry-table-header">Use Of Prompt Theme</th>
-						<th class="entry-table-header">Score Quality</th>
-						<th class="entry-table-header">Overall Rating</th>
-					</tr>
-					<tr v-for="(entry, entryIndex) in entries">
-						<td class="entry-cell">{{ entry.entrantName }}</td>
-						<td class="entry-cell">{{ entry.entryName }}</td>
-						<td class="entry-cell" :class="{ 'entry-cell-selected': viewedEntry != null && entry.uuid == viewedEntry.uuid }">
-							<button class="icon-button" @click="viewEntry(entry)">
-								<img src="/static/interface-video-play.png" alt="Play" />
-							</button>
-						</td>
-						<td class="entry-cell">
-							<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
-							<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
-						</td>
-						<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
-							<vote-star-widget :uuid="entry.uuid" :param="voteParam" :stars="entry[voteParam]"></vote-star-widget>
-						</td>
-					</tr>
-				</table>
-				<div class="vote-submit-area">
-					<p>You've rated {{ numEntriesRated }}/{{ entries.length }} entries.</p>
-					<input v-model="userVoteKey" placeholder="Paste your vote token here" /> 
-					<button @click="submitVote()" class="text-button">Submit Vote</button>
-					<br>
-					<p style="font-size: 0.8em;">DM @8Bot the command "vote!vote" to obtain a vote token.</p>
+		<div v-if="entries === null">Loading...</div>
+		<div v-else>
+			<transition name="entry-list-toggle">
+				<div class="entries-container" v-show="showEntryList">
+					<h2 class="week-title">{{ theme }}</h2><h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
+					<table cellpadding='0' class='entry-table'>
+						<tr class="entry-table-header-row">
+							<th class="entry-table-header">Entrant</th>
+							<th class="entry-table-header">Composition Title</th>
+							<th class="entry-table-header">View & Listen</th>
+							<th class="entry-table-header">Download</th>
+							<th class="entry-table-header">Use Of Prompt Theme</th>
+							<th class="entry-table-header">Score Quality</th>
+							<th class="entry-table-header">Overall Rating</th>
+						</tr>
+						<tr v-for="(entry, entryIndex) in entries">
+							<td class="entry-cell">{{ entry.entrantName }}</td>
+							<td class="entry-cell">{{ entry.entryName }}</td>
+							<td class="entry-cell" :class="{ 'entry-cell-selected': viewedEntryIndex == entryIndex }">
+								<button class="icon-button" @click="viewEntry(entryIndex)">
+									<img src="/static/interface-video-play.png" alt="Play" />
+								</button>
+							</td>
+							<td class="entry-cell">
+								<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
+								<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
+							</td>
+							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
+								<vote-star-widget v-model="entry[voteParam]" @input="updateNumEntriesRated"></vote-star-widget>
+							</td>
+						</tr>
+					</table>
+					<div class="vote-submit-area">
+						<p>You've rated {{ numEntriesRated }}/{{ entries.length }} entries.</p>
+						<input v-model="userVoteKey" placeholder="Paste your vote token here" />
+						<button @click="submitVote()" class="text-button">Submit Vote</button>
+						<br>
+						<p style="font-size: 0.8em;">DM @8Bot the command "vote!vote" to obtain a vote token.</p>
+					</div>
 				</div>
-			</div>
-		</transition>
+			</transition>
 
-		<div class="pdf-container" :class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
-			<div v-if="pdfShowWelcome" id="pdf-viewer" class="pdf-viewer-welcome">
-				<div id="pdf-alt" class="pdf-alt">
-					<img width="150px"  src="/static/kirb_phones.png" />
-					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+			<div class="pdf-container" :class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
+				<div v-if="viewedEntryIndex === null" id="pdf-viewer" class="pdf-viewer-welcome">
+					<div id="pdf-alt" class="pdf-alt">
+						<img width="150px"  src="/static/kirb_phones.png" />
+						<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+					</div>
 				</div>
+				<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }" :data="entries[viewedEntryIndex].pdfUrl" type="application/pdf">
+					<div id="pdf-alt" class="pdf-alt">
+						<img width="150px" src="/static/kirb_think.png">
+						<h2><a :href="entries[viewedEntryIndex].pdfUrl">Link to PDF (embedded viewer failed)</a></h2>
+					</div>
+				</object>
 			</div>
-			<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }" :data="pdfViewingFilename" type="application/pdf">
-				<div id="pdf-alt" class="pdf-alt">
-					<img width="150px" src="/static/kirb_think.png">
-					<h2><a :href="pdfViewingFilename">Link to PDF (embedded viewer failed)</a></h2>
-				</div>
-			</object>
+
+			<table cellpadding='0' class="viewer-control-bar">
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="toggleEntryContainer()">
+						<img src="/static/interface-category-grid.png" />
+					</button>
+				</td>
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="selectAdjacentEntry(-1)">
+						<img src="/static/interface-up-arrow.png" />
+					</button>
+				</td>
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="selectAdjacentEntry(1)">
+						<img src="/static/interface-down-arrow.png" />
+					</button>
+				</td>
+				<td v-if="viewedEntryIndex != null" class="viewer-control" style="text-align: center;" width="400px">
+					<p>{{ truncateString(entries[viewedEntryIndex].entrantName + " - " + entries[viewedEntryIndex].entryName, 60) }}<p>
+				</td>
+				<td v-if="viewedEntryIndex != null" class="viewer-control">
+					<div v-if="entries[viewedEntryIndex].mp3Format == 'mp3'">
+						<audio controls :src="entries[viewedEntryIndex].mp3Url" type="audio/mpeg"></audio>
+					</div>
+					<div v-else>
+						<img src="/static/interface-play.png" />
+						<a :href="entries[viewedEntryIndex].mp3Url" style="position: relative; top: -12px;">Listen Here!</a>
+					</div>
+				</td>
+				<td>
+					<!-- empty cell to expand and fill space -->
+				</td>
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="toggleNightMode()">
+						<img src="/static/interface-bulb.png" />
+					</button>
+				</td>
+			</table>
 		</div>
-		<table cellpadding='0' class="viewer-control-bar">
-			<td width="48px" class="viewer-control">
-				<button class="icon-button" @click="toggleEntryContainer()">
-					<img src="/static/interface-category-grid.png" />
-				</button>
-			</td>
-			<td width="48px" class="viewer-control">
-				<button class="icon-button" @click="selectAdjacentEntry(-1)">
-					<img src="/static/interface-up-arrow.png" />
-				</button>
-			</td>
-			<td width="48px" class="viewer-control">
-				<button class="icon-button" @click="selectAdjacentEntry(1)">
-					<img src="/static/interface-down-arrow.png" />
-				</button>
-			</td>
-			<td v-if="viewedEntry != null" class="viewer-control" style="text-align: center;" width="400px">
-				<p>{{ truncateString(viewedEntry.entrantName + " - " + viewedEntry.entryName, 60) }}<p>
-			</td>
-			<td v-if="viewedEntry != null" class="viewer-control">
-				<div v-if="viewedEntry.mp3Format == 'mp3'">
-					<audio controls :src="viewedEntry.mp3Url" type="audio/mpeg"></audio>
-				</div>
-				<div v-else>
-					<img src="/static/interface-play.png" />
-					<a :href="viewedEntry.mp3Url" style="position: relative; top: -12px;">Listen Here!</a>
-				</div>
-			</td>
-			<td>
-				<!-- empty cell to expand and fill space -->
-			</td>
-			<td width="48px" class="viewer-control">
-				<button class="icon-button" @click="toggleNightMode()">
-					<img src="/static/interface-bulb.png" />
-				</button>
-			</td>
-		</table>
 	</div>
 
 	<script>
-		
+
 		Vue.component("vote-star-widget", {
 			props: [
-				"uuid",
-				"param",
-				"stars"
+				"value"
 			],
+			data() {
+				return {
+					starsData: this.value
+				}
+			},
 			template:
-			`<table cellpadding='0'>
-				<td v-for="starNum in [0, 1, 2, 3, 4]" class="vote-star-cell">
-					<button @click="$root.setRating(uuid, param, starNum + 1)" class="vote-star">
-						<img class="vote-star-img" v-if="stars > starNum" src="/static/interface-star-yes.svg" />
-						<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
-					</button>
-				</td>
-			</table>`
+				`<table cellpadding='0'>
+					<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
+						<button @click="vote(starNum)" class="vote-star">
+							<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
+							<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
+						</button>
+					</td>
+				</table>`,
+				methods: {
+					vote(value) {
+						if (this.starsData == value) {
+							this.starsData = 0;
+						} else {
+							this.starsData = value;
+						}
+
+						this.$emit("input", this.starsData);
+					}
+				}
 		})
-		
+
 		var app = new Vue({
 			el: '#content',
 			data: function()
 			{
-			    weekData = [WEEK-DATA]
-			
-			    var ret = {
+				return {
 			    	voteParams: ["votePrompt", "voteScore", "voteOverall"],
 			    	showEntryList: true,
 			    	pdfColorInvert: true,
-				    pdfShowWelcome: true,
-				    pdfViewingFilename: "https://www.youtube.com/watch/dQw4w9WgXcQ",
-				    entries: weekData.entries,
-				    viewedEntry: null,
-				    theme: weekData.theme,
-				    date: weekData.date,
+				    entries: null,
+				    viewedEntryIndex: null,
+				    theme: null,
+				    date: null,
 				    numEntriesRated: 0,
 				    userVoteKey: "",
 				}
-				
-				return ret
+			},
+			async mounted() {
+				let weekResponse = await fetch("/entry_data")
+				let weekData = await weekResponse.json()
+
+				this.entries = weekData.entries
+				this.theme = weekData.theme
+				this.date = weekData.theme
 			},
 			methods: {
-				viewEntry: function(entry)
+				viewEntry: function(entryIndex)
 				{
-					this.pdfShowWelcome = false
-					this.pdfViewingFilename = entry.pdfUrl
-					this.viewedEntry = entry
+					this.viewedEntryIndex = entryIndex
 					this.showEntryList = false
 				},
 				toggleEntryContainer: function()
@@ -163,41 +182,24 @@
 				},
 				selectAdjacentEntry: function(offset)
 				{
-					if (this.viewedEntry == null)
+					if (this.viewedEntryIndex === null)
 						return
-					
-					var index = this.getEntryIndex(this.viewedEntry.uuid)
-					
-					if (index == null)
-						return
-					
-					index += offset
-					
-					if (index < 0)
+
+					let index = this.viewedEntryIndex + offset
+
+					if (index < 0) {
 						index = 0
-					else if (index >= this.entries.length)
+					} else if (index >= this.entries.length) {
 						index = this.entries.length - 1
-					
-					this.pdfViewingFilename = this.entries[index].pdfUrl
-					this.viewedEntry = this.entries[index]
-					this.showEntryList = false
-				},
-				getEntryIndex: function(uuid)
-				{
-					for (var e = 0; e < this.entries.length; e++)
-					{
-						if (this.entries[e].uuid == uuid)
-						{
-							return e
-						}
 					}
-					
-					return null
+
+					this.viewedEntryIndex = index
+					this.showEntryList = false
 				},
 				updateNumEntriesRated: function()
 				{
 					var total = 0
-					
+
 					for (var i = 0; i < this.entries.length; i++)
 					{
 						var hasRating = false
@@ -212,34 +214,22 @@
 						if (hasRating)
 							total++
 					}
-					
+
 					this.numEntriesRated = total
 				},
-				setRating: function(uuid, voteParam, stars)
-				{
-					var index = this.getEntryIndex(uuid)
-					
-					// allow user to unset ratings
-					if (this.entries[index][voteParam] == stars)
-						this.entries[index][voteParam] = 0
-					else
-						this.entries[index][voteParam] = stars
-					
-					this.updateNumEntriesRated()
-				},
-				submitVote: function()
+				submitVote: async function ()
 				{
 					if (this.userVoteKey == "")
 					{
 						alert("Please enter a vote key! (To obtain a vote key, DM the command \"vote!vote\" to @8Bot on the 8BMT discord server.")
 						return
 					}
-					
+
 					var voteData = {
 						votes: [],
 						voteKey: this.userVoteKey
 					}
-					
+
 					for (var e = 0; e < this.entries.length; e++)
 					{
 						for (var p = 0; p < this.voteParams.length; p++)
@@ -256,28 +246,16 @@
 							}
 						}
 					}
-				
-					var req = new XMLHttpRequest()
-					
-					req.onreadystatechange = function()
-					{
-						if (this.readyState == 4)
-						{
-							if (this.status == 200)
-							{
-							    // Let the voter know they're awesome
-								location.href = "thanks"
-							}
-							else
-							{
-								alert("Something went wrong :/\nMake sure you entered a valid vote key")
-							}
-						}
+
+					try {
+					    let response = await fetch("submit_vote", {method: "POST", body: JSON.stringify(voteData)});
+					    if (response.status != "ok") {
+					       throw new Error("...");
+					    }
+					    location.href = "thanks";
+					} catch (e) {
+					    alert("Something went wrong :/\nMake sure you entered a valid vote key");
 					}
-					
-					req.open("POST", "submit_vote", true)
-					req.setRequestHeader("Content-type", "application/json")
-					req.send(JSON.stringify(voteData))
 				},
 				truncateString: function(s, length)
 				{
