@@ -481,8 +481,6 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
 async def submit_vote_handler(request: web_request.Request) -> web.Response:
     vote_input = await request.json()
 
-    print(vote_input)
-
     auth_key = vote_input["voteKey"]
 
     if not key_valid(auth_key, vote_keys):
