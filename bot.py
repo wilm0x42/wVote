@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 import compo
-import http_server
+import keys
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
@@ -17,72 +17,16 @@ client = commands.Bot(description="Musical Voting Platform",
                       command_prefix=[],
                       case_insensitive=True,
                       help_command=None)
-test_mode = False
-postentries_channel = 0
-notify_admins_channel = 0
+config: dict = None
 
 
-def url_prefix() -> str:
-    """
-    Returns a URL prefix that changes depending on whether the bot is being
-    tested or is being used in production.
+async def start(_config):
+    global config
 
-    Returns
-    -------
-    str
-        The URL of the test server if in test mode, and the production server
-        URL otherwise.
-    """
-    if test_mode:
-        return "http://127.0.0.1:8251"
-    else:
-        return "https://%s" % http_server.server_domain
+    config = _config
+    client.command_prefix = config["command_prefix"]
 
-
-def load_config() -> None:
-    """
-    Loads configuration information from bot.conf.
-    Specifically, bot.conf contains all information on what prefix is used
-    to call the bot, which channel entries are posted in each week, which
-    channel updates should be posted in, the bot key used to log in with
-    discord.py, and which IDs are treated as admins.
-    """
-    global test_mode
-    global postentries_channel
-    global notify_admins_channel
-
-    conf = open("bot.conf", "r")
-
-    client.admins = []
-
-    for line in conf:
-        if line[0] == "#":
-            continue
-
-        if line[-1:] == "\n":  # remove newlines from string
-            line = line[:-1]
-
-        arguments = line.split("=")
-
-        if len(arguments) < 2:
-            continue
-
-        key = arguments[0]
-
-        if key == "command_prefix":
-            client.command_prefix.append(arguments[1])
-        if key == "test_mode":
-            test_mode = (arguments[1] == "True")
-        if key == "postentries_channel":
-            postentries_channel = int(arguments[1])
-        if key == "notify_admins_channel":
-            notify_admins_channel = int(arguments[1])
-        if key == "bot_key":
-            client.bot_key = arguments[1]
-        if key == "admin":
-            client.admins.append(arguments[1])
-
-    logging.info("DISCORD: Loaded bot.conf")
+    await client.start(config["bot_key"])
 
 
 async def notify_admins(msg: str) -> None:
@@ -94,19 +38,24 @@ async def notify_admins(msg: str) -> None:
     msg : str
         The message that should be sent
     """
-    if notify_admins_channel:
-        await client.get_channel(notify_admins_channel).send(msg)
+    global config
+
+    if config.get("notify_admins_channel"):
+        await client.get_channel(config["notify_admins_channel"]).send(msg)
+
 
 def entry_info_message(entry: dict) -> str:
-    entry_message = "%s submitted \"%s\":\n" % (entry["entrantName"],
-                                                       entry["entryName"])
+    global config
+
+    entry_message = '%s submitted "%s":\n' % (entry["entrantName"],
+                                              entry["entryName"])
 
     # If a music file was attached (including in the form of an external link),
     # make note of it in the message
     if "mp3" in entry:
         if entry["mp3Format"] == "mp3":
             entry_message += "MP3: %s/files/%s/%s %d KB\n" \
-                % (url_prefix(),
+                % (config["url_prefix"],
                    entry["uuid"],
                    urllib.parse.quote(entry["mp3Filename"]),
                    len(entry["mp3"]) / 1000)
@@ -116,7 +65,7 @@ def entry_info_message(entry: dict) -> str:
     # If a score was attached, make note of it in the message
     if "pdf" in entry:
         entry_message += "PDF: %s/files/%s/%s %d KB\n" \
-            % (url_prefix(),
+            % (config["url_prefix"],
                entry["uuid"],
                urllib.parse.quote(entry["pdfFilename"]),
                len(entry["pdf"]) / 1000)
@@ -128,6 +77,7 @@ def entry_info_message(entry: dict) -> str:
         entry_message += ("This entry isn't valid! "
                                  "(Something is missing or broken!)\n")
     return entry_message
+
 
 async def submission_message(entry: dict, user_was_admin: bool) -> None:
     """
@@ -161,18 +111,20 @@ def help_message() -> str:
     str
         The generated help message.
     """
+    global config
+
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
-            client.command_prefix[0] + "submit`, and I'll give you "
+            config["command_prefix"] + "submit`, and I'll give you "
         msg += "a secret link to a personal submission form."
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
         msg += ("To see the already submitted entries for this week, "
-                "head on over to " + url_prefix())
+                "head on over to " + config["url_prefix"])
 
     return msg
 
@@ -197,7 +149,9 @@ def expiry_message() -> str:
     str
         The message itself
     """
-    return "\nThis link will expire in %d minutes" % http_server.default_ttl
+    global config
+
+    return "\nThis link will expire in %d minutes" % config["default_ttl"]
 
 
 @client.event
@@ -208,8 +162,8 @@ async def on_ready() -> None:
     """
     logging.info("DISCORD: Logged in as %s (ID: %s)" %
           (client.user.name, client.user.id))
-    logging.info("DISCORD: Connected to %s servers, and %s users" %
-          (str(len(client.guilds)), str(len(set(client.get_all_members())))))
+    logging.info("DISCORD: Connected to %d servers, and %d users" %
+          (len(client.guilds), len(set(client.get_all_members()))))
     logging.info(("DISCORD: Invite link: "
            "https://discordapp.com/oauth2/authorize?client_id="
            "%s&scope=bot&permissions=335936592" % str(client.user.id)))
@@ -248,8 +202,9 @@ async def is_admin(context: commands.Context) -> bool:
     Bot command check: Returns `true` if the user is an admin.
     Throws `IsNotAdminError()` on failure.
     """
+    global config
 
-    if str(context.author.id) not in client.admins:
+    if str(context.author.id) not in config["admins"]:
         raise IsNotAdminError()
 
     return True
@@ -262,7 +217,7 @@ def is_postentries_channel():
     Throws `WrongChannelError` on failure.
     """
     def predicate(context: commands.Context):
-        if postentries_channel != 0 and context.channel.id == postentries_channel:
+        if context.channel.id == config.get("postentries_channel"):
             return True
 
         raise WrongChannelError()
@@ -322,16 +277,16 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                                      filename=entry["mp3Filename"]))
                 elif entry["mp3Format"] == "external":
                     upload_message += "\n" + str(entry["mp3"])
-                
+
                 upload_files.append(
                     discord.File(io.BytesIO(bytes(entry["pdf"])),
                                  filename=entry["pdfFilename"]))
-                
+
                 total_len = len(bytes(entry["pdf"]))
-                
+
                 if entry["mp3Format"] == "mp3":
                     total_len += len(bytes(entry["mp3"]))
-                
+
                 # 8MB limit
                 if total_len < 8000 * 1000 or entry["mp3Format"] != "mp3":
                     await context.send(upload_message, files=upload_files)
@@ -339,7 +294,7 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                     # Upload mp3 and pdf separately if they're too big together
                     await context.send(upload_message, files=[upload_files[0]])
                     await context.send("", files=[upload_files[1]])
-                    
+
             except Exception as e:
                 logging.error("DISCORD: Failed to upload entry: %s" % str(e))
                 await context.send("(Failed to upload this entry!)")
@@ -351,9 +306,11 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
 @commands.dm_only()
 async def manage(context: commands.Context) -> None:
     """Shows link to management panel"""
-    key = http_server.create_admin_key()
+    global config
 
-    url = "%s/admin/%s" % (url_prefix(), key)
+    key = keys.create_admin_key()
+
+    url = "%s/admin/%s" % (config["url_prefix"], key)
     await context.send("Admin interface: " + url + expiry_message())
 
 
@@ -364,6 +321,8 @@ async def submit(context: commands.Context) -> None:
     Creates a submission entry for the user.
     Replies with a link to the management panel with options to create or edit.
     """
+    global config
+
     week = compo.get_week(True)
 
     if not week["submissionsOpen"]:
@@ -373,8 +332,8 @@ async def submit(context: commands.Context) -> None:
 
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
-            key = http_server.create_edit_key(entry["uuid"])
-            url = "%s/edit/%s" % (url_prefix(), key)
+            key = keys.create_edit_key(entry["uuid"])
+            url = "%s/edit/%s" % (config["url_prefix"], key)
             edit_info = ("Link to edit your existing "
                          "submission: " + url + expiry_message())
             await context.send(edit_info)
@@ -382,8 +341,8 @@ async def submit(context: commands.Context) -> None:
 
     new_entry = compo.create_blank_entry(context.author.name,
                                          context.author.id)
-    key = http_server.create_edit_key(new_entry)
-    url = "%s/edit/%s" % (url_prefix(), key)
+    key = keys.create_edit_key(new_entry)
+    url = "%s/edit/%s" % (config["url_prefix"], key)
 
     await context.send("Submission form: " + url + expiry_message())
 
@@ -391,15 +350,17 @@ async def submit(context: commands.Context) -> None:
 @commands.dm_only()
 async def vote(context: commands.Context) -> None:
     """Sends the user a vote key to be used in the voting interface"""
-    key = http_server.create_vote_key(context.author.id, context.author.name)
-    
+    global config
+
+    key = keys.create_vote_key(context.author.id, context.author.name)
+
     await context.send("```%s```" % key)
-    
+
     message = "Thank you for voting!\n"
-    message += "This key will expire in %s minutes. " % http_server.default_ttl
+    message += "This key will expire in %s minutes. " % config["default_ttl"]
     message += "If you need another key, including if you want to revise your "
     message += "vote, you can use this command again to obtain a new one."
-    
+
     await context.send(message)
 
 @client.command()
@@ -407,15 +368,15 @@ async def vote(context: commands.Context) -> None:
 @commands.dm_only()
 async def getentryplacements(context: commands.Context) -> None:
     ranked = compo.get_ranked_entrant_list(False)
-    
+
     message = ""
-    
+
     for e in ranked:
         message += "%d - %s - %s\n" \
             % (e["votePlacement"], e["entrantName"], e["entryName"])
-    
+
     await context.send(message)
-    
+
 @client.command()
 @commands.check(is_admin)
 async def googleformslist(context: commands.Context) -> None:
@@ -446,27 +407,22 @@ async def howmany(context: commands.Context) -> None:
 
     await context.channel.send(response)
 
+
 @client.command()
 async def help(context: commands.Context) -> None:
     await context.send(help_message())
 
+
 @client.command()
 @commands.dm_only()
 async def status(context: commands.Context) -> None:
-    
+    global config
+
     week = compo.get_week(True)
 
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
             await context.send(entry_info_message(entry))
             return
-    
-    await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % client.command_prefix[0])
 
-if __name__ == "__main__":
-    load_config()
-
-    loop = asyncio.get_event_loop()
-
-    loop.create_task(client.start(client.bot_key))
-    loop.run_forever()
+    await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % config["command_prefix"][0])
