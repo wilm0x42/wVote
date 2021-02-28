@@ -39,7 +39,6 @@ def get_week(get_next_week: bool) -> dict:
     global current_week, next_week
 
     if current_week is None:
-        # current_week = json.loads(open("week.json", "r").read())
         try:
             current_week = pickle.load(open("weeks/current-week.pickle", "rb"))
         except FileNotFoundError:
@@ -74,7 +73,6 @@ def save_weeks() -> None:
     later be read again.
     """
     if current_week is not None and next_week is not None:
-        # open("week.json", "w").write(json.dumps(current_week))
         pickle.dump(current_week, open("weeks/current-week.pickle", "wb"))
         pickle.dump(next_week, open("weeks/next-week.pickle", "wb"))
         logging.info("COMPO: current-week.pickle and next-week.pickle overwritten")
@@ -382,18 +380,18 @@ def sanitize_url_for_client(url: str) -> str:
     sanitized = sanitized.replace("%3F", "?")
     sanitized = sanitized.replace("%3D", "=")
     sanitized = sanitized.replace("%26", "&")
-    
+
     return sanitized
 
-def get_week_viewer_json(which_week: bool) -> str:
+def get_week_viewer(which_week: bool) -> str:
     week = get_week(which_week)
-    
+
     entryData = []
-    
+
     for e in week["entries"]:
         if not entry_valid(e):
             continue
-        
+
         prunedEntry = {
             "uuid": e["uuid"],
             "pdfUrl": "/files/%s/%s" % (e["uuid"], e["pdfFilename"]),
@@ -401,56 +399,56 @@ def get_week_viewer_json(which_week: bool) -> str:
             "entryName": e["entryName"],
             "entrantName": e["entrantName"]
         }
-        
+
         if e["mp3Format"] == "mp3":
             prunedEntry["mp3Url"] = "/files/%s/%s" % \
                 (e["uuid"], e["mp3Filename"])
         else:
             prunedEntry["mp3Url"] = e["mp3"]
-        
+
         # this data is just here for the benefit of the client
         for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
             prunedEntry[voteParam] = 0
-        
+
         entryData.append(prunedEntry)
-    
+
     data = {
         "entries": entryData,
         "theme": week["theme"],
         "date": week["date"]
     }
-    
-    return json.dumps(data)
 
-def get_week_votes_json(which_week: bool) -> str:
+    return data
+
+def get_week_votes(which_week: bool) -> str:
     week = get_week(which_week)
-    
+
     if not "votes" in week:
         week["votes"] = []
-    
+
     adaptedData = week["votes"].copy()
-    
+
     # JavaScript is very silly and won't work if we send these huge
     # numbers as actual numbers, so we have to stringify them first
     for v in adaptedData:
         v["userID"] = str(v["userID"])
-    
-    return json.dumps(adaptedData)
+
+    return adaptedData
 
 def get_ranked_entrant_list(which_week: bool) -> str:
     """Bloc STAR Voting wooooo"""
-    
+
     week = get_week(which_week)
-    
+
     if not "votes" in week:
         week["votes"] = []
-    
+
     # Keeps track of set vs. unset votes, and makes sure a single user can
     # only vote on the same parameter for the same entry a single time
     userVotes = {}
-    
+
     scores = {}
-    
+
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
@@ -469,7 +467,7 @@ def get_ranked_entrant_list(which_week: bool) -> str:
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
-    
+
     # Get rating extents, for normalization
     for v in week["votes"]:
         v["minimum"] = 5
@@ -481,7 +479,7 @@ def get_ranked_entrant_list(which_week: bool) -> str:
                 v["maximum"] = r["rating"]
             if r["rating"] < v["minimum"]:
                 v["minimum"] = r["rating"]
-    
+
     # Evaluate scores
     for v in week["votes"]:
         for r in v["ratings"]:
@@ -492,10 +490,10 @@ def get_ranked_entrant_list(which_week: bool) -> str:
                 normalized /= float(v["maximum"] - (v["minimum"] -1))
                 normalized *= 5
                 scores[r["entryUUID"]].append(normalized)
-    
+
     entry_pool = []
     ranked_entries = []
-    
+
     # Write final scores to entry data, and put 'em all in entry_pool
     for e in week["entries"]:
         if entry_valid(e):
@@ -504,64 +502,64 @@ def get_ranked_entrant_list(which_week: bool) -> str:
             else:
                 e["voteScore"] = 0
             entry_pool.append(e)
-    
+
     # Now that we have scores calculated, run the actual STAR algorithm
     while len(entry_pool) > 1:
         entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"])
-        
+
         entryA = entry_pool[0]
         entryB = entry_pool[1]
-        
+
         preferEntryA = 0
         preferEntryB = 0
-        
+
         for v in week["votes"]:
             scoreA = 0
             scoreB = 0
-            
+
             # note that normalization doesn't matter for comparing preference
             for r in v["ratings"]:
                 if r["entryUUID"] == entryA["uuid"]:
                     scoreA += r["rating"]
                 elif r["entryUUID"] == entryB["uuid"]:
                     scoreB += r["rating"]
-            
+
             if scoreA > scoreB:
                 preferEntryA += 1
             elif scoreB > scoreA:
                 preferEntryB += 1
-        
+
         # greater than or equal to, as entryA is the entry with a higher score,
         # to settle things in the case of a tie
         if preferEntryA >= preferEntryB:
             ranked_entries.append(entry_pool.pop(0))
         else:
             ranked_entries.append(entry_pool.pop(1))
-    
+
     # Add the one remaining entry
     ranked_entries.insert(0, entry_pool.pop(0))
-    
+
     for place, e in enumerate(reversed(ranked_entries)):
         e["votePlacement"] = place + 1
-    
+
     return list(reversed(ranked_entries))
 
 def get_tablerow_for_entry(entry: dict) -> str:
     html = ""
-    
+
     def add_node(tag: str, data: str) -> None:
         nonlocal html
         html += "<%s>%s</%s>" % (tag, data, tag)
 
     def add_td(data: str) -> None:
         add_node("td", data)
-    
+
     html += "<tr>"
 
     add_td(html_lib.escape(entry["entrantName"]))
-    
+
     add_td(html_lib.escape(entry["entryName"]))
-    
+
     add_td(
         "<button onclick=\"viewPDF('/files/%s/%s')\">View PDF</button>" %
         (entry["uuid"], urllib.parse.quote(entry["pdfFilename"])))
@@ -591,7 +589,7 @@ def get_tablerow_for_entry(entry: dict) -> str:
         add_td("Audio format not recognized D:")
 
     html += "</tr>"
-    
+
     return html
 
 def get_vote_controls_for_week(which_week: bool) -> str:
@@ -619,7 +617,7 @@ def get_vote_controls_for_week(which_week: bool) -> str:
 
         if not entry_valid(entry):
             continue
-        
+
         html += get_tablerow_for_entry(entry)
 
     html += "</table>"
