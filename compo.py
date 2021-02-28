@@ -6,6 +6,7 @@ import urllib.parse
 import uuid
 import logging
 import json
+import statistics
 from typing import Optional
 
 import pickle
@@ -444,40 +445,67 @@ def get_ranked_entrant_list(which_week: bool) -> str:
     if not "votes" in week:
         week["votes"] = []
     
-    scores = {}
+    # Keeps track of set vs. unset votes, and makes sure a single user can
+    # only vote on the same parameter for the same entry a single time
     userVotes = {}
-    rankedEntrants = {}
     
+    scores = {}
+    
+    # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
-            if not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes:
-                if r["rating"] == 0:
+            if not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes \
+                    and r["rating"] <= 5 \
+                    and r["rating"] >= 0:
+                if r["rating"] == 0: # Unset rating
                     userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
                         = False
                 else:
                     userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
                         = True
-                
-                if not r["entryUUID"] in scores:
-                    scores[r["entryUUID"]] = 0
-                
-                scores[r["entryUUID"]] += r["rating"]
+                # TODO: throw out ratings for made-up categories
+                # (this will involve data-ifying the voteParams into the week)
             else:
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
     
+    # Get rating extents, for normalization
+    for v in week["votes"]:
+        v["minimum"] = 5
+        v["maximum"] = 1
+        for r in v["ratings"]:
+            if r["rating"] == 0: # Unset rating
+                continue
+            if r["rating"] > v["maximum"]:
+                v["maximum"] = r["rating"]
+            if r["rating"] < v["minimum"]:
+                v["minimum"] = r["rating"]
+    
+    # Evaluate scores
+    for v in week["votes"]:
+        for r in v["ratings"]:
+            if not r["entryUUID"] in scores:
+                scores[r["entryUUID"]] = []
+            if r["rating"] != 0:
+                normalized = float(r["rating"] - (v["minimum"] - 1))
+                normalized /= float(v["maximum"] - (v["minimum"] -1))
+                normalized *= 5
+                scores[r["entryUUID"]].append(normalized)
+    
     entry_pool = []
     ranked_entries = []
     
+    # Write final scores to entry data, and put 'em all in entry_pool
     for e in week["entries"]:
         if entry_valid(e):
             if e["uuid"] in scores:
-                e["voteScore"] = scores[e["uuid"]]
+                e["voteScore"] = statistics.mean(scores[e["uuid"]])
             else:
                 e["voteScore"] = 0
             entry_pool.append(e)
     
+    # Now that we have scores calculated, run the actual STAR algorithm
     while len(entry_pool) > 1:
         entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"])
         
@@ -491,6 +519,7 @@ def get_ranked_entrant_list(which_week: bool) -> str:
             scoreA = 0
             scoreB = 0
             
+            # note that normalization doesn't matter for comparing preference
             for r in v["ratings"]:
                 if r["entryUUID"] == entryA["uuid"]:
                     scoreA += r["rating"]
