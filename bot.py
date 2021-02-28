@@ -372,8 +372,9 @@ async def getentryplacements(context: commands.Context) -> None:
     message = ""
 
     for e in ranked:
-        message += "%d - %s - %s\n" \
-            % (e["votePlacement"], e["entrantName"], e["entryName"])
+        message += "%d - %s - %s (%f)\n" \
+            % (e["votePlacement"], e["entrantName"],
+               e["entryName"], e["voteScore"])
 
     await context.send(message)
 
