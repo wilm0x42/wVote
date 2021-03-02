@@ -252,6 +252,8 @@
 					    if (response.status != "ok") {
 					       throw new Error("...");
 					    }
+
+						// TODO: Display the Thanks here and avoid redirecting the user
 					    location.href = "thanks";
 					} catch (e) {
 					    alert("Something went wrong :/\nMake sure you entered a valid vote key");
