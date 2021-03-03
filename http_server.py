@@ -71,14 +71,6 @@ async def admin_handler(request: web_request.Request) -> web.Response:
     return web.Response(status=200, body=html, content_type="text/html")
 
 
-#TODO: Remove
-async def vote_thanks_handler(request: web_request.Request) -> web.Response:
-    message = thanks_template.replace("[HEADER]", "Thank you for voting!")
-    message = message.replace("[BODY]",
-        "Your vote has been recorded.  I will guard it with my life. :)")
-    return web.Response(status=200, body=message, content_type="text/html")
-
-
 # API handlers (JSON -> JSON)
 async def get_entries_handler(request: web_request.Request) -> web.Response:
     return web.json_response(get_week_viewer(False, True))
@@ -466,7 +458,6 @@ server.add_routes([
     web.get("/favicon.ico", favicon_handler),
     web.get("/files/{uuid}/{filename}", week_files_handler),
     web.get("/edit/{authKey}", edit_handler),
-    web.get("/thanks", vote_thanks_handler),  #TODO: Remove
     web.get("/entry_data", get_entries_handler),
     web.get("/admin/{authKey}", admin_handler),
     web.get("/admin/get_admin_data/{authKey}", admin_get_data_handler),

@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en_US">
+
 <head>
 	<meta charset="utf-8">
 	<meta name="theme-color" content="#ee34e7">
@@ -7,16 +8,18 @@
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
 	<script src="[VUE-URL]"></script>
 </head>
+
 <body>
 	<h1>
 		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
 	</h1>
 	<div id="content">
 		<div v-if="entries === null">Loading...</div>
-		<div v-else>
+		<div v-else-if="mode === 'vote'">
 			<transition name="entry-list-toggle">
 				<div class="entries-container" v-show="showEntryList">
-					<h2 class="week-title">{{ theme }}</h2><h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
+					<h2 class="week-title">{{ theme }}</h2>
+					<h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
 					<table cellpadding='0' class='entry-table'>
 						<tr class="entry-table-header-row">
 							<th class="entry-table-header">Entrant</th>
@@ -40,7 +43,8 @@
 								<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
 							</td>
 							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
-								<vote-star-widget v-model="entry[voteParam]" @input="updateNumEntriesRated"></vote-star-widget>
+								<vote-star-widget v-model="entry[voteParam]" @input="updateNumEntriesRated">
+								</vote-star-widget>
 							</td>
 						</tr>
 					</table>
@@ -54,14 +58,16 @@
 				</div>
 			</transition>
 
-			<div class="pdf-container" :class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
+			<div class="pdf-container"
+				:class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
 				<div v-if="viewedEntryIndex === null" id="pdf-viewer" class="pdf-viewer-welcome">
 					<div id="pdf-alt" class="pdf-alt">
-						<img width="150px"  src="/static/kirb_phones.png" />
+						<img width="150px" src="/static/kirb_phones.png" />
 						<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
 					</div>
 				</div>
-				<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }" :data="entries[viewedEntryIndex].pdfUrl" type="application/pdf">
+				<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }"
+					:data="entries[viewedEntryIndex].pdfUrl" type="application/pdf">
 					<div id="pdf-alt" class="pdf-alt">
 						<img width="150px" src="/static/kirb_think.png">
 						<h2><a :href="entries[viewedEntryIndex].pdfUrl">Link to PDF (embedded viewer failed)</a></h2>
@@ -86,7 +92,9 @@
 					</button>
 				</td>
 				<td v-if="viewedEntryIndex != null" class="viewer-control" style="text-align: center;" width="400px">
-					<p>{{ truncateString(entries[viewedEntryIndex].entrantName + " - " + entries[viewedEntryIndex].entryName, 60) }}<p>
+					<p>{{ truncateString(entries[viewedEntryIndex].entrantName + " - " +
+						entries[viewedEntryIndex].entryName, 60) }}
+					<p>
 				</td>
 				<td v-if="viewedEntryIndex != null" class="viewer-control">
 					<div v-if="entries[viewedEntryIndex].mp3Format == 'mp3'">
@@ -94,7 +102,8 @@
 					</div>
 					<div v-else>
 						<img src="/static/interface-play.png" />
-						<a :href="entries[viewedEntryIndex].mp3Url" style="position: relative; top: -12px;">Listen Here!</a>
+						<a :href="entries[viewedEntryIndex].mp3Url" style="position: relative; top: -12px;">Listen
+							Here!</a>
 					</div>
 				</td>
 				<td>
@@ -106,6 +115,15 @@
 					</button>
 				</td>
 			</table>
+		</div>
+		<div v-else-if="mode === 'thanks'">
+			<div id="content">
+				<div class="submit-babble">
+					<h2>Thank you for voting!</h2>
+					<p>Your vote has been recorded.  I will guard it with my life. :)</p>
+					<img width="500px" src="/static/kirb_thanks.png" />
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -129,33 +147,33 @@
 						</button>
 					</td>
 				</table>`,
-				methods: {
-					vote(value) {
-						if (this.starsData == value) {
-							this.starsData = 0;
-						} else {
-							this.starsData = value;
-						}
-
-						this.$emit("input", this.starsData);
+			methods: {
+				vote(value) {
+					if (this.starsData == value) {
+						this.starsData = 0;
+					} else {
+						this.starsData = value;
 					}
+
+					this.$emit("input", this.starsData);
 				}
+			}
 		})
 
 		var app = new Vue({
 			el: '#content',
-			data: function()
-			{
+			data: function () {
 				return {
-			    	voteParams: ["votePrompt", "voteScore", "voteOverall"],
-			    	showEntryList: true,
-			    	pdfColorInvert: true,
-				    entries: null,
-				    viewedEntryIndex: null,
-				    theme: null,
-				    date: null,
-				    numEntriesRated: 0,
-				    userVoteKey: "",
+					mode: "vote",
+					voteParams: ["votePrompt", "voteScore", "voteOverall"],
+					showEntryList: true,
+					pdfColorInvert: true,
+					entries: null,
+					viewedEntryIndex: null,
+					theme: null,
+					date: null,
+					numEntriesRated: 0,
+					userVoteKey: "",
 				}
 			},
 			async mounted() {
@@ -167,21 +185,17 @@
 				this.date = weekData.date
 			},
 			methods: {
-				viewEntry: function(entryIndex)
-				{
+				viewEntry: function (entryIndex) {
 					this.viewedEntryIndex = entryIndex
 					this.showEntryList = false
 				},
-				toggleEntryContainer: function()
-				{
+				toggleEntryContainer: function () {
 					this.showEntryList = !this.showEntryList
 				},
-				toggleNightMode()
-				{
+				toggleNightMode() {
 					this.pdfColorInvert = !this.pdfColorInvert
 				},
-				selectAdjacentEntry: function(offset)
-				{
+				selectAdjacentEntry: function (offset) {
 					if (this.viewedEntryIndex === null)
 						return
 
@@ -196,17 +210,13 @@
 					this.viewedEntryIndex = index
 					this.showEntryList = false
 				},
-				updateNumEntriesRated: function()
-				{
+				updateNumEntriesRated: function () {
 					var total = 0
 
-					for (var i = 0; i < this.entries.length; i++)
-					{
+					for (var i = 0; i < this.entries.length; i++) {
 						var hasRating = false
-						for (var p = 0; p < this.voteParams.length; p++)
-						{
-							if (this.entries[i][this.voteParams[p]] != 0)
-							{
+						for (var p = 0; p < this.voteParams.length; p++) {
+							if (this.entries[i][this.voteParams[p]] != 0) {
 								hasRating = true
 								break
 							}
@@ -217,10 +227,8 @@
 
 					this.numEntriesRated = total
 				},
-				submitVote: async function ()
-				{
-					if (this.userVoteKey == "")
-					{
+				submitVote: async function () {
+					if (this.userVoteKey == "") {
 						alert("Please enter a vote key! (To obtain a vote key, DM the command \"vote!vote\" to @8Bot on the 8BMT discord server.")
 						return
 					}
@@ -230,12 +238,9 @@
 						voteKey: this.userVoteKey
 					}
 
-					for (var e = 0; e < this.entries.length; e++)
-					{
-						for (var p = 0; p < this.voteParams.length; p++)
-						{
-							if (this.entries[e][this.voteParams[p]] != null)
-							{
+					for (var e = 0; e < this.entries.length; e++) {
+						for (var p = 0; p < this.voteParams.length; p++) {
+							if (this.entries[e][this.voteParams[p]] != null) {
 								newData = {
 									entryUUID: this.entries[e].uuid,
 									voteForName: this.entries[e].entrantName,
@@ -248,22 +253,19 @@
 					}
 
 					try {
-					    let response = await fetch("submit_vote", {method: "POST", body: JSON.stringify(voteData)});
-					    if (response.status != "ok") {
-					       throw new Error("...");
-					    }
+						let response = await fetch("submit_vote", { method: "POST", body: JSON.stringify(voteData) });
+						if (!response.ok) {
+							throw new Error("...");
+						}
 
-						// TODO: Display the Thanks here and avoid redirecting the user
-					    location.href = "thanks";
+						this.mode = 'thanks';
 					} catch (e) {
-					    alert("Something went wrong :/\nMake sure you entered a valid vote key");
+						alert("Something went wrong :/\nMake sure you entered a valid vote key");
 					}
 				},
-				truncateString: function(s, length)
-				{
-					if (s.length > length)
-					{
-						return s.slice(0, length-1) + "..."
+				truncateString: function (s, length) {
+					if (s.length > length) {
+						return s.slice(0, length - 1) + "..."
 					}
 					return s
 				}
@@ -271,4 +273,5 @@
 		})
 	</script>
 </body>
+
 </html>
