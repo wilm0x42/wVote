@@ -104,7 +104,7 @@ async def edit_handler(request: web_request.Request) -> web.Response:
     if keys.key_valid(auth_key, keys.edit_keys):
         key = keys.edit_keys[auth_key]
 
-        entry = compo.get_entry_by_uuid(key["entryUUID"])
+        entry = compo.find_entry_by_uuid(key["entryUUID"])
 
         form = get_edit_form_for_entry(entry, auth_key)
         html = submit_template.replace("[ENTRY-FORM]", form)
@@ -298,19 +298,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
     await bot.submission_message(entry,
                                  keys.key_valid(auth_key, keys.admin_keys))
 
-    if is_admin:
-        return web.Response(status=303, headers={"Location": "%s/admin/%s" % (config["url_prefix"], auth_key)})
-
-    thanks = thanks_template.replace("[HEADER]",
-                          "Your entry has been recorded -- Good luck!")
-    thanks = thanks.replace("[BODY]",
-        "If you have any issues, "
-        "let us know in #weekly-challenge-discussion, "
-        "or DM one of our friendly moderators.")
-
-    return web.Response(status=200,
-                        body=thanks,  #TODO: Remove (Should be JSON).
-                        content_type="text/html")
+    return web.Response(status=204)
 
 
 async def submit_vote_handler(request: web_request.Request) -> web.Response:
@@ -351,7 +339,7 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
 # Helpers
 # TODO: Vueify
 def get_edit_form_for_entry(entry: dict, auth_key: str) -> str:
-    post_url = "/edit/post/%s/%s" % (uuid, auth_key)
+    post_url = "/edit/post/%s/%s" % (entry['uuid'], auth_key)
 
     form_class = "entry-form"
 
