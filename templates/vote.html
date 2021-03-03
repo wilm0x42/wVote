@@ -14,8 +14,11 @@
 		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
 	</h1>
 	<div id="content">
-		<div v-if="entries === null">Loading...</div>
+		<div v-if="mode === null">Loading...</div>
 		<div v-else-if="mode === 'vote'">
+			<div v-show="working">
+				PUT A SPINNER HERE OR SOMETHING I'M LAZY
+			</div>
 			<transition name="entry-list-toggle">
 				<div class="entries-container" v-show="showEntryList">
 					<h2 class="week-title">{{ theme }}</h2>
@@ -164,7 +167,7 @@
 			el: '#content',
 			data: function () {
 				return {
-					mode: "vote",
+					mode: null,
 					voteParams: ["votePrompt", "voteScore", "voteOverall"],
 					showEntryList: true,
 					pdfColorInvert: true,
@@ -174,15 +177,34 @@
 					date: null,
 					numEntriesRated: 0,
 					userVoteKey: "",
+					working: false,
 				}
 			},
 			async mounted() {
-				let weekResponse = await fetch("/entry_data")
+				this.working = true;
+
+				// Are we admin?
+				let weekResponse;
+				if (window.location.pathname == "/") {
+					weekResponse = await fetch("/entry_data")
+				} else {
+					let parts = window.location.pathname.split("/");
+					let authKey = parts[parts.length - 1];
+					weekResponse = await fetch("/admin/get_preview_data/" + authKey)
+				}
+
+				if (!weekResponse.ok) {
+					// TODO: Error handling
+				}
+
 				let weekData = await weekResponse.json()
 
 				this.entries = weekData.entries
 				this.theme = weekData.theme
 				this.date = weekData.date
+				this.mode = "vote";
+
+				this.working = false;
 			},
 			methods: {
 				viewEntry: function (entryIndex) {
@@ -228,6 +250,8 @@
 					this.numEntriesRated = total
 				},
 				submitVote: async function () {
+					this.working = true;
+
 					if (this.userVoteKey == "") {
 						alert("Please enter a vote key! (To obtain a vote key, DM the command \"vote!vote\" to @8Bot on the 8BMT discord server.")
 						return
@@ -262,6 +286,8 @@
 					} catch (e) {
 						alert("Something went wrong :/\nMake sure you entered a valid vote key");
 					}
+
+					this.working = false;
 				},
 				truncateString: function (s, length) {
 					if (s.length > length) {

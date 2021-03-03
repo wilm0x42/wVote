@@ -99,7 +99,7 @@
 
 			<div class="vote-list">
 				<div v-for="vote in votes" class="vote-data">
-					<a :href="'/admin/viewvote/[ADMIN-KEY]/' + vote.userID.toString()">Vote from {{ vote.userName }}</a>
+					<a :href="'/admin/viewvote/' + authKey + '/' + vote.userID.toString()">Vote from {{ vote.userName }}</a>
 				</div>
 			</div>
 		</div>
@@ -162,7 +162,7 @@
 		var adminApp = new Vue({
 			el: "#content",
 			components: { Entry: entryComponent },
-			data: function () {
+			data() {
 				return {
 					authKey: "",
 					votes: null,
