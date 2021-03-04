@@ -191,7 +191,7 @@ async def on_command_error(context: commands.Context,
         return
 
     if isinstance(error, WrongChannelError):
-        await context.send("This isn't the right channel" " for this!")
+        await context.send("This isn't the right channel for this!")
         return
 
     logging.error("DISCORD: Unhandled command error: %s" % str(error))
