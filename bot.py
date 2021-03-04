@@ -448,11 +448,10 @@ async def myresults(context: commands.Context) -> None:
 
     ratings = []
 
-    # change to list comp? it would be a bit over 80 chars tho
-    for vote in week["votes"]:
-        for rating in vote["ratings"]:
-            if rating["entryUUID"] == user_entry["uuid"]:
-                ratings.append(rating)
+    [rating
+        for rating in vote["ratings"]
+        for vote in week["votes"]
+        if rating["entryUUID"] == user_entry["uuid"]]
 
     if not ratings:
         await context.send("Well this is awkward, no one voted on your entry...")
