@@ -186,8 +186,7 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
     return None, None
 
 
-def verify_votes(which_week: bool) -> None:
-    week = get_week(which_week)
+def verify_votes(week: dict) -> None:
     
     if not "votes" in week:
         week["votes"] = []
