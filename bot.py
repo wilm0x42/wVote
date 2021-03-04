@@ -432,8 +432,6 @@ async def status(context: commands.Context) -> None:
 @commands.dm_only()
 async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
-    
-    compo.verify_votes(False)
 
     user_entry = None
     
@@ -446,8 +444,8 @@ async def myresults(context: commands.Context) -> None:
         await context.send("You didn't submit anything for this week!")
         return
 
-    ratings = []
-
+    compo.get_ranked_entrant_list(False)
+    
     ratings = [rating
         for vote in week["votes"]
         for rating in vote["ratings"]
@@ -472,5 +470,8 @@ async def myresults(context: commands.Context) -> None:
             % (category[4:], total, total / results[category][1])
         # im slicing to get rid of the vote in the category name
         message.append(text)
+
+    message.append("You got rank %d with an overall score of %f" \
+        % (user_entry["votePlacement"], user_entry["voteScore"]))
 
     await context.send("\n".join(message))
