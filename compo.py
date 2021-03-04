@@ -214,7 +214,7 @@ def verify_votes(week: dict) -> None:
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
 
-def get_ranked_entrant_list(which_week: bool) -> str:
+def get_ranked_entrant_list(which_week: bool) -> list:
     """Bloc STAR Voting wooooo"""
 
     week = get_week(which_week)
