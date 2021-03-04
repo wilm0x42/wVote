@@ -459,7 +459,7 @@ async def myresults(context: commands.Context) -> None:
 
     for rating in ratings:
         score = results.setdefault(rating["voteParam"], [0, 0])
-        if rating["rating > 0"]: # unset rating
+        if rating["rating"] > 0: # unset rating
             score[0] += rating["rating"]
             score[1] += 1
     
