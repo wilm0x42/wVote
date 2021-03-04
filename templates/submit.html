@@ -117,7 +117,10 @@
 					const formData = new FormData();
 
 					formData.append("entryName", this.entry.entryName);
-					formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+					
+					if (this.pdfFormat === 'upload') {
+						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+					}
 
 					if (this.mp3Format === 'external') {
 						formData.append("mp3Link", this.mp3Link);
