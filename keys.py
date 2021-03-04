@@ -37,7 +37,7 @@ def key_valid(key: str, keystore: dict) -> bool:
         return False
 
     now = datetime.datetime.now()
-    ttl = datetime.timedelta(minutes=int(keystore[key]["timeToLive"]))
+    ttl = datetime.timedelta(minutes=keystore[key]["timeToLive"])
 
     if now - keystore[key]["creationTime"] < ttl:
         return True

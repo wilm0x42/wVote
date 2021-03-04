@@ -166,7 +166,7 @@ async def on_ready() -> None:
           (len(client.guilds), len(set(client.get_all_members()))))
     logging.info(("DISCORD: Invite link: "
            "https://discordapp.com/oauth2/authorize?client_id="
-           "%s&scope=bot&permissions=335936592" % str(client.user.id)))
+           "%d&scope=bot&permissions=335936592" % client.user.id))
     activity = discord.Game(name="Preventing Voter Fraud")
     return await client.change_presence(activity=activity)
 
@@ -204,7 +204,7 @@ async def is_admin(context: commands.Context) -> bool:
     """
     global config
 
-    if str(context.author.id) not in config["admins"]:
+    if context.author.id not in config["admins"]:
         raise IsNotAdminError()
 
     return True
@@ -276,7 +276,7 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                         discord.File(io.BytesIO(bytes(entry["mp3"])),
                                      filename=entry["mp3Filename"]))
                 elif entry["mp3Format"] == "external":
-                    upload_message += "\n" + str(entry["mp3"])
+                    upload_message += "\n" + entry["mp3"]
 
                 upload_files.append(
                     discord.File(io.BytesIO(bytes(entry["pdf"])),
@@ -434,7 +434,7 @@ async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
 
     user_entry = None
-    
+
     # change to list comp or some other search method?
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
@@ -445,7 +445,7 @@ async def myresults(context: commands.Context) -> None:
         return
 
     compo.verify_votes(week)
-    
+
     ratings = [rating
         for vote in week["votes"]
         for rating in vote["ratings"]
@@ -462,7 +462,7 @@ async def myresults(context: commands.Context) -> None:
         if rating["rating"] > 0: # unset rating
             score[0] += rating["rating"]
             score[1] += 1
-    
+
     message = []
     message.append("*drumroll please*")
     for category in results:
