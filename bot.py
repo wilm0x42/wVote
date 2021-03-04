@@ -454,6 +454,10 @@ async def myresults(context: commands.Context) -> None:
             if rating["entryUUID"] == user_entry["uuid"]:
                 ratings.append(rating)
 
+    if not ratings:
+        await context.send("Well this is awkward, no one voted on your entry...")
+        return
+
     results = {}
 
     for rating in ratings:
