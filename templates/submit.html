@@ -42,6 +42,10 @@
 					<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
 						can enter that here.</label>
 					<input name='mp3Link' type='text' v-model="mp3Link" />
+
+					<div v-if="mp3LinkError" class="error-message">
+						{{ mp3LinkError }}
+					</div>
 				</div>
 				<br>
 				<div class='entry-param'>
@@ -90,21 +94,29 @@
 			async mounted() {
 				this.working = true;
 
-				let parts = window.location.pathname.split("/");
-				this.authKey = parts[parts.length - 1];
-
-				let request = await fetch("/entry_data/" + this.authKey);
-
-				if (!request.ok) {
-					alert("Something went wrong: " + await request.text());
+				let hostsRequest = await fetch("/allowed_hosts");
+				if (!hostsRequest.ok) {
+					// TODO: A better way to handle errors...
+					alert("Something went wrong: " + await hostsRequest.text());
 				} else {
-					let entryData = await request.json();
-					this.mode = "submit";
-					this.entry = entryData;
+					this.validHosts = await hostsRequest.json();
 
-					if (!this.entry.mp3Format == 'mp3') {
-						// If it's a link, populate the field
-						this.mp3Link = this.entry.mp3Url;
+					let parts = window.location.pathname.split("/");
+					this.authKey = parts[parts.length - 1];
+
+					let request = await fetch("/entry_data/" + this.authKey);
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						let entryData = await request.json();
+						this.mode = "submit";
+						this.entry = entryData;
+
+						if (!this.entry.mp3Format == 'mp3') {
+							// If it's a link, populate the field
+							this.mp3Link = this.entry.mp3Url;
+						}
 					}
 				}
 
@@ -117,7 +129,7 @@
 					const formData = new FormData();
 
 					formData.append("entryName", this.entry.entryName);
-					
+
 					if (this.pdfFormat === 'upload') {
 						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
 					}
@@ -169,6 +181,19 @@
 					}
 
 					return true;
+				},
+				mp3LinkError() {
+					if (this.mp3Link === '') {
+						return "Link can't be empty.";
+					}
+
+					for (let host of this.validHosts) {
+						if (this.mp3Link.startsWith(host)) {
+							return false;
+						}
+					}
+
+					return "This host is not in the approved list. Please use any of these: " + this.validHosts.join(",") + ".";
 				}
 			}
 		});

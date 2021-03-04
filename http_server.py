@@ -272,6 +272,10 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
         elif field.name == "mp3Link":
             url = (await field.read(decode=True)).decode("utf-8")
             if len(url) > 1:
+                if not any(url.startswith(host) for host in config["allowed_hosts"]):
+                    return web.Response(status=400,
+                                        text="This host is not allowed.")
+
                 entry["mp3"] = url
                 entry["mp3Format"] = "external"
                 entry["mp3Filename"] = ""
@@ -349,6 +353,12 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     compo.save_weeks()
 
     return web.Response(status=200, text="FRICK yeah")
+
+
+async def allowed_hosts_handler(request: web_request.Request) -> web.Response:
+    """Returns the list of allowed hosts for song links"""
+
+    return web.json_response(config["allowed_hosts"])
 
 
 # Helpers
@@ -438,6 +448,7 @@ server.add_routes([
     web.get("/edit/{authKey}", edit_handler),
     web.get("/entry_data", get_entries_handler),
     web.get("/entry_data/{authKey}", get_entry_handler),
+    web.get("/allowed_hosts", allowed_hosts_handler),
     web.get("/admin/{authKey}", admin_handler),
     web.get("/admin/get_admin_data/{authKey}", admin_get_data_handler),
     web.get("/admin/get_preview_data/{authKey}", admin_preview_handler),
