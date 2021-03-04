@@ -448,9 +448,9 @@ async def myresults(context: commands.Context) -> None:
 
     ratings = []
 
-    [rating
-        for rating in vote["ratings"]
+    ratings = [rating
         for vote in week["votes"]
+        for rating in vote["ratings"]
         if rating["entryUUID"] == user_entry["uuid"]]
 
     if not ratings:
