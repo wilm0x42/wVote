@@ -75,7 +75,7 @@ async def admin_handler(request: web_request.Request) -> web.Response:
 async def edit_handler(request: web_request.Request) -> web.Response:
     """Display edit forms (No data; will be fetched by Vue)"""
 
-    html = open("templates/submit.html", "r").read().replace("[VUE-URL]", get_vue_url())
+    html = submit_template.replace("[VUE-URL]", get_vue_url())
 
     return web.Response(status=200, body=html, content_type="text/html")
 
