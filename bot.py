@@ -444,7 +444,7 @@ async def myresults(context: commands.Context) -> None:
         await context.send("You didn't submit anything for this week!")
         return
 
-    compo.get_ranked_entrant_list(False)
+    compo.verify_votes(week)
     
     ratings = [rating
         for vote in week["votes"]
@@ -470,8 +470,5 @@ async def myresults(context: commands.Context) -> None:
             % (category[4:], total, total / results[category][1])
         # im slicing to get rid of the vote in the category name
         message.append(text)
-
-    message.append("You got rank %d with an overall score of %f" \
-        % (user_entry["votePlacement"], user_entry["voteScore"]))
 
     await context.send("\n".join(message))
