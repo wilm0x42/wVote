@@ -433,6 +433,8 @@ async def status(context: commands.Context) -> None:
 async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
     
+    compo.verify_votes(False)
+
     user_entry = None
     
     # change to list comp or some other search method?

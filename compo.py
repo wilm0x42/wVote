@@ -186,20 +186,16 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
     return None, None
 
 
-def get_ranked_entrant_list(which_week: bool) -> str:
-    """Bloc STAR Voting wooooo"""
-
+def verify_votes(which_week: bool) -> None:
     week = get_week(which_week)
-
+    
     if not "votes" in week:
         week["votes"] = []
 
     # Keeps track of set vs. unset votes, and makes sure a single user can
     # only vote on the same parameter for the same entry a single time
     userVotes = {}
-
-    scores = {}
-
+    
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
@@ -218,6 +214,15 @@ def get_ranked_entrant_list(which_week: bool) -> str:
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
+
+def get_ranked_entrant_list(which_week: bool) -> str:
+    """Bloc STAR Voting wooooo"""
+
+    week = get_week(which_week)
+
+    verify_votes(which_week)
+
+    scores = {}
 
     # Get rating extents, for normalization
     for v in week["votes"]:
