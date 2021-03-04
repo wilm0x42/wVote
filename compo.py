@@ -219,7 +219,7 @@ def get_ranked_entrant_list(which_week: bool) -> list:
 
     week = get_week(which_week)
 
-    verify_votes(which_week)
+    verify_votes(week)
 
     scores = {}
 
