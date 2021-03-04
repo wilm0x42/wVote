@@ -427,3 +427,49 @@ async def status(context: commands.Context) -> None:
             return
 
     await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % config["command_prefix"][0])
+
+@client.command()
+@commands.dm_only()
+async def myresults(context: commands.Context) -> None:
+    week = compo.get_week(False)
+
+    user_entry = None
+    
+    # change to list comp or some other search method?
+    for entry in week["entries"]:
+        if entry["discordID"] == context.author.id:
+            user_entry = entry
+
+    if not user_entry:
+        await context.send("You didn't submit anything for this week!")
+        return
+
+    compo.verify_votes(week)
+    
+    ratings = [rating
+        for vote in week["votes"]
+        for rating in vote["ratings"]
+        if rating["entryUUID"] == user_entry["uuid"]]
+
+    if not ratings:
+        await context.send("Well this is awkward, no one voted on your entry...")
+        return
+
+    results = {}
+
+    for rating in ratings:
+        score = results.setdefault(rating["voteParam"], [0, 0])
+        if rating["rating"] > 0: # unset rating
+            score[0] += rating["rating"]
+            score[1] += 1
+    
+    message = []
+    message.append("*drumroll please*")
+    for category in results:
+        total = results[category][0]
+        text = "%s: You got %d stars total for an average of %f" \
+            % (category[4:], total, total / results[category][1])
+        # im slicing to get rid of the vote in the category name
+        message.append(text)
+
+    await context.send("\n".join(message))
