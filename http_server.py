@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import html as html_lib
-import string
 import logging
 import json
 
@@ -13,9 +11,9 @@ import bot
 
 config: dict = None
 
+# TODO: replace [VUE-URL] ASAP?
 vote_template = open("templates/vote.html", "r").read()
 submit_template = open("templates/submit.html", "r").read()
-thanks_template = open("templates/thanks.html", "r").read()
 admin_template = open("templates/admin.html", "r").read()
 
 favicon = open("static/favicon.ico", "rb").read()
@@ -38,165 +36,14 @@ def get_vue_url() -> str:
         return "https://cdn.jsdelivr.net/npm/vue@2"
 
 
-# TODO: Vue
-def get_admin_controls(auth_key: str) -> str:
-    this_week = compo.get_week(False)
-    next_week = compo.get_week(True)
-
-    html = ""
-
-    def text_field(field: str, label: str, value: str) -> None:
-        nonlocal html
-        html += "<form action='/admin/edit/%s' " % auth_key
-        html += ("onsubmit='setTimeout(function()"
-                 "{window.location.reload();},1000);' ")
-        html += ("method='post' accept-charset='utf-8' "
-                 "enctype='application/x-www-form-urlencoded'>")
-
-        html += "<label for='%s'>%s</label>" % (field, label)
-        html += "<input name='%s' type='text' value='%s' />" % (
-            field, html_lib.escape(value))
-        html += "<input type='submit' value='Submit'/>"
-        html += "</form><br>"
-
-    text_field("currentWeekTheme", "Theme/title of current week",
-               this_week["theme"])
-    text_field("currentWeekDate", "Date of current week", this_week["date"])
-    text_field("nextWeekTheme", "Theme/title of next week", next_week["theme"])
-    text_field("nextWeekDate", "Date of next week", next_week["date"])
-
-    if compo.get_week(True)["submissionsOpen"]:
-        html += "<p>Submissions are currently OPEN</p>"
-    else:
-        html += "<p>Submissions are currently CLOSED</p>"
-
-    html += "<form action='/admin/edit/%s' " % auth_key
-    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
-    html += ("method='post' accept-charset='utf-8' "
-             "enctype='application/x-www-form-urlencoded'>")
-    html += "<label for='submissionsOpen'>Submissions Open</label>"
-    html += "<input type='radio' name='submissionsOpen' value='Yes'>"
-    html += "<label for='Yes'>Yes</label>"
-    html += "<input type='radio' name='submissionsOpen' value='No'>"
-    html += "<label for='No'>No</label>"
-    html += "<input type='submit' value='Submit'/>"
-    html += "</form><br>"
-
-    if compo.get_week(False)["votingOpen"]:
-        html += "<p>Voting is currently OPEN</p>"
-    else:
-        html += "<p>Voting is currently CLOSED</p>"
-
-    html += "<form action='/admin/edit/%s' " % auth_key
-    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
-    html += ("method='post' accept-charset='utf-8' "
-             "enctype='application/x-www-form-urlencoded'>")
-    html += "<label for='votingOpen'>Voting Open</label>"
-    html += "<input type='radio' name='votingOpen' value='Yes'>"
-    html += "<label for='Yes'>Yes</label>"
-    html += "<input type='radio' name='votingOpen' value='No'>"
-    html += "<label for='No'>No</label>"
-    html += "<input type='submit' value='Submit'/>"
-    html += "</form><br>"
-
-    html += ("<form style='border: 1px solid black;' "
-             "action='/admin/edit/%s' " % auth_key)
-    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
-    html += ("method='post' accept-charset='utf-8' "
-             "enctype='application/x-www-form-urlencoded'>")
-    html += "<label>Force create an entry</label><br>"
-    html += "<label for='newEntryEntrant'>Spoofed entrant name</label>"
-    html += "<input type='text' name='newEntryEntrant' value='Wiglaf'><br>"
-    html += ("<label for='newEntryDiscordID'>(Optional) "
-             "Spoofed entrant discord ID</label>")
-    html += "<input type='text' name='newEntryDiscordID' value=''><br>"
-    html += ("<label for='newEntryWeek'>Place entry in current week "
-             "instead of next week?</label>")
-    html += "<input type='checkbox' name='newEntryWeek' value='on'><br>"
-    html += "<input type='submit' value='Submit'/>"
-    html += "</form><br>"
-
-    html += "<form action='/admin/edit/%s' " % auth_key
-    html += "onsubmit='setTimeout(function(){window.location.reload();},1000);' "
-    html += ("method='post' accept-charset='utf-8' "
-             "enctype='application/x-www-form-urlencoded'>")
-    html += ("<label for='rolloutWeek'>Archive current week, "
-             "and make next week current</label>")
-    html += "<input type='checkbox' name='rolloutWeek' value='on'>"
-    html += "<input type='submit' value='Submit'/>"
-    html += "</form>"
-
-    return html
-
-
-async def admin_control_handler(request: web_request.Request) -> web.Response:
-    auth_key = request.match_info["authKey"]
-
-    if keys.key_valid(auth_key, keys.admin_keys):
-        this_week = compo.get_week(False)
-        next_week = compo.get_week(True)
-
-        data = await request.post()
-
-        def data_param(week, param, field):
-            nonlocal data
-
-            if field in data:
-                week[param] = data[field]
-
-        data_param(this_week, "theme", "currentWeekTheme")
-        data_param(this_week, "date", "currentWeekDate")
-        data_param(next_week, "theme", "nextWeekTheme")
-        data_param(next_week, "date", "nextWeekDate")
-
-        if "submissionsOpen" in data:
-            if data["submissionsOpen"] == "Yes":
-                compo.get_week(True)["submissionsOpen"] = True
-            if data["submissionsOpen"] == "No":
-                compo.get_week(True)["submissionsOpen"] = False
-
-        if "votingOpen" in data:
-            if data["votingOpen"] == "Yes":
-                compo.get_week(False)["votingOpen"] = True
-            if data["votingOpen"] == "No":
-                compo.get_week(False)["votingOpen"] = False
-
-        if "rolloutWeek" in data:
-            if data["rolloutWeek"] == "on":
-                compo.move_to_next_week()
-
-        if "newEntryEntrant" in data:
-            new_entry_week = True
-            if "newEntryWeek" in data:
-                new_entry_week = False
-
-            new_entry_discord_id = None
-            if "newEntryDiscordID" in data:
-                if data["newEntryDiscordID"] != "":
-                    try:
-                        new_entry_discord_id = int(data["newEntryDiscordID"])
-                    except ValueError:
-                        new_entry_discord_id = None
-
-            compo.create_blank_entry(data["newEntryEntrant"],
-                                     new_entry_discord_id, new_entry_week)
-        compo.save_weeks()
-        return web.Response(status=204, text="Nice")
-    else:
-        return web.Response(status=404, text="File not found")
-
 # Static/semi-static files:
-async def vote_handler(request: web_request.Request) -> web.Response:
-    html = vote_template.replace("[VUE-URL]", get_vue_url())
-
-    return web.Response(text=html, content_type="text/html")
-
-
 async def favicon_handler(request: web_request.Request) -> web.Response:
+    """Display the favicon at the root"""
     return web.Response(body=favicon)
 
 
 async def week_files_handler(request: web_request.Request) -> web.Response:
+    """Download the requested file for an entry"""
     data, content_type = compo.get_entry_file(request.match_info["uuid"],
                                               request.match_info["filename"])
 
@@ -206,79 +53,101 @@ async def week_files_handler(request: web_request.Request) -> web.Response:
     return web.Response(status=200, body=data, content_type=content_type)
 
 
+async def vote_handler(request: web_request.Request) -> web.Response:
+    """Display the vote form (No data; will be fetched by Vue)"""
+    html = vote_template.replace("[VUE-URL]", get_vue_url())
+
+    return web.Response(text=html, content_type="text/html")
+
+
 async def admin_handler(request: web_request.Request) -> web.Response:
+    """Display admin forms (No data; will be fetched by Vue)"""
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="File not found")
 
     html = admin_template.replace("[VUE-URL]", get_vue_url())
-    html = html.replace("[ENTRY-LIST]", compo.get_all_admin_forms(auth_key))
-    html = html.replace("[ADMIN-KEY]", auth_key)
-    html = html.replace("[ADMIN-CONTROLS]", get_admin_controls(auth_key))
-    html = html.replace("[VOTE-DATA]", json.dumps(compo.get_week_votes(False)))
 
     return web.Response(status=200, body=html, content_type="text/html")
 
 
-async def vote_thanks_handler(request: web_request.Request) -> web.Response:
-    message = thanks_template.replace("[HEADER]", "Thank you for voting!")
-    message = message.replace("[BODY]",
-        "Your vote has been recorded.  I will guard it with my life. :)")
-    return web.Response(status=200, body=message, content_type="text/html")
-
-
-
-# API handlers (JSON -> JSON)
-async def get_entries_handler(request: web_request.Request) -> web.Response:
-    return web.json_response(compo.get_week_viewer(False))
-
-
 async def edit_handler(request: web_request.Request) -> web.Response:
+    """Display edit forms (No data; will be fetched by Vue)"""
+
+    html = open("templates/submit.html", "r").read().replace("[VUE-URL]", get_vue_url())
+
+    return web.Response(status=200, body=html, content_type="text/html")
+
+
+# API handlers
+async def get_entries_handler(request: web_request.Request) -> web.Response:
+    """Display this weeks votable entries"""
+    return web.json_response(get_week_viewer(False, True))
+
+
+async def get_entry_handler(request: web_request.Request) -> web.Response:
+    """Return an entry for editing"""
     auth_key = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
         return web.Response(status=400,
                             text="Submissions are currently closed!")
 
-    if keys.key_valid(auth_key, keys.edit_keys):
-        key = keys.edit_keys[auth_key]
+    if not keys.key_valid(auth_key, keys.edit_keys):
+        return web.Response(status=401, text="File not found")
 
-        form = compo.get_edit_form_for_entry(key["entryUUID"], auth_key)
-        html = submit_template.replace("[ENTRY-FORM]", form)
-        html = html.replace("[ENTRANT-NAME]",
-                            compo.get_entrant_name(key["entryUUID"]))
+    key = keys.edit_keys[auth_key]
 
-        return web.Response(status=200, body=html, content_type="text/html")
-    else:
+    entry = compo.find_entry_by_uuid(key["entryUUID"])
+
+    return web.json_response(get_editable_entry(entry))
+
+
+async def admin_get_data_handler(request: web_request.Request) -> web.Response:
+    """Display admin data:
+
+       - Week information
+       - Submissions
+       - Votes
+    """
+    auth_key = request.match_info["authKey"]
+
+    if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="File not found")
 
 
+    weeks = [get_week_viewer(False, False), get_week_viewer(True, False)]
+    votes = get_week_votes(False)
+
+    data = {
+        "weeks": weeks,
+        "votes": votes
+    }
+
+    return web.json_response(data)
+
+
 async def admin_preview_handler(request: web_request.Request) -> web.Response:
+    """Display next weeks votable entries"""
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="Invalid key")
 
-    html = vote_template.replace("[WEEK-DATA]",
-                                 json.dumps(compo.get_week_viewer(True)))
-
-    html = html.replace("[VUE-URL]", get_vue_url())
-
-    return web.Response(text=html, content_type="text/html")
+    return web.json_response(get_week_viewer(True, True))
 
 
+# TODO: handle?
 async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
+    """?"""
     auth_key = request.match_info["authKey"]
     user_id = request.match_info["userID"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=401, text="Invalid key")
 
-
     week = compo.get_week(False)
-
-    print("user_id: " + str(user_id))
 
     if not "votes" in week:
         week["votes"] = []
@@ -292,19 +161,75 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
     return web.Response(status=404, text="File not found")
 
 
-async def file_post_handler(request: web_request.Request) -> web.Response:
-    global config
+async def admin_control_handler(request: web_request.Request) -> web.Response:
+    """Update week information"""
+    auth_key = request.match_info["authKey"]
 
+    if not keys.key_valid(auth_key, keys.admin_keys):
+        return web.Response(status=404, text="File not found")
+
+    this_week = compo.get_week(False)
+    next_week = compo.get_week(True)
+
+    data = await request.json()
+
+    next_week["theme"] = data["weeks"][1]["theme"]
+    next_week["date"] = data["weeks"][1]["date"]
+    next_week["submissionsOpen"] = data["weeks"][1]["submissionsOpen"]
+
+    this_week["theme"] = data["weeks"][0]["theme"]
+    this_week["date"] = data["weeks"][0]["date"]
+    this_week["votingOpen"] = data["weeks"][0]["votingOpen"]
+
+    compo.save_weeks()
+    return web.Response(status=204, text="Nice")
+
+
+async def admin_archive_handler(request: web_request.Request) -> web.Response:
+    """Archive current week, move next week to current, and create a new week"""
+    auth_key = request.match_info["authKey"]
+
+    if not keys.key_valid(auth_key, keys.admin_keys):
+        return web.Response(status=404, text="File not found")
+
+    compo.move_to_next_week()
+
+    return web.Response(status=204, text="Nice")
+
+
+async def admin_spoof_handler(request: web_request.Request) -> web.Response:
+    """Create a fake new entry
+
+       TODO: Take in more data?
+    """
+    auth_key = request.match_info["authKey"]
+
+    if not keys.key_valid(auth_key, keys.admin_keys):
+        return web.Response(status=404, text="File not found")
+
+    entry_data = await request.json()
+
+    compo.create_blank_entry(entry_data["entrantName"], entry_data["discordId"], entry_data["nextWeek"])
+
+    return web.Response(status=204, text="Nice")
+
+
+async def file_post_handler(request: web_request.Request) -> web.Response:
+    """Handle user submission.
+       If user was an admin, mark entry as meddled with.
+
+       This takes multipart/form-encoding because of large files
+    """
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
-    user_authorized = (keys.key_valid(auth_key, keys.edit_keys)
+    is_authorized_user = (keys.key_valid(auth_key, keys.edit_keys)
                        and keys.edit_keys[auth_key]["entryUUID"] == uuid
                        and compo.get_week(True)["submissionsOpen"])
 
     is_admin = keys.key_valid(auth_key, keys.admin_keys)
-    authorized = user_authorized or is_admin
-    if not authorized:
+    is_authorized = is_authorized_user or is_admin
+    if not is_authorized:
         return web.Response(status=403, text="Not happening babe")
 
     # Find the entry
@@ -328,23 +253,22 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
         return web.Response(status=400, text="Not happening babe")
 
     async for field in reader:
+        if is_admin:
+            if field.name == "entrantName":
+                entry["entrantName"] = \
+                    (await field.read(decode=True)).decode("utf-8")
+            elif field.name == "entryNotes":
+                entry["entryNotes"] = \
+                    (await field.read(decode=True)).decode("utf-8")
+            elif field.name == "deleteEntry":
+                week["entries"].remove(entry)
+                compo.save_weeks()
+                return web.Response(status=200,
+                                    text="Entry successfully deleted.")
+
         if field.name == "entryName":
             entry["entryName"] = \
                 (await field.read(decode=True)).decode("utf-8")
-        elif (field.name == "entrantName"
-              and keys.key_valid(auth_key, keys.admin_keys)):
-            entry["entrantName"] = \
-                (await field.read(decode=True)).decode("utf-8")
-        elif (field.name == "entryNotes"
-              and keys.key_valid(auth_key, keys.admin_keys)):
-            entry["entryNotes"] = \
-                (await field.read(decode=True)).decode("utf-8")
-        elif (field.name == "deleteEntry"
-              and keys.key_valid(auth_key, keys.admin_keys)):
-            week["entries"].remove(entry)
-            compo.save_weeks()
-            return web.Response(status=200,
-                                text="Entry successfully deleted.")
         elif field.name == "mp3Link":
             url = (await field.read(decode=True)).decode("utf-8")
             if len(url) > 1:
@@ -386,25 +310,13 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
 
     compo.save_weeks()
 
-    await bot.submission_message(entry,
-                                 keys.key_valid(auth_key, keys.admin_keys))
+    await bot.submission_message(entry, is_admin)
 
-    if is_admin:
-        return web.Response(status=303, headers={"Location": "%s/admin/%s" % (config["url_prefix"], auth_key)})
-
-    thanks = thanks_template.replace("[HEADER]",
-                          "Your entry has been recorded -- Good luck!")
-    thanks = thanks.replace("[BODY]",
-        "If you have any issues, "
-        "let us know in #weekly-challenge-discussion, "
-        "or DM one of our friendly moderators.")
-
-    return web.Response(status=200,
-                        body=thanks,
-                        content_type="text/html")
+    return web.Response(status=204)
 
 
 async def submit_vote_handler(request: web_request.Request) -> web.Response:
+    """Record user votes"""
     vote_input = await request.json()
 
     auth_key = vote_input["voteKey"]
@@ -439,19 +351,101 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     return web.Response(status=200, text="FRICK yeah")
 
 
+# Helpers
+def get_week_viewer(which_week: bool, only_valid: bool) -> str:
+    """
+    Massages week data into the format that will be output as JSON.
+    """
+    week = compo.get_week(which_week)
+
+    entryData = []
+
+    for e in week["entries"]:
+        is_valid = compo.entry_valid(e)
+        if only_valid and not is_valid:
+            continue
+
+        prunedEntry = {
+            "uuid": e["uuid"],
+            "pdfUrl": "/files/%s/%s" % (e["uuid"], e.get("pdfFilename")),
+            "mp3Format": e.get("mp3Format"),
+            "entryName": e["entryName"],
+            "entrantName": e["entrantName"],
+            "isValid": is_valid,
+        }
+
+        if e.get("mp3Format") == "mp3":
+            prunedEntry["mp3Url"] = "/files/%s/%s" % (e["uuid"], e["mp3Filename"])
+        else:
+            prunedEntry["mp3Url"] = e.get("mp3")
+
+        # this data is just here for the benefit of the client
+        for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
+            prunedEntry[voteParam] = 0
+
+        entryData.append(prunedEntry)
+
+    data = {
+        "entries": entryData,
+        "theme": week["theme"],
+        "date": week["date"],
+        "submissionsOpen": week["submissionsOpen"],
+        "votingOpen": week["votingOpen"],
+    }
+
+    return data
+
+
+def get_week_votes(which_week: bool) -> str:
+    week = compo.get_week(which_week)
+
+    if "votes" not in week:
+        week["votes"] = []
+
+    adaptedData = week["votes"].copy()
+
+    # JavaScript is very silly and won't work if we send these huge
+    # numbers as actual numbers, so we have to stringify them first
+    for v in adaptedData:
+        v["userID"] = str(v["userID"])
+
+    return adaptedData
+
+
+def get_editable_entry(entry: dict) -> dict:
+    entry_data = {
+        "uuid": entry["uuid"],
+        "entryName": entry["entryName"],
+        "entrantName": entry["entrantName"],
+        "pdfUrl": "/files/%s/%s" % (entry["uuid"], entry.get("pdfFilename")),
+        "mp3Format": entry.get("mp3Format"),
+    }
+
+    if entry.get("mp3Format") == "mp3":
+        entry_data["mp3Url"] = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
+    else:
+        entry_data["mp3Url"] = entry.get("mp3")
+
+    return entry_data
+
+
 server = web.Application()
 
 server.add_routes([
     web.get("/", vote_handler),
-    web.get("/files/{uuid}/{filename}", week_files_handler),
     web.get("/favicon.ico", favicon_handler),
+    web.get("/files/{uuid}/{filename}", week_files_handler),
     web.get("/edit/{authKey}", edit_handler),
-    web.get("/admin/{authKey}", admin_handler),
-    web.get("/admin/preview/{authKey}", admin_preview_handler),
-    web.get("/admin/viewvote/{authKey}/{userID}", admin_viewvote_handler),
-    web.get("/thanks", vote_thanks_handler),
     web.get("/entry_data", get_entries_handler),
+    web.get("/entry_data/{authKey}", get_entry_handler),
+    web.get("/admin/{authKey}", admin_handler),
+    web.get("/admin/get_admin_data/{authKey}", admin_get_data_handler),
+    web.get("/admin/get_preview_data/{authKey}", admin_preview_handler),
+    web.get("/admin/preview/{authKey}", vote_handler),
+    web.get("/admin/viewvote/{authKey}/{userID}", admin_viewvote_handler),
     web.post("/admin/edit/{authKey}", admin_control_handler),
+    web.post("/admin/archive/{authKey}", admin_archive_handler),
+    web.post("/admin/spoof/{authKey}", admin_spoof_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
     web.post("/submit_vote", submit_vote_handler),
     web.static("/static", "static")
