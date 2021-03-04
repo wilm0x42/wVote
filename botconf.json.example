@@ -7,7 +7,7 @@
     "notify_admins_channel": ADD A CHANNEL,
     "bot_key": SET YOUR KEY,
     "url_prefix": "http://127.0.0.1:8251",
-    "valid_hosts": [
+    "allowed_hosts": [
         "https://soundcloud.com/",
         "https://clyp.it/"
     ]
