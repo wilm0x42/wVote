@@ -473,7 +473,7 @@ async def start_http(_config) -> None:
 
     runner = web.AppRunner(server)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 8251)
+    site = web.TCPSite(runner, "0.0.0.0", config["http_port"])
     await site.start()
     logging.info("HTTP: Started server")
 
