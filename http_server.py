@@ -373,6 +373,9 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> str:
             "entrantName": e["entrantName"],
             "isValid": is_valid,
         }
+        
+        if "entryNotes" in e:
+        	prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":
             prunedEntry["mp3Url"] = "/files/%s/%s" % (e["uuid"], e["mp3Filename"])
@@ -380,6 +383,7 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> str:
             prunedEntry["mp3Url"] = e.get("mp3")
 
         # this data is just here for the benefit of the client
+        # TODO: actually store these voting categories in the week structure
         for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
             prunedEntry[voteParam] = 0
 
