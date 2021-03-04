@@ -58,10 +58,10 @@ def load_config() -> dict:
 
     if config["test_mode"]:
         config["server_domain"] = "127.0.0.1:8251"
+        config["url_prefix"] = "http://%s" % config["server_domain"]
     else:
         config["server_domain"] = "8bitweekly.xyz"
-
-    config["url_prefix"] = "https://%s" % config["server_domain"]
+        config["url_prefix"] = "https://%s" % config["server_domain"]
 
     logging.info("MAIN: Loaded bot.conf")
 
