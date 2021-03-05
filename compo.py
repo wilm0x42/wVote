@@ -45,7 +45,7 @@ def get_week(get_next_week: bool) -> dict:
                 "submissionsOpen": False,
                 "votingOpen": True,
                 "entries": [],
-                "voteParams": ["votePrompt", "voteScore", "voteOverall"]
+                "voteParams": ["prompt", "score", "overall"]
             }
     if next_week is None:
         try:
@@ -57,7 +57,7 @@ def get_week(get_next_week: bool) -> dict:
                 "submissionsOpen": True,
                 "votingOpen": True,
                 "entries": [],
-                "voteParams": ["votePrompt", "voteScore", "voteOverall"]
+                "voteParams": ["prompt", "score", "overall"]
             }
 
     if get_next_week:
@@ -97,7 +97,7 @@ def move_to_next_week() -> None:
         "submissionsOpen": True,
         "votingOpen": True,
         "entries": [],
-        "voteParams": ["votePrompt", "voteScore", "voteOverall"]
+        "voteParams": ["prompt", "score", "overall"]
     }
 
     save_weeks()
