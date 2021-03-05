@@ -426,7 +426,8 @@ async def status(context: commands.Context) -> None:
             await context.send(entry_info_message(entry))
             return
 
-    await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % config["command_prefix"][0])
+    await context.send("You haven't submitted anything yet! "
+                       "But if you want to you can with %ssubmit !" % config["command_prefix"][0])
 
 @client.command()
 @commands.dm_only()
@@ -434,7 +435,8 @@ async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
 
     if week["votingOpen"]:
-        await context.send("You can't really get results while they're still coming in despite what election coverage would lead you to believe, sorry")
+        await context.send("You can't really get results while they're still coming"
+                           "in despite what election coverage would lead you to believe, sorry")
         return
 
     user_entry = None
