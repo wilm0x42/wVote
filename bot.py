@@ -433,6 +433,10 @@ async def status(context: commands.Context) -> None:
 async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
 
+    if week["votingOpen"]:
+        await context.send("You can't really get results while they're still coming in despite what election coverage would lead you to believe, sorry")
+        return
+
     user_entry = None
     
     # change to list comp or some other search method?
