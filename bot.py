@@ -395,7 +395,7 @@ async def googleformslist(context: commands.Context) -> None:
 
     response += "\n```"
 
-    await context.channel.send(response)
+    await context.send(response)
 
 
 @client.command()
@@ -406,7 +406,7 @@ async def howmany(context: commands.Context) -> None:
 
     response = "%d, so far." % compo.count_valid_entries(True)
 
-    await context.channel.send(response)
+    await context.send(response)
 
 
 @client.command()
