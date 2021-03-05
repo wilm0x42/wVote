@@ -221,10 +221,10 @@
 					});
 
 					if (!req.ok) {
-						// TODO: Error handling.
+						alert("Something went wrong: " + await req.text());
+					} else {
+						this.updateWeeks();
 					}
-
-					this.updateWeeks();
 
 					this.working = false;
 				},
@@ -244,28 +244,32 @@
 					});
 
 					if (!req.ok) {
-						// TODO: Error handling.
+						alert("Something went wrong: " + await req.text());
+					} else {
+						this.spoofedEntry = {
+							entrantName: "Wiglaf",
+							discordId: "",
+							placeInCurrentWeek: false,
+						};
+
+						await this.updateWeeks();
 					}
 
-					this.spoofedEntry = {
-						entrantName: "Wiglaf",
-						discordId: "",
-						placeInCurrentWeek: false,
-					};
-
-					await this.updateWeeks();
 					this.working = false;
 				},
 				async updateWeeks() {
 					let req = await fetch("/admin/get_admin_data/" + this.authKey);
 
-					// TODO: Error handling.
-					let result = await req.json();
-					this.votes = result.votes;
-					this.weeks = result.weeks;
+					if (!req.ok) {
+						alert("Something went wrong: " + await req.text());
+					} else {
+						let result = await req.json();
+						this.votes = result.votes;
+						this.weeks = result.weeks;
 
-					this.votingOpen = this.weeks[0].votingOpen;
-					this.submissionsOpen = this.weeks[1].submissionsOpen;
+						this.votingOpen = this.weeks[0].votingOpen;
+						this.submissionsOpen = this.weeks[1].submissionsOpen;
+					}
 				}
 			}
 		})

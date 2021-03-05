@@ -194,15 +194,15 @@
 				}
 
 				if (!weekResponse.ok) {
-					// TODO: Error handling
-				}
-
+					alert("Something went wrong: " + await weekResponse.text());
+				} else {
 				let weekData = await weekResponse.json()
 
 				this.entries = weekData.entries
 				this.theme = weekData.theme
 				this.date = weekData.date
 				this.mode = "vote";
+				}
 
 				this.working = false;
 			},
