@@ -504,3 +504,16 @@ async def myresults(context: commands.Context) -> None:
         message.append(text)
 
     await context.send("\n".join(message))
+
+@client.command()
+async def crudbroke(context: commands.Context) -> None:
+    week = compo.get_week(True)
+
+    if not "crudbroke" in week:
+        week["crudbroke"] = 0
+
+    week["crudbroke"] += 1
+
+    message = "Dang, that's happened %d times this week." % week["crudbroke"]
+
+    await context.send(message)
