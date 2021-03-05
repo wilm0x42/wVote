@@ -218,6 +218,9 @@ def get_ranked_entrant_list(which_week: bool) -> list:
     """Bloc STAR Voting wooooo"""
 
     week = get_week(which_week)
+    
+    if len(week["entries"]) < 1: # lol no one submitted
+        return []
 
     verify_votes(week)
 

@@ -369,12 +369,14 @@ async def vote(context: commands.Context) -> None:
 async def getentryplacements(context: commands.Context) -> None:
     ranked = compo.get_ranked_entrant_list(False)
 
-    message = ""
+    message = "```\n"
 
     for e in ranked:
         message += "%d - %s - %s (%f)\n" \
             % (e["votePlacement"], e["entrantName"],
                e["entryName"], e["voteScore"])
+    
+    message += "\n```"
 
     await context.send(message)
 
