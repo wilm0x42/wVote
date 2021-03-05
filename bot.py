@@ -154,6 +154,23 @@ def expiry_message() -> str:
     return "\nThis link will expire in %d minutes" % config["default_ttl"]
 
 
+@client.listen('on_message')
+async def unhandled_dm(message):
+    """
+    When a DM is received and it didn't match any known commands, show the help prompt.
+    """
+    if message.author == client.user:
+        # Don't reply to self
+        return
+
+    if message.channel != message.author.dm_channel:
+        # Only DMs
+        return
+
+    if not any(message.content.startswith(prefix) for prefix in client.command_prefix):
+        await message.channel.send(help_message())
+
+
 @client.event
 async def on_ready() -> None:
     """
@@ -166,7 +183,7 @@ async def on_ready() -> None:
           (len(client.guilds), len(set(client.get_all_members()))))
     logging.info(("DISCORD: Invite link: "
            "https://discordapp.com/oauth2/authorize?client_id="
-           "%s&scope=bot&permissions=335936592" % str(client.user.id)))
+           "%d&scope=bot&permissions=335936592" % client.user.id))
     activity = discord.Game(name="Preventing Voter Fraud")
     return await client.change_presence(activity=activity)
 
@@ -178,7 +195,9 @@ async def on_command_error(context: commands.Context,
     if isinstance(error, commands.errors.CommandNotFound):
         if context.channel.type == discord.ChannelType.private:
             await context.send(help_message())
-            return
+        else:
+            await context.author.send(help_message())
+        return
 
     if isinstance(error, commands.errors.PrivateMessageOnly):
         await context.send(dm_reminder)
@@ -191,7 +210,7 @@ async def on_command_error(context: commands.Context,
         return
 
     if isinstance(error, WrongChannelError):
-        await context.send("This isn't the right channel" " for this!")
+        await context.send("This isn't the right channel for this!")
         return
 
     logging.error("DISCORD: Unhandled command error: %s" % str(error))
@@ -204,7 +223,7 @@ async def is_admin(context: commands.Context) -> bool:
     """
     global config
 
-    if str(context.author.id) not in config["admins"]:
+    if context.author.id not in config["admins"]:
         raise IsNotAdminError()
 
     return True
@@ -276,7 +295,7 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                         discord.File(io.BytesIO(bytes(entry["mp3"])),
                                      filename=entry["mp3Filename"]))
                 elif entry["mp3Format"] == "external":
-                    upload_message += "\n" + str(entry["mp3"])
+                    upload_message += "\n" + entry["mp3"]
 
                 upload_files.append(
                     discord.File(io.BytesIO(bytes(entry["pdf"])),
@@ -442,7 +461,7 @@ async def myresults(context: commands.Context) -> None:
         return
 
     user_entry = None
-    
+
     # change to list comp or some other search method?
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
@@ -453,7 +472,7 @@ async def myresults(context: commands.Context) -> None:
         return
 
     compo.verify_votes(week)
-    
+
     ratings = [rating
         for vote in week["votes"]
         for rating in vote["ratings"]
@@ -470,7 +489,7 @@ async def myresults(context: commands.Context) -> None:
         if rating["rating"] > 0: # unset rating
             score[0] += rating["rating"]
             score[1] += 1
-    
+
     message = []
     message.append("Please keep in mind that music is subjective, and that "
                    "these scores shouldn't be taken to represent the quality of"
