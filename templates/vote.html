@@ -172,7 +172,6 @@
 			data: function () {
 				return {
 					mode: null,
-					voteParams: ["votePrompt", "voteScore", "voteOverall"],
 					showEntryList: true,
 					pdfColorInvert: true,
 					entries: null,
@@ -207,6 +206,7 @@
 				this.theme = weekData.theme
 				this.date = weekData.date
 				this.votingOpen = weekData.votingOpen
+				this.voteParams = weekData.voteParams
 				this.mode = "vote";
 
 				this.working = false;

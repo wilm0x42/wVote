@@ -392,9 +392,8 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
         else:
             prunedEntry["mp3Url"] = e.get("mp3")
 
-        # this data is just here for the benefit of the client
-        # TODO: actually store these voting categories in the week structure
-        for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
+        # dummy vote data for the client's benefit
+        for voteParam in week["voteParams"]:
             prunedEntry[voteParam] = 0
 
         entryData.append(prunedEntry)
@@ -405,6 +404,7 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
         "date": week["date"],
         "submissionsOpen": week["submissionsOpen"],
         "votingOpen": week["votingOpen"],
+        "voteParams": week["voteParams"]
     }
 
     return data
