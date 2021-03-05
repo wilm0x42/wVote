@@ -9,7 +9,7 @@ import compo
 import keys
 import bot
 
-config: dict = None
+config = None
 
 # TODO: replace [VUE-URL] ASAP?
 vote_template = open("templates/vote.html", "r").read()
@@ -362,7 +362,7 @@ async def allowed_hosts_handler(request: web_request.Request) -> web.Response:
 
 
 # Helpers
-def get_week_viewer(which_week: bool, only_valid: bool) -> str:
+def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
     """
     Massages week data into the format that will be output as JSON.
     """

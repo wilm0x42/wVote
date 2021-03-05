@@ -17,7 +17,7 @@ client = commands.Bot(description="Musical Voting Platform",
                       command_prefix=[],
                       case_insensitive=True,
                       help_command=None)
-config: dict = None
+config = None
 
 
 async def start(_config):
