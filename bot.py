@@ -474,7 +474,7 @@ async def myresults(context: commands.Context) -> None:
                    "these scores shouldn't be taken to represent the quality of"
                    " your entry-- your artistic work is valuable, regardless of"
                    " what results it was awarded, so don't worry too much about it")
-    message.append("And with that out of the way")
+    message.append("And with that out of the way...")
     message.append("*drumroll please*")
     for category in results:
         total = results[category][0]
