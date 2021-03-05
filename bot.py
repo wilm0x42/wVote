@@ -481,8 +481,7 @@ async def myresults(context: commands.Context) -> None:
     for category in results:
         total = results[category][0]
         text = "%s: You got %d stars total for an average of %f" \
-            % (category[4:], total, total / results[category][1])
-        # im slicing to get rid of the vote in the category name
+            % (category, total, total / results[category][1])
         message.append(text)
 
     await context.send("\n".join(message))
