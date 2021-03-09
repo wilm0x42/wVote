@@ -12,6 +12,18 @@ current_week = None
 next_week = None
 
 
+def blank_week() -> dict:
+    return {
+        "theme": "Week XYZ: Fill this in by hand!",
+        "date": "Month day'th 20XX",
+        "submissionsOpen": True,
+        "votingOpen": True,
+        "entries": [],
+        "votes": [],
+        "voteParams": ["prompt", "score", "overall"]
+    }
+
+
 def get_week(get_next_week: bool) -> dict:
     """
     Returns a dictionary that encodes information for a week's challenge. If
@@ -39,26 +51,13 @@ def get_week(get_next_week: bool) -> dict:
         try:
             current_week = pickle.load(open("weeks/current-week.pickle", "rb"))
         except FileNotFoundError:
-            current_week = {
-                "theme": "Week XYZ: Fill this in by hand!",
-                "date": "Month day'th 20XX",
-                "submissionsOpen": False,
-                "votingOpen": True,
-                "entries": [],
-                "voteParams": ["prompt", "score", "overall"]
-            }
+            current_week = blank_week()
+            current_week["submissions_open"] = False
     if next_week is None:
         try:
             next_week = pickle.load(open("weeks/next-week.pickle", "rb"))
         except FileNotFoundError:
-            next_week = {
-                "theme": "Week XYZ: Fill this in by hand!",
-                "date": "Month day'th 20XX",
-                "submissionsOpen": True,
-                "votingOpen": True,
-                "entries": [],
-                "voteParams": ["prompt", "score", "overall"]
-            }
+            next_week = blank_week()
 
     if get_next_week:
         return next_week
@@ -91,14 +90,7 @@ def move_to_next_week() -> None:
     pickle.dump(current_week, open(archive_filename, "wb"))
 
     current_week = next_week
-    next_week = {
-        "theme": "Week XYZ: Fill this in by hand!",
-        "date": "Month day'th 20XX",
-        "submissionsOpen": True,
-        "votingOpen": True,
-        "entries": [],
-        "voteParams": ["prompt", "score", "overall"]
-    }
+    next_week = blank_week()
 
     save_weeks()
 
@@ -190,14 +182,14 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
 
 def verify_votes(week: dict) -> None:
-    
+
     if not "votes" in week:
         week["votes"] = []
 
     # Keeps track of set vs. unset votes, and makes sure a single user can
     # only vote on the same parameter for the same entry a single time
     userVotes = {}
-    
+
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
@@ -221,7 +213,7 @@ def get_ranked_entrant_list(which_week: bool) -> list:
     """Bloc STAR Voting wooooo"""
 
     week = get_week(which_week)
-    
+
     if len(week["entries"]) < 1: # lol no one submitted
         return []
 

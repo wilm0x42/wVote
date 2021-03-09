@@ -382,6 +382,7 @@ async def vote(context: commands.Context) -> None:
 
     await context.send(message)
 
+
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
@@ -394,29 +395,10 @@ async def getentryplacements(context: commands.Context) -> None:
         message += "%d - %s - %s (%f)\n" \
             % (e["votePlacement"], e["entrantName"],
                e["entryName"], e["voteScore"])
-    
+
     message += "\n```"
 
     await context.send(message)
-
-@client.command()
-@commands.check(is_admin)
-async def googleformslist(context: commands.Context) -> None:
-    """
-    Generates the list of Google forms for the entries.
-    """
-    entries = compo.get_week(False)["entries"]
-
-    response = "```\n"
-
-    for e in entries:
-        if not compo.entry_valid(e):
-            continue
-        response += "%s - %s\n" % (e["entrantName"], e["entryName"])
-
-    response += "\n```"
-
-    await context.send(response)
 
 
 @client.command()
