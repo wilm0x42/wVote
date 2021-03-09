@@ -344,7 +344,7 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     user_entry = None
 
     for entry in week["entries"]:
-        if entry["entrantName"] == user_name:
+        if entry["discordID"] == user_id:
             user_entry = entry
             break
 
