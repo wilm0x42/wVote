@@ -138,7 +138,6 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     return web.json_response(get_week_viewer(True, True))
 
 
-# TODO: handle?
 async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
     """?"""
     auth_key = request.match_info["authKey"]
@@ -156,6 +155,22 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
                                 content_type="application/json")
 
     return web.Response(status=404, text="File not found")
+
+
+async def admin_deletevote_handler(request: web_request.Request) -> web.Response:
+    """Delete every vote from an user"""
+    auth_key = request.match_info["authKey"]
+    user_id = request.match_info["userID"]
+
+    if not keys.key_valid(auth_key, keys.admin_keys):
+        return web.Response(status=401, text="Invalid key")
+
+    week = compo.get_week(False)
+    week["votes"] = [vote for vote in week["votes"] if vote["userID"] != user_id]
+
+    compo.save_weeks()
+
+    return web.Response(status=204)
 
 
 async def admin_control_handler(request: web_request.Request) -> web.Response:
@@ -481,6 +496,7 @@ server.add_routes([
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/admin/archive/{authKey}", admin_archive_handler),
     web.post("/admin/spoof/{authKey}", admin_spoof_handler),
+    web.post("/admin/delete_vote/{authKey}/{userID}", admin_deletevote_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
     web.post("/submit_vote", submit_vote_handler),
     web.static("/static", "static")

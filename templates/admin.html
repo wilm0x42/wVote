@@ -62,15 +62,15 @@
 						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
 								:value="false" /> No</label>
 					</p>
-					
+
 					<hr />
 
 					<p>
 						<button @click="save">Save changes</button>
 					</p>
-					
+
 					<hr />
-					
+
 					<p>
 						<label>Archive current week, and make next week current <input type="checkbox"
 								v-model="confirmArchive"></label>
@@ -103,6 +103,7 @@
 			<div class="vote-list">
 				<div v-for="vote in votes" class="vote-data">
 					<a :href="'/admin/viewvote/' + authKey + '/' + vote.userID.toString()">Vote from {{ vote.userName }}</a>
+					<button @click="deleteVote(vote)">Delete</button>
 				</div>
 			</div>
 		</div>
@@ -205,7 +206,7 @@
 					formData.append("entryName", this.entry.entryName);
 					formData.append("entrantName", this.entry.entrantName);
 					formData.append("entryNotes", this.entry.entryNotes);
-					
+
 					if (this.pdfFormat === 'upload') {
 						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
 					}
@@ -215,7 +216,7 @@
 					} else if (this.mp3Format === 'upload') {
 						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
 					}
-					
+
 					if (this.deleteEntry === true) {
 						formData.append("deleteEntry", "true")
 					}
@@ -243,7 +244,7 @@
 					}
 				},
 				async updateEntry() {
-				}
+				},
 			}
 		});
 
@@ -357,6 +358,17 @@
 
 						this.votingOpen = this.weeks[0].votingOpen;
 						this.submissionsOpen = this.weeks[1].submissionsOpen;
+					}
+				},
+				async deleteVote(vote) {
+					let request = await fetch("/admin/delete_vote/" + this.authKey + "/" + vote.userID, {
+						method: "POST"
+					});
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						await this.updateWeeks();
 					}
 				}
 			}
