@@ -149,9 +149,6 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
 
     week = compo.get_week(False)
 
-    if not "votes" in week:
-        week["votes"] = []
-
     for v in week["votes"]:
         if int(v["userID"]) == int(user_id):
             return web.Response(status=200,
