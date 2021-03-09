@@ -330,6 +330,7 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
 
     user_id = keys.vote_keys[auth_key]["userID"]
     user_name = keys.vote_keys[auth_key]["userName"]
+    user_votes = vote_input["votes"]
 
     week = compo.get_week(False)
 
@@ -339,8 +340,36 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
         if int(v["userID"]) == int(user_id):
             week["votes"].remove(v)
 
+    # Find the user's entry
+    user_entry = None
+
+    for entry in week["entries"]:
+        if entry["entrantName"] == user_name:
+            user_entry = entry
+            break
+
+    # Remove the user's vote on their own entry (Search by UUID to prevent name spoofing).
+    if user_entry is not None:
+        user_votes = [vote
+                       for vote in user_votes
+                       if vote["entryUUID"] != user_entry["uuid"]]
+
+        # Find the user's highest rating
+        max_vote = max(vote["rating"] for vote in user_votes)
+
+        # Grant the user rating equal to their highest vote on each category
+        for param in week["voteParams"]:
+            user_votes.append(
+                {
+                    "entryUUID": user_entry["uuid"],
+                    "voteForName": user_name,
+                    "voteParam": param,
+                    "rating": max_vote
+                }
+            )
+
     vote_data = {
-        "ratings": vote_input["votes"],
+        "ratings": user_votes,
         "userID": user_id,
         "userName": user_name
     }
@@ -380,7 +409,7 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
             "entrantName": e["entrantName"],
             "isValid": is_valid,
         }
-        
+
         if "entryNotes" in e:
         	prunedEntry["entryNotes"] = e["entryNotes"]
 
