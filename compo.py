@@ -209,6 +209,7 @@ def verify_votes(week: dict) -> None:
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
 
+
 def get_ranked_entrant_list(week: dict) -> list:
     """Bloc STAR Voting wooooo"""
 
@@ -219,28 +220,23 @@ def get_ranked_entrant_list(week: dict) -> list:
 
     scores = {}
 
-    # Get rating extents, for normalization
     for v in week["votes"]:
-        v["minimum"] = 5
-        v["maximum"] = 1
-        for r in v["ratings"]:
-            if r["rating"] == 0: # Unset rating
-                continue
-            if r["rating"] > v["maximum"]:
-                v["maximum"] = r["rating"]
-            if r["rating"] < v["minimum"]:
-                v["minimum"] = r["rating"]
+        valid_ratings = [r for r in v["ratings"] if r["rating"] != 0]
 
-    # Evaluate scores
-    for v in week["votes"]:
-        for r in v["ratings"]:
-            if not r["entryUUID"] in scores:
-                scores[r["entryUUID"]] = []
-            if r["rating"] != 0:
-                normalized = float(r["rating"] - (v["minimum"] - 1))
-                normalized /= float(v["maximum"] - (v["minimum"] -1))
-                normalized *= 5
-                scores[r["entryUUID"]].append(normalized)
+        if len(valid_ratings) == 0:
+            # The user cleared all votes
+            continue
+
+        rating_values = [r["rating"] for r in valid_ratings]
+
+        minimum = min(rating_values)
+        maximum = max(rating_values)
+        extent = maximum - minimum
+
+        for r in valid_ratings:
+            normalized = (float(r["rating"]) - (minimum - 1)) / (extent + 1) * 5
+
+            scores.setdefault(r["entryUUID"], []).append(normalized)
 
     entry_pool = []
     ranked_entries = []
@@ -248,15 +244,12 @@ def get_ranked_entrant_list(week: dict) -> list:
     # Write final scores to entry data, and put 'em all in entry_pool
     for e in week["entries"]:
         if entry_valid(e):
-            if e["uuid"] in scores:
-                e["voteScore"] = statistics.mean(scores[e["uuid"]])
-            else:
-                e["voteScore"] = 0
+            e["voteScore"] = statistics.mean(scores.get(e["uuid"], [0]))
             entry_pool.append(e)
 
     # Now that we have scores calculated, run the actual STAR algorithm
     while len(entry_pool) > 1:
-        entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"])
+        entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"], reverse=True)
 
         entryA = entry_pool[0]
         entryB = entry_pool[1]
@@ -265,15 +258,9 @@ def get_ranked_entrant_list(week: dict) -> list:
         preferEntryB = 0
 
         for v in week["votes"]:
-            scoreA = 0
-            scoreB = 0
-
             # note that normalization doesn't matter for comparing preference
-            for r in v["ratings"]:
-                if r["entryUUID"] == entryA["uuid"]:
-                    scoreA += r["rating"]
-                elif r["entryUUID"] == entryB["uuid"]:
-                    scoreB += r["rating"]
+            scoreA = sum(r["rating"] for r in v["ratings"] if r["entryUUID"] == entryA["uuid"])
+            scoreB = sum(r["rating"] for r in v["ratings"] if r["entryUUID"] == entryB["uuid"])
 
             if scoreA > scoreB:
                 preferEntryA += 1
@@ -288,9 +275,9 @@ def get_ranked_entrant_list(week: dict) -> list:
             ranked_entries.append(entry_pool.pop(1))
 
     # Add the one remaining entry
-    ranked_entries.insert(0, entry_pool.pop(0))
+    ranked_entries.append(entry_pool.pop(0))
 
-    for place, e in enumerate(reversed(ranked_entries)):
+    for place, e in enumerate(ranked_entries):
         e["votePlacement"] = place + 1
 
     return list(reversed(ranked_entries))
