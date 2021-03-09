@@ -209,10 +209,8 @@ def verify_votes(week: dict) -> None:
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
 
-def get_ranked_entrant_list(which_week: bool) -> list:
+def get_ranked_entrant_list(week: dict) -> list:
     """Bloc STAR Voting wooooo"""
-
-    week = get_week(which_week)
 
     if len(week["entries"]) < 1: # lol no one submitted
         return []
