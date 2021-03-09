@@ -244,7 +244,7 @@
 
 					for (let entry of this.entries) {
 						for (let param of this.voteParams) {
-							if (entry[param] != 0) {
+							if (entry[param] != null && entry[param] != 0) {
 								total++
 								break
 							}

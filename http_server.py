@@ -391,7 +391,7 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
 
         # dummy vote data for the client's benefit
         for voteParam in week["voteParams"]:
-            prunedEntry[voteParam] = 0
+            prunedEntry[voteParam] = None
 
         entryData.append(prunedEntry)
 
