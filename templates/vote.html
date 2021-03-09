@@ -147,12 +147,14 @@
 			},
 			template:
 				`<table cellpadding='0'>
-					<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
-						<button @click="vote(starNum)" class="vote-star">
-							<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
-							<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
-						</button>
-					</td>
+					<tr>
+						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
+							<button @click="vote(starNum)" class="vote-star">
+								<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
+								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
+							</button>
+						</td>
+					</tr>
 				</table>`,
 			methods: {
 				vote(value) {
@@ -240,16 +242,13 @@
 				updateNumEntriesRated: function () {
 					var total = 0
 
-					for (var i = 0; i < this.entries.length; i++) {
-						var hasRating = false
-						for (var p = 0; p < this.voteParams.length; p++) {
-							if (this.entries[i][this.voteParams[p]] != 0) {
-								hasRating = true
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != 0) {
+								total++
 								break
 							}
 						}
-						if (hasRating)
-							total++
 					}
 
 					this.numEntriesRated = total
