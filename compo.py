@@ -45,7 +45,8 @@ def get_week(get_next_week: bool) -> dict:
                 "submissionsOpen": False,
                 "votingOpen": True,
                 "entries": [],
-                "votes": []
+                "votes": [],
+                "voteParams": ["prompt", "score", "overall"]
             }
     if next_week is None:
         try:
@@ -57,7 +58,8 @@ def get_week(get_next_week: bool) -> dict:
                 "submissionsOpen": True,
                 "votingOpen": True,
                 "entries": [],
-                "votes": []
+                "votes": [],
+                "voteParams": ["prompt", "score", "overall"]
             }
 
     if get_next_week:
@@ -96,7 +98,8 @@ def move_to_next_week() -> None:
         "date": "Month day'th 20XX",
         "submissionsOpen": True,
         "votingOpen": True,
-        "entries": []
+        "entries": [],
+        "voteParams": ["prompt", "score", "overall"]
     }
 
     save_weeks()
@@ -220,6 +223,9 @@ def get_ranked_entrant_list(which_week: bool) -> list:
     """Bloc STAR Voting wooooo"""
 
     week = get_week(which_week)
+
+    if len(week["entries"]) < 1: # lol no one submitted
+        return []
 
     verify_votes(week)
 

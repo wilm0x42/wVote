@@ -9,7 +9,7 @@ import compo
 import keys
 import bot
 
-config: dict = None
+config = None
 
 # TODO: replace [VUE-URL] ASAP?
 vote_template = open("templates/vote.html", "r").read()
@@ -359,7 +359,7 @@ async def allowed_hosts_handler(request: web_request.Request) -> web.Response:
 
 
 # Helpers
-def get_week_viewer(which_week: bool, only_valid: bool) -> str:
+def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
     """
     Massages week data into the format that will be output as JSON.
     """
@@ -380,14 +380,17 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> str:
             "entrantName": e["entrantName"],
             "isValid": is_valid,
         }
+        
+        if "entryNotes" in e:
+        	prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":
             prunedEntry["mp3Url"] = "/files/%s/%s" % (e["uuid"], e["mp3Filename"])
         else:
             prunedEntry["mp3Url"] = e.get("mp3")
 
-        # this data is just here for the benefit of the client
-        for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
+        # dummy vote data for the client's benefit
+        for voteParam in week["voteParams"]:
             prunedEntry[voteParam] = 0
 
         entryData.append(prunedEntry)
@@ -398,6 +401,7 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> str:
         "date": week["date"],
         "submissionsOpen": week["submissionsOpen"],
         "votingOpen": week["votingOpen"],
+        "voteParams": week["voteParams"]
     }
 
     return data
@@ -463,7 +467,7 @@ async def start_http(_config) -> None:
 
     runner = web.AppRunner(server)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", 8251)
+    site = web.TCPSite(runner, "0.0.0.0", config["http_port"])
     await site.start()
     logging.info("HTTP: Started server")
 

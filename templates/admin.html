@@ -25,17 +25,17 @@
 				<p>The submissions are also labeled "(valid)" or "(invalid!)". To be valid, an entry must be adequately filled out, with mp3 and pdf uploaded. An entry will only be displayed in the voting interface if it is valid.</p>
 				<p>If you need help, or if something seems amiss, message @wilm0x42, and he'll ii V us back to I.</p>
 			</div>
-			<div v-show="working">
-				PUT A SPINNER HERE OR SOMETHING I'M LAZY
+			<div class="admin-progress-img" v-show="working">
+				<img class="admin-progress-img" src="/static/kirb_phone.gif" />
 			</div>
 			<div class="admin-controls">
 				<!-- TODO: Style -->
 				<div id="weeks">
 					<p>
-						<label>Theme/title of current week <input type="text" v-model="weeks[0].theme" /></label>
+						<label>Theme/title of current week <input class="admin-week-text-param" type="text" v-model="weeks[0].theme" /></label>
 					</p>
 					<p>
-						<label>Date of current week <input type="text" v-model="weeks[0].date" /></label>
+						<label>Date of current week <input class="admin-week-text-param" type="text" v-model="weeks[0].date" /></label>
 					</p>
 					<p>Voting is currently {{ votingOpen ? "OPEN" : "CLOSED" }}</p>
 					<p>
@@ -49,10 +49,10 @@
 					<hr />
 
 					<p>
-						<label>Theme/title of next week <input type="text" v-model="weeks[1].theme" /></label>
+						<label>Theme/title of next week <input class="admin-week-text-param" type="text" v-model="weeks[1].theme" /></label>
 					</p>
 					<p>
-						<label>Date of next week <input type="text" v-model="weeks[1].date" /></label>
+						<label>Date of next week <input class="admin-week-text-param" type="text" v-model="weeks[1].date" /></label>
 					</p>
 					<p>Submissions are currently {{ submissionsOpen ? "OPEN" : "CLOSED" }}</p>
 					<p>
@@ -62,12 +62,15 @@
 						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
 								:value="false" /> No</label>
 					</p>
-
+					
 					<hr />
 
 					<p>
 						<button @click="save">Save changes</button>
 					</p>
+					
+					<hr />
+					
 					<p>
 						<label>Archive current week, and make next week current <input type="checkbox"
 								v-model="confirmArchive"></label>
@@ -90,10 +93,10 @@
 
 			<div class="entry-list">
 				<div>
-					<Entry v-for="entry in weeks[1].entries" :key="entry.uuid" :entry="entry" :next-week="true" />
+					<Entry v-for="entry in weeks[1].entries" :key="entry.uuid" :entry="entry" :next-week="true" @editedentry="updateWeeks" />
 				</div>
 				<div>
-					<Entry v-for="entry in weeks[0].entries" :key="entry.uuid" :entry="entry" :next-week="false" />
+					<Entry v-for="entry in weeks[0].entries" :key="entry.uuid" :entry="entry" :next-week="false" @editedentry="updateWeeks" />
 				</div>
 			</div>
 
@@ -113,47 +116,132 @@
 			],
 			data() {
 				return {
-					hide: true
+					hide: true,
+					mode: null,
+					working: false,
+					entrant: "",
+					pdfFile: null,
+					pdfFormat: 'keep',
+					mp3File: null,
+					mp3Link: "",
+					mp3Format: 'keep',
+					deleteEntry: false
 				}
+			},
+			async mounted() {
+				this.working = true;
+
+				let parts = window.location.pathname.split("/");
+				this.authKey = parts[parts.length - 1];
+
+				this.working = false;
 			},
 			template: `
 				<div
 					class="admin-entry-form"
 					:class="{'form-current-week': !nextWeek, 'form-next-week': nextWeek, 'form-invalid': !entry.isValid}">
-					<h3 @click="hide = !hide">Entry for {{ nextWeek ? "NEXT" : "CURRENT" }} week ({{ entry.isValid ? "valid" : "invalid!" }})</h3>
+					<h3 @click="hide = !hide">Entry for {{ nextWeek ? "NEXT" : "CURRENT" }} week ({{ entry.isValid ? "valid" : "invalid!" }}) - {{ entry.entrantName }}</h3>
 					<div v-show="!hide">
-						<h3>THIS IS TEMPORARILY BROKEN UNTIL SUBMIT.HTML IS VUEIFIED</h3>
-						<label for="entryName">Entry Name</label>
-						<input name="entryName" type="text" v-model="entry.entryName">
+						<div class="admin-entry-param">
+							<label for="entryName">Entry Name</label>
+							<input name="entryName" type="text" v-model="entry.entryName">
+						</div>
 						<br>
-						<label for="entrantName">Discord Username</label>
-						<input name="entrantName" type="text" v-model="entry.entrantName">
+						<div class="admin-entry-param">
+							<label for="entrantName">Discord Username</label>
+							<input name="entrantName" type="text" v-model="entry.entrantName">
+						</div>
 						<br>
-						<label for="entryNotes">Additional Notes</label>
-						<input name="entryNotes" type="text" v-model="entry.notes">
+						<div class="admin-entry-param">
+							<label for="entryNotes">Additional Notes</label>
+							<input name="entryNotes" type="text" v-model="entry.entryNotes">
+						</div>
 						<br>
-						<a :href="entry.mp3">Link to MP3</a>
+						<div class='admin-entry-param'>
+							<label><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
+							<label><input type="radio" value="upload" v-model="mp3Format"/> Upload MP3</label>
+							<label><input type="radio" value="external" v-model="mp3Format"/> Link MP3</label>
+						</div>
+						<div class='admin-entry-param' v-if="mp3Format === 'keep'">
+							<a :href="entry.mp3Url">Link to MP3</a>
+						</div>
+						<div class='admin-entry-param' v-else-if="mp3Format === 'upload'">
+							<label for='mp3'>Upload MP3</label>
+							<input name='mp3' type='file' @change="setFile('mp3', $event)" />
+						</div>
+						<div class='admin-entry-param' v-else-if="mp3Format === 'external'">
+							<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
+								can enter that here.</label>
+							<input name='mp3Link' type='text' v-model="mp3Link" />
+						</div>
 						<br>
-						<label for="mp3">Upload MP3</label>
-						<input name="mp3Url" type="file" value=""> <!-- TODO: Handle file -->
+						<div class='admin-entry-param'>
+							<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
+							<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
+						</div>
+						<div class='admin-entry-param' v-if="pdfFormat === 'keep'">
+							<a :href="entry.pdfUrl">Link to PDF</a>
+						</div>
+						<div class='admin-entry-param' v-else-if="pdfFormat === 'upload'">
+							<label for='pdf'>Upload PDF</label>
+							<input name='pdf' type='file' @change="setFile('pdf', $event)" />
+						</div>
 						<br>
-						<label for="mp3Link">Or, if you have an external link to your
-							submission (e.g. SoundCloud), you can enter that here.</label>
-						<input name="mp3Link" type="text" v-model="entry.mp3File">
+						<div class="admin-entry-param">
+							<label for="deleteEntry">Delete Entry</label>
+							<input type="checkbox" name="deleteEntry" v-model="deleteEntry" />
+						</div>
 						<br>
-						<a :href="entry.pdf">Link to PDF</a>
-						<br>
-						<label for="pdf">Upload PDF</label>
-						<input name="pdfUrl" type="file" value=""> <!-- TODO: Handle file -->
-						<br>
-						<label for="deleteEntry">Delete Entry</label>
-						<input type="checkbox" name="deleteEntry" value="true">
-						<br>
-						<input type="submit" value="Submit Entry" class="admin-entry-param admin-submit-button">
+						<input type="submit" value="Submit Entry" class="admin-entry-param admin-submit-button" @click="submit">
 					</div>
 				</div>
 			`,
 			methods: {
+				async submit() {
+					this.working = true;
+
+					const formData = new FormData();
+
+					formData.append("entryName", this.entry.entryName);
+					formData.append("entrantName", this.entry.entrantName);
+					formData.append("entryNotes", this.entry.entryNotes);
+					
+					if (this.pdfFormat === 'upload') {
+						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+					}
+
+					if (this.mp3Format === 'external') {
+						formData.append("mp3Link", this.mp3Link);
+					} else if (this.mp3Format === 'upload') {
+						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
+					}
+					
+					if (this.deleteEntry === true) {
+						formData.append("deleteEntry", "true")
+					}
+
+					let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
+						method: "POST",
+						body: formData,
+					});
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						this.mode = "thanks";
+					}
+
+					this.working = false;
+					this.$emit('editedentry')
+				},
+				setFile(type, event){
+					let file = event.target.files[0];
+
+					this[type + "File"] = {
+						filename: event.target.files[0].name,
+						file
+					}
+				},
 				async updateEntry() {
 				}
 			}

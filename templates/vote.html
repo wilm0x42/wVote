@@ -51,13 +51,17 @@
 							</td>
 						</tr>
 					</table>
-					<div class="vote-submit-area">
+					<div class="vote-submit-area" v-if="votingOpen">
 						<p>You've rated {{ numEntriesRated }}/{{ entries.length }} entries.</p>
 						<input v-model="userVoteKey" placeholder="Paste your vote token here" />
 						<button @click="submitVote()" class="text-button">Submit Vote</button>
 						<br>
 						<p style="font-size: 0.8em;">DM @8Bot the command "vote!vote" to obtain a vote token.</p>
 					</div>
+					<div class="vote-submit-area" v-else>
+						<p>Voting for this week is now closed.</p>
+					</div>
+
 				</div>
 			</transition>
 
@@ -168,7 +172,6 @@
 			data: function () {
 				return {
 					mode: null,
-					voteParams: ["votePrompt", "voteScore", "voteOverall"],
 					showEntryList: true,
 					pdfColorInvert: true,
 					entries: null,
@@ -201,8 +204,9 @@
 					this.entries = weekData.entries
 					this.theme = weekData.theme
 					this.date = weekData.date
+					this.votingOpen = weekData.votingOpen
+					this.voteParams = weekData.voteParams
 					this.mode = "vote";
-				}
 
 				this.working = false;
 			},

@@ -17,7 +17,7 @@ client = commands.Bot(description="Musical Voting Platform",
                       command_prefix=[],
                       case_insensitive=True,
                       help_command=None)
-config: dict = None
+config = None
 
 
 async def start(_config):
@@ -389,12 +389,14 @@ async def vote(context: commands.Context) -> None:
 async def getentryplacements(context: commands.Context) -> None:
     ranked = compo.get_ranked_entrant_list(False)
 
-    message = ""
+    message = "```\n"
 
     for e in ranked:
         message += "%d - %s - %s (%f)\n" \
             % (e["votePlacement"], e["entrantName"],
                e["entryName"], e["voteScore"])
+
+    message += "\n```"
 
     await context.send(message)
 
@@ -407,7 +409,7 @@ async def howmany(context: commands.Context) -> None:
 
     response = "%d, so far." % compo.count_valid_entries(True)
 
-    await context.channel.send(response)
+    await context.send(response)
 
 
 @client.command()
@@ -427,12 +429,18 @@ async def status(context: commands.Context) -> None:
             await context.send(entry_info_message(entry))
             return
 
-    await context.send("You haven't submitted anything yet! But if you want to you can with %ssubmit !" % config["command_prefix"][0])
+    await context.send("You haven't submitted anything yet! "
+                       "But if you want to you can with %ssubmit !" % config["command_prefix"][0])
 
 @client.command()
 @commands.dm_only()
 async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
+
+    if week["votingOpen"]:
+        await context.send("You can't really get results while they're still coming "
+                           "in, despite what election coverage would lead you to believe; sorry.")
+        return
 
     user_entry = None
 
@@ -465,12 +473,29 @@ async def myresults(context: commands.Context) -> None:
             score[1] += 1
 
     message = []
+    message.append("Please keep in mind that music is subjective, and that "
+                   "these scores shouldn't be taken to represent the quality of"
+                   " your entry-- your artistic work is valuable, regardless of"
+                   " what results it was awarded, so don't worry too much about it")
+    message.append("And with that out of the way...")
     message.append("*drumroll please*")
     for category in results:
         total = results[category][0]
         text = "%s: You got %d stars total for an average of %f" \
-            % (category[4:], total, total / results[category][1])
-        # im slicing to get rid of the vote in the category name
+            % (category, total, total / results[category][1])
         message.append(text)
 
     await context.send("\n".join(message))
+
+@client.command()
+async def crudbroke(context: commands.Context) -> None:
+    week = compo.get_week(True)
+
+    if not "crudbroke" in week:
+        week["crudbroke"] = 0
+
+    week["crudbroke"] += 1
+
+    message = "Dang, that's happened %d times this week." % week["crudbroke"]
+
+    await context.send(message)

@@ -22,6 +22,16 @@ h3:hover
     cursor: pointer;
 }
 
+hr
+{
+	color: #361536;
+}
+
+.admin-week-text-param
+{
+	width: 400px;
+}
+
 .admin-entry-form
 {
 	background: linear-gradient(to bottom left, rgba(141, 80, 141, 1), rgba(141, 80, 141, 0.5));
@@ -89,4 +99,10 @@ h3:hover
 	background: linear-gradient(to bottom left, rgba(141, 80, 141, 1), rgba(141, 80, 141, 0.5));
 	width: 500px;
 	border: 1px solid black;
+}
+
+.admin-progress-img
+{
+    width: 200px;
+    margin: auto;
 }
