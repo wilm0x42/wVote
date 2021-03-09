@@ -196,12 +196,12 @@
 				if (!weekResponse.ok) {
 					alert("Something went wrong: " + await weekResponse.text());
 				} else {
-				let weekData = await weekResponse.json()
+					let weekData = await weekResponse.json()
 
-				this.entries = weekData.entries
-				this.theme = weekData.theme
-				this.date = weekData.date
-				this.mode = "vote";
+					this.entries = weekData.entries
+					this.theme = weekData.theme
+					this.date = weekData.date
+					this.mode = "vote";
 				}
 
 				this.working = false;
@@ -257,19 +257,19 @@
 						return
 					}
 
-					var voteData = {
+					let voteData = {
 						votes: [],
 						voteKey: this.userVoteKey
 					}
 
-					for (var e = 0; e < this.entries.length; e++) {
-						for (var p = 0; p < this.voteParams.length; p++) {
-							if (this.entries[e][this.voteParams[p]] != null) {
-								newData = {
-									entryUUID: this.entries[e].uuid,
-									voteForName: this.entries[e].entrantName,
-									voteParam: this.voteParams[p],
-									rating: this.entries[e][this.voteParams[p]]
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != null) {
+								let newData = {
+									entryUUID: entry.uuid,
+									voteForName: entry.entrantName,
+									voteParam: param,
+									rating: entry[param]
 								}
 								voteData.votes.push(newData)
 							}
