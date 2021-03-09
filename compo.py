@@ -44,7 +44,8 @@ def get_week(get_next_week: bool) -> dict:
                 "date": "Month day'th 20XX",
                 "submissionsOpen": False,
                 "votingOpen": True,
-                "entries": []
+                "entries": [],
+                "votes": []
             }
     if next_week is None:
         try:
@@ -55,7 +56,8 @@ def get_week(get_next_week: bool) -> dict:
                 "date": "Month day'th 20XX",
                 "submissionsOpen": True,
                 "votingOpen": True,
-                "entries": []
+                "entries": [],
+                "votes": []
             }
 
     if get_next_week:
@@ -187,14 +189,14 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
 
 def verify_votes(week: dict) -> None:
-    
+
     if not "votes" in week:
         week["votes"] = []
 
     # Keeps track of set vs. unset votes, and makes sure a single user can
     # only vote on the same parameter for the same entry a single time
     userVotes = {}
-    
+
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:

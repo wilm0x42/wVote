@@ -333,9 +333,6 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
 
     week = compo.get_week(False)
 
-    if not "votes" in week:
-        week["votes"] = []
-
     # If user has submitted a vote already, then remove it, so we can
     # replace it with the new one
     for v in week["votes"]:
@@ -408,9 +405,6 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> str:
 
 def get_week_votes(which_week: bool) -> str:
     week = compo.get_week(which_week)
-
-    if "votes" not in week:
-        week["votes"] = []
 
     adaptedData = week["votes"].copy()
 
