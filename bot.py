@@ -387,7 +387,7 @@ async def vote(context: commands.Context) -> None:
 @commands.check(is_admin)
 @commands.dm_only()
 async def getentryplacements(context: commands.Context) -> None:
-    ranked = compo.get_ranked_entrant_list(False)
+    ranked = compo.get_ranked_entrant_list(compo.get_week(False))
 
     message = "```\n"
 

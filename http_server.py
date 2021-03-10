@@ -83,7 +83,7 @@ async def edit_handler(request: web_request.Request) -> web.Response:
 # API handlers
 async def get_entries_handler(request: web_request.Request) -> web.Response:
     """Display this weeks votable entries"""
-    return web.json_response(get_week_viewer(False, True))
+    return web.json_response(format_week(False, True))
 
 
 async def get_entry_handler(request: web_request.Request) -> web.Response:
@@ -116,9 +116,11 @@ async def admin_get_data_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="File not found")
 
+    this_week = get_week(False)
+    next_week = get_week(True)
 
-    weeks = [get_week_viewer(False, False), get_week_viewer(True, False)]
-    votes = get_week_votes(False)
+    weeks = [format_week(this_week, False), format_week(next_week, False)]
+    votes = get_week_votes(this_week)
 
     data = {
         "weeks": weeks,
@@ -135,10 +137,9 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="Invalid key")
 
-    return web.json_response(get_week_viewer(True, True))
+    return web.json_response(format_week(get_week(True), True))
 
 
-# TODO: handle?
 async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
     """?"""
     auth_key = request.match_info["authKey"]
@@ -149,9 +150,6 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
 
     week = compo.get_week(False)
 
-    if not "votes" in week:
-        week["votes"] = []
-
     for v in week["votes"]:
         if int(v["userID"]) == int(user_id):
             return web.Response(status=200,
@@ -159,6 +157,22 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
                                 content_type="application/json")
 
     return web.Response(status=404, text="File not found")
+
+
+async def admin_deletevote_handler(request: web_request.Request) -> web.Response:
+    """Delete every vote from an user"""
+    auth_key = request.match_info["authKey"]
+    user_id = request.match_info["userID"]
+
+    if not keys.key_valid(auth_key, keys.admin_keys):
+        return web.Response(status=401, text="Invalid key")
+
+    week = compo.get_week(False)
+    week["votes"] = [vote for vote in week["votes"] if vote["userID"] != user_id]
+
+    compo.save_weeks()
+
+    return web.Response(status=204)
 
 
 async def admin_control_handler(request: web_request.Request) -> web.Response:
@@ -388,12 +402,10 @@ async def allowed_hosts_handler(request: web_request.Request) -> web.Response:
 
 
 # Helpers
-def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
+def format_week(week: dict, only_valid: bool) -> dict:
     """
     Massages week data into the format that will be output as JSON.
     """
-    week = compo.get_week(which_week)
-
     entryData = []
 
     for e in week["entries"]:
@@ -436,9 +448,7 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
     return data
 
 
-def get_week_votes(which_week: bool) -> str:
-    week = compo.get_week(which_week)
-
+def get_week_votes(week: dict) -> str:
     adaptedData = week["votes"].copy()
 
     # JavaScript is very silly and won't work if we send these huge
@@ -484,6 +494,7 @@ server.add_routes([
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/admin/archive/{authKey}", admin_archive_handler),
     web.post("/admin/spoof/{authKey}", admin_spoof_handler),
+    web.post("/admin/delete_vote/{authKey}/{userID}", admin_deletevote_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
     web.post("/submit_vote", submit_vote_handler),
     web.static("/static", "static")
