@@ -100,7 +100,7 @@ async def submission_message(entry: dict, user_was_admin: bool) -> None:
     await notify_admins(notification_message)
 
 
-def help_message() -> str:
+def help_message(full: bool = False, is_admin: bool = False) -> str:
     """
     Creates and returns a help message for guiding users in the right direction.
     Additionally lets users know whether the submissions for this week are
@@ -113,6 +113,21 @@ def help_message() -> str:
     """
     global config
 
+    command_description = {
+        "howmany": "Displays the number of submissions for this week",
+        "submit": "Provides a link to submit your own entry",
+        "vote": "Provides a vote token so you can judge other people",
+        "status": "Reports the status of your entry",
+        "myresults": "Lets you know how your entry did",
+    }
+
+    admin_command_description = {
+        "getentryplacements": "Display the ranking for this week's entries",
+        "postentries": "Post this week's entries and links, and notifies the poster",
+        "postentriespreview": "like `postentries`, but for next week",
+        "manage": "Returns a link to the admin interface, with an access token",
+    }
+
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
@@ -120,11 +135,33 @@ def help_message() -> str:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
             config["command_prefix"][0] + "submit`, and I'll give you "
-        msg += "a secret link to a personal submission form."
+        msg += "a secret link to a personal submission form. \n"
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
         msg += ("To see the already submitted entries for this week, "
-                "head on over to " + config["url_prefix"])
+                "head on over to " + config["url_prefix"]) + "\n"
+
+    if not full:
+        msg += "Send `" + config["command_prefix"][0] + "help` to see all available "
+        msg += "commands."
+    else:
+        msg += "I understand the following commands: \n"
+
+        for command, description in command_description.items():
+            msg += "`" + config["command_prefix"][0] + command + "`: "
+            msg += description + "\n"
+
+        if is_admin:
+            msg += "Also since you're an admin, here are some secret commands: \n"
+
+            for command, description in admin_command_description.items():
+                msg += "`" + config["command_prefix"][0] + command + "`: "
+                msg += description + "\n"
+
+        if len(config["command_prefix"]) > 1:
+            msg += "\n"
+            msg += "Besides `" + config["command_prefix"][0] + "` I understand the"
+            msg += "following prefixes: " + ", ".join(config["command_prefix"][1:])
 
     return msg
 
@@ -414,7 +451,7 @@ async def howmany(context: commands.Context) -> None:
 
 @client.command()
 async def help(context: commands.Context) -> None:
-    await context.send(help_message())
+    await context.send(help_message(True, is_admin(context)))
 
 
 @client.command()
