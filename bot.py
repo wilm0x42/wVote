@@ -407,7 +407,7 @@ async def howmany(context: commands.Context) -> None:
     Prints how many entries are currently submitted for the upcoming week.
     """
 
-    response = "%d, so far." % compo.count_valid_entries(True)
+    response = "%d, so far." % compo.count_valid_entries(compo.get_week(True))
 
     await context.send(response)
 
