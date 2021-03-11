@@ -148,7 +148,7 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
 
         if len(client.command_prefix) > 1:
             msg += "\n"
-            msg += "Besides `" + client.command_prefix[0] + "` I understand the"
+            msg += "Besides `" + client.command_prefix[0] + "` I understand the "
             msg += "following prefixes: " + ", ".join("`" + prefix + "`" for prefix in client.command_prefix[1:])
 
     return msg
