@@ -113,20 +113,8 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
     """
     global config
 
-    command_description = {
-        "howmany": "Displays the number of submissions for this week",
-        "submit": "Provides a link to submit your own entry",
-        "vote": "Provides a vote token so you can judge other people",
-        "status": "Reports the status of your entry",
-        "myresults": "Lets you know how your entry did",
-    }
-
-    admin_command_description = {
-        "getentryplacements": "Display the ranking for this week's entries",
-        "postentries": "Post this week's entries and links, and notifies the poster",
-        "postentriespreview": "like `postentries`, but for next week",
-        "manage": "Returns a link to the admin interface, with an access token",
-    }
+    commands = ["howmany", "submit", "vote", "status", "myresults"]
+    admin_commands = ["getentryplacements", "postentries", "postentriespreview", "manage"]
 
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
@@ -134,7 +122,7 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
-            config["command_prefix"][0] + "submit`, and I'll give you "
+            client.command_prefix[0] + "submit`, and I'll give you "
         msg += "a secret link to a personal submission form. \n"
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
@@ -142,26 +130,26 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
                 "head on over to " + config["url_prefix"]) + "\n"
 
     if not full:
-        msg += "Send `" + config["command_prefix"][0] + "help` to see all available "
+        msg += "Send `" + client.command_prefix[0] + "help` to see all available "
         msg += "commands."
     else:
-        msg += "I understand the following commands: \n"
+        msg += "\nI understand the following commands: \n"
 
-        for command, description in command_description.items():
-            msg += "`" + config["command_prefix"][0] + command + "`: "
-            msg += description + "\n"
+        for command in commands:
+            msg += "`" + client.command_prefix[0] + command + "`: "
+            msg += client.get_command(command).short_doc + "\n"
 
         if is_admin:
-            msg += "Also since you're an admin, here are some secret commands: \n"
+            msg += "\nAlso since you're an admin, here are some secret commands: \n"
 
-            for command, description in admin_command_description.items():
-                msg += "`" + config["command_prefix"][0] + command + "`: "
-                msg += description + "\n"
+            for command in admin_commands:
+                msg += "`" + client.command_prefix[0] + command + "`: "
+                msg += client.get_command(command).short_doc + "\n"
 
-        if len(config["command_prefix"]) > 1:
+        if len(client.command_prefix) > 1:
             msg += "\n"
-            msg += "Besides `" + config["command_prefix"][0] + "` I understand the"
-            msg += "following prefixes: " + ", ".join(config["command_prefix"][1:])
+            msg += "Besides `" + client.command_prefix[0] + "` I understand the"
+            msg += "following prefixes: " + ", ".join("`" + prefix + "`" for prefix in client.command_prefix[1:])
 
     return msg
 
@@ -373,10 +361,7 @@ async def manage(context: commands.Context) -> None:
 @client.command()
 @commands.dm_only()
 async def submit(context: commands.Context) -> None:
-    """
-    Creates a submission entry for the user.
-    Replies with a link to the management panel with options to create or edit.
-    """
+    """Provides a link to submit your entry."""
     global config
 
     week = compo.get_week(True)
@@ -424,6 +409,7 @@ async def vote(context: commands.Context) -> None:
 @commands.check(is_admin)
 @commands.dm_only()
 async def getentryplacements(context: commands.Context) -> None:
+    """Prints the entries ranked according to the STAR algoritm."""
     ranked = compo.get_ranked_entrant_list(compo.get_week(False))
 
     message = "```\n"
@@ -451,12 +437,13 @@ async def howmany(context: commands.Context) -> None:
 
 @client.command()
 async def help(context: commands.Context) -> None:
-    await context.send(help_message(True, is_admin(context)))
+    await context.send(help_message(True, await is_admin(context)))
 
 
 @client.command()
 @commands.dm_only()
 async def status(context: commands.Context) -> None:
+    """Displays the status of your entry for this week."""
     global config
 
     week = compo.get_week(True)
@@ -467,11 +454,12 @@ async def status(context: commands.Context) -> None:
             return
 
     await context.send("You haven't submitted anything yet! "
-                       "But if you want to you can with %ssubmit !" % config["command_prefix"][0])
+                       "But if you want to you can with %ssubmit !" % client.command_prefix[0])
 
 @client.command()
 @commands.dm_only()
 async def myresults(context: commands.Context) -> None:
+    """Shows you your results on the latest vote."""
     week = compo.get_week(False)
 
     if week["votingOpen"]:
