@@ -204,14 +204,7 @@ def verify_votes(week: dict) -> None:
                 v["ratings"].remove(r)
 
 
-def get_ranked_entrant_list(week: dict) -> list:
-    """Bloc STAR Voting wooooo"""
-
-    if len(week["entries"]) < 1: # lol no one submitted
-        return []
-
-    verify_votes(week)
-
+def get_valid_scores(week: dict) -> dict:
     scores = {}
 
     for v in week["votes"]:
@@ -230,7 +223,26 @@ def get_ranked_entrant_list(week: dict) -> list:
         for r in valid_ratings:
             normalized = (float(r["rating"]) - (minimum - 1)) / (extent + 1) * 5
 
-            scores.setdefault(r["entryUUID"], []).append(normalized)
+            scores.setdefault(r["entryUUID"], []).append((normalized, r["voteParam"]))
+
+    return scores
+
+
+def get_ranked_entrant_list(week: dict) -> list:
+    """Bloc STAR Voting wooooo"""
+
+    param_weights = {
+        "prompt": 0.3,
+        "score": 0.3,
+        "overall": 0.4
+    }
+
+    if len(week["entries"]) < 1: # lol no one submitted
+        return []
+
+    verify_votes(week)
+
+    scores = get_valid_scores(week)
 
     entry_pool = []
     ranked_entries = []
@@ -238,7 +250,7 @@ def get_ranked_entrant_list(week: dict) -> list:
     # Write final scores to entry data, and put 'em all in entry_pool
     for e in week["entries"]:
         if entry_valid(e):
-            e["voteScore"] = statistics.mean(scores.get(e["uuid"], [0]))
+            e["voteScore"] = statistics.mean(score[0] for score in scores.get(e["uuid"], [(0, None)]))
             entry_pool.append(e)
 
     # Now that we have scores calculated, run the actual STAR algorithm
@@ -253,8 +265,8 @@ def get_ranked_entrant_list(week: dict) -> list:
 
         for v in week["votes"]:
             # note that normalization doesn't matter for comparing preference
-            scoreA = sum(r["rating"] for r in v["ratings"] if r["entryUUID"] == entryA["uuid"])
-            scoreB = sum(r["rating"] for r in v["ratings"] if r["entryUUID"] == entryB["uuid"])
+            scoreA = sum(r["rating"] * param_weights[r["voteParam"]] for r in v["ratings"] if r["entryUUID"] == entryA["uuid"])
+            scoreB = sum(r["rating"] * param_weights[r["voteParam"]] for r in v["ratings"] if r["entryUUID"] == entryB["uuid"])
 
             if scoreA > scoreB:
                 preferEntryA += 1
