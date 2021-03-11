@@ -83,7 +83,7 @@ async def edit_handler(request: web_request.Request) -> web.Response:
 # API handlers
 async def get_entries_handler(request: web_request.Request) -> web.Response:
     """Display this weeks votable entries"""
-    return web.json_response(format_week(False, True))
+    return web.json_response(format_week(False, False))
 
 
 async def get_entry_handler(request: web_request.Request) -> web.Response:
@@ -119,7 +119,7 @@ async def admin_get_data_handler(request: web_request.Request) -> web.Response:
     this_week = get_week(False)
     next_week = get_week(True)
 
-    weeks = [format_week(this_week, False), format_week(next_week, False)]
+    weeks = [format_week(this_week, True), format_week(next_week, True)]
     votes = get_week_votes(this_week)
 
     data = {
@@ -137,7 +137,7 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="Invalid key")
 
-    return web.json_response(format_week(get_week(True), True))
+    return web.json_response(format_week(get_week(True), False))
 
 
 async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
@@ -402,7 +402,7 @@ async def allowed_hosts_handler(request: web_request.Request) -> web.Response:
 
 
 # Helpers
-def format_week(week: dict, only_valid: bool) -> dict:
+def format_week(week: dict, is_admin: bool) -> dict:
     """
     Massages week data into the format that will be output as JSON.
     """
@@ -410,7 +410,7 @@ def format_week(week: dict, only_valid: bool) -> dict:
 
     for e in week["entries"]:
         is_valid = compo.entry_valid(e)
-        if only_valid and not is_valid:
+        if not is_admin and not is_valid:
             continue
 
         prunedEntry = {
@@ -422,7 +422,7 @@ def format_week(week: dict, only_valid: bool) -> dict:
             "isValid": is_valid,
         }
 
-        if "entryNotes" in e:
+        if is_admin in "entryNotes" in e:
         	prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":
