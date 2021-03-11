@@ -100,7 +100,7 @@ async def submission_message(entry: dict, user_was_admin: bool) -> None:
     await notify_admins(notification_message)
 
 
-def help_message() -> str:
+def help_message(full: bool = False, is_admin: bool = False) -> str:
     """
     Creates and returns a help message for guiding users in the right direction.
     Additionally lets users know whether the submissions for this week are
@@ -113,18 +113,43 @@ def help_message() -> str:
     """
     global config
 
+    commands = ["howmany", "submit", "vote", "status", "myresults"]
+    admin_commands = ["getentryplacements", "postentries", "postentriespreview", "manage"]
+
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
-            config["command_prefix"][0] + "submit`, and I'll give you "
-        msg += "a secret link to a personal submission form."
+            client.command_prefix[0] + "submit`, and I'll give you "
+        msg += "a secret link to a personal submission form. \n"
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
         msg += ("To see the already submitted entries for this week, "
-                "head on over to " + config["url_prefix"])
+                "head on over to " + config["url_prefix"]) + "\n"
+
+    if not full:
+        msg += "Send `" + client.command_prefix[0] + "help` to see all available "
+        msg += "commands."
+    else:
+        msg += "\nI understand the following commands: \n"
+
+        for command in commands:
+            msg += "`" + client.command_prefix[0] + command + "`: "
+            msg += client.get_command(command).short_doc + "\n"
+
+        if is_admin:
+            msg += "\nAlso since you're an admin, here are some secret commands: \n"
+
+            for command in admin_commands:
+                msg += "`" + client.command_prefix[0] + command + "`: "
+                msg += client.get_command(command).short_doc + "\n"
+
+        if len(client.command_prefix) > 1:
+            msg += "\n"
+            msg += "Besides `" + client.command_prefix[0] + "` I understand the "
+            msg += "following prefixes: " + ", ".join("`" + prefix + "`" for prefix in client.command_prefix[1:])
 
     return msg
 
@@ -336,10 +361,7 @@ async def manage(context: commands.Context) -> None:
 @client.command()
 @commands.dm_only()
 async def submit(context: commands.Context) -> None:
-    """
-    Creates a submission entry for the user.
-    Replies with a link to the management panel with options to create or edit.
-    """
+    """Provides a link to submit your entry."""
     global config
 
     week = compo.get_week(True)
@@ -387,6 +409,7 @@ async def vote(context: commands.Context) -> None:
 @commands.check(is_admin)
 @commands.dm_only()
 async def getentryplacements(context: commands.Context) -> None:
+    """Prints the entries ranked according to the STAR algoritm."""
     ranked = compo.get_ranked_entrant_list(compo.get_week(False))
 
     message = "```\n"
@@ -407,19 +430,20 @@ async def howmany(context: commands.Context) -> None:
     Prints how many entries are currently submitted for the upcoming week.
     """
 
-    response = "%d, so far." % compo.count_valid_entries(True)
+    response = "%d, so far." % compo.count_valid_entries(compo.get_week(True))
 
     await context.send(response)
 
 
 @client.command()
 async def help(context: commands.Context) -> None:
-    await context.send(help_message())
+    await context.send(help_message(True, await is_admin(context)))
 
 
 @client.command()
 @commands.dm_only()
 async def status(context: commands.Context) -> None:
+    """Displays the status of your entry for this week."""
     global config
 
     week = compo.get_week(True)
@@ -430,11 +454,12 @@ async def status(context: commands.Context) -> None:
             return
 
     await context.send("You haven't submitted anything yet! "
-                       "But if you want to you can with %ssubmit !" % config["command_prefix"][0])
+                       "But if you want to you can with %ssubmit !" % client.command_prefix[0])
 
 @client.command()
 @commands.dm_only()
 async def myresults(context: commands.Context) -> None:
+    """Shows you your results on the latest vote."""
     week = compo.get_week(False)
 
     if week["votingOpen"]:

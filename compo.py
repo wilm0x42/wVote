@@ -157,14 +157,8 @@ def entry_valid(entry: dict) -> bool:
     return True
 
 
-def count_valid_entries(which_week: bool) -> int:
-    count = 0
-
-    for e in get_week(which_week)["entries"]:
-        if entry_valid(e):
-            count += 1
-
-    return count
+def count_valid_entries(week: dict) -> int:
+    return len(e for e in week["entries"] if entry_valid(e))
 
 
 def get_entry_file(uuid: str, filename: str) -> tuple:
