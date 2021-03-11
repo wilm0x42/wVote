@@ -507,6 +507,7 @@ async def myresults(context: commands.Context) -> None:
 
     await context.send("\n".join(message))
 
+
 @client.command()
 async def crudbroke(context: commands.Context) -> None:
     week = compo.get_week(True)
