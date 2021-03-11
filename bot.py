@@ -4,6 +4,7 @@ import asyncio
 import io
 import urllib.parse
 import logging
+import statistics
 
 import discord
 from discord.ext import commands
@@ -469,7 +470,6 @@ async def myresults(context: commands.Context) -> None:
 
     user_entry = None
 
-    # change to list comp or some other search method?
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
             user_entry = entry
@@ -479,23 +479,13 @@ async def myresults(context: commands.Context) -> None:
         return
 
     compo.verify_votes(week)
+    scores = compo.get_valid_scores(week)
 
-    ratings = [rating
-        for vote in week["votes"]
-        for rating in vote["ratings"]
-        if rating["entryUUID"] == user_entry["uuid"]]
-
-    if not ratings:
+    if user_entry["uuid"] not in scores:
         await context.send("Well this is awkward, no one voted on your entry...")
         return
 
-    results = {}
-
-    for rating in ratings:
-        score = results.setdefault(rating["voteParam"], [0, 0])
-        if rating["rating"] > 0: # unset rating
-            score[0] += rating["rating"]
-            score[1] += 1
+    entry_scores = scores[user_entry["uuid"]]
 
     message = []
     message.append("Please keep in mind that music is subjective, and that "
@@ -504,11 +494,16 @@ async def myresults(context: commands.Context) -> None:
                    " what results it was awarded, so don't worry too much about it")
     message.append("And with that out of the way...")
     message.append("*drumroll please*")
-    for category in results:
-        total = results[category][0]
-        text = "%s: You got %d stars total for an average of %f" \
-            % (category, total, total / results[category][1])
+    for category in week["voteParams"]:
+        category_scores = [s[0] for s in entry_scores if s[1] == category]
+        if len(category_scores) == 0:
+            # The user received votes, but not in this category
+            category_scores = [0]
+        text = "%s: You got an average score of %1.2f" \
+            % (category, statistics.mean(category_scores))
         message.append(text)
+
+    message.append("Your total average was: %1.2f!" % statistics.mean(s[0] for s in entry_scores))
 
     await context.send("\n".join(message))
 
