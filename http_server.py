@@ -223,7 +223,9 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
 
     entry_data = await request.json()
 
-    compo.create_blank_entry(entry_data["entrantName"], entry_data["discordId"], entry_data["nextWeek"])
+    new_entry = compo.create_blank_entry(entry_data["entrantName"], entry_data["discordId"])
+    week = compo.get_week(entry_data["nextWeek"])
+    week["entries"].append(new_entry)
 
     return web.Response(status=204, text="Nice")
 
