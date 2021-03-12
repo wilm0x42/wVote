@@ -233,7 +233,7 @@ def get_ranked_entrant_list(week: dict) -> list:
 
     verify_votes(week)
 
-    scores = get_valid_scores(week["votes"])
+    scores = normalize_votes(week["votes"])
 
     entry_pool = []
     ranked_entries = []
