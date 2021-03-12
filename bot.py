@@ -383,7 +383,8 @@ async def submit(context: commands.Context) -> None:
 
     new_entry = compo.create_blank_entry(context.author.name,
                                          context.author.id)
-    key = keys.create_edit_key(new_entry)
+    week["entries"].append(new_entry)
+    key = keys.create_edit_key(new_entry["uuid"])
     url = "%s/edit/%s" % (config["url_prefix"], key)
 
     await context.send("Submission form: " + url + expiry_message())
@@ -479,7 +480,7 @@ async def myresults(context: commands.Context) -> None:
         return
 
     compo.verify_votes(week)
-    scores = compo.get_valid_scores(week)
+    scores = compo.normalize_votes(week["votes"])
 
     if user_entry["uuid"] not in scores:
         await context.send("Well this is awkward, no one voted on your entry...")
@@ -506,6 +507,7 @@ async def myresults(context: commands.Context) -> None:
     message.append("Your total average was: %1.2f!" % statistics.mean(s[0] for s in entry_scores))
 
     await context.send("\n".join(message))
+
 
 @client.command()
 async def crudbroke(context: commands.Context) -> None:
