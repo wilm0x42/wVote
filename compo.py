@@ -96,8 +96,7 @@ def move_to_next_week() -> None:
 
 
 def create_blank_entry(entrant_name: str,
-                       discord_id: int,
-                       get_next_week: bool = True) -> str:
+                       discord_id: int) -> dict:
     """
     Create a blank entry for an entrant and returns a UUID
 
@@ -107,8 +106,6 @@ def create_blank_entry(entrant_name: str,
         The name of the entrant
     discord_id : int
         The entrant's Discord ID
-    get_next_week : bool, optional
-        Whether the entry should be for the folowing week, by default True
 
     Returns
     -------
@@ -121,9 +118,8 @@ def create_blank_entry(entrant_name: str,
         "discordID": discord_id,
         "uuid": str(uuid.uuid4())
     }
-    get_week(get_next_week)["entries"].append(entry)
 
-    return entry["uuid"]
+    return entry
 
 
 def find_entry_by_uuid(uuid: str) -> Optional[dict]:

@@ -383,7 +383,8 @@ async def submit(context: commands.Context) -> None:
 
     new_entry = compo.create_blank_entry(context.author.name,
                                          context.author.id)
-    key = keys.create_edit_key(new_entry)
+    week["entries"].append(new_entry)
+    key = keys.create_edit_key(new_entry["uuid"])
     url = "%s/edit/%s" % (config["url_prefix"], key)
 
     await context.send("Submission form: " + url + expiry_message())
