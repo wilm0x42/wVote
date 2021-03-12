@@ -479,7 +479,7 @@ async def myresults(context: commands.Context) -> None:
         return
 
     compo.verify_votes(week)
-    scores = compo.get_valid_scores(week)
+    scores = compo.normalize_votes(week["votes"])
 
     if user_entry["uuid"] not in scores:
         await context.send("Well this is awkward, no one voted on your entry...")

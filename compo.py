@@ -176,38 +176,33 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
 
 def verify_votes(week: dict) -> None:
-
     if not "votes" in week:
         week["votes"] = []
 
-    # Keeps track of set vs. unset votes, and makes sure a single user can
-    # only vote on the same parameter for the same entry a single time
-    userVotes = {}
+    # Makes sure a single user can only vote on the same parameter
+    # for the same entry a single time
+    userVotes = set({})
 
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
-            if not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes \
-                    and r["rating"] <= 5 \
-                    and r["rating"] >= 0:
-                if r["rating"] == 0: # Unset rating
-                    userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
-                        = False
-                else:
-                    userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
-                        = True
-                # TODO: throw out ratings for made-up categories
-                # (this will involve data-ifying the voteParams into the week)
+            if 0 <= r["rating"] <= 5 \
+                and r["voteParam"] in week["voteParams"] \
+                and not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes:
+                userVotes.add((v["userID"], r["entryUUID"], r["voteParam"]))
             else:
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
 
 
-def get_valid_scores(week: dict) -> dict:
+def normalize_votes(votes: dict) -> dict:
+    """Trim away 0-votes and normalize each user's scores
+       into the 1-5 range.
+    """
     scores = {}
 
-    for v in week["votes"]:
+    for v in votes:
         valid_ratings = [r for r in v["ratings"] if r["rating"] != 0]
 
         if len(valid_ratings) == 0:
@@ -242,7 +237,7 @@ def get_ranked_entrant_list(week: dict) -> list:
 
     verify_votes(week)
 
-    scores = get_valid_scores(week)
+    scores = get_valid_scores(week["votes"])
 
     entry_pool = []
     ranked_entries = []
