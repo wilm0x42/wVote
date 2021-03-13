@@ -53,6 +53,7 @@ def get_week(get_next_week: bool) -> dict:
         except FileNotFoundError:
             current_week = blank_week()
             current_week["submissions_open"] = False
+
     if next_week is None:
         try:
             next_week = pickle.load(open("weeks/next-week.pickle", "rb"))
@@ -209,7 +210,10 @@ def normalize_votes(votes: list) -> dict:
         extent = maximum - minimum
 
         for r in valid_ratings:
-            normalized = (float(r["rating"]) - (minimum - 1)) / (extent + 1) * 5
+            if extent == 0:
+                normalized = 3.0
+            else:
+                normalized = (float(r["rating"]) - minimum) / extent * 4 + 1
 
             scores.setdefault(r["entryUUID"], []).append((normalized, r["voteParam"]))
 
