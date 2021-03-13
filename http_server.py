@@ -424,7 +424,7 @@ def format_week(week: dict, is_admin: bool) -> dict:
             "isValid": is_valid,
         }
 
-        if is_admin in "entryNotes" in e:
+        if is_admin and "entryNotes" in e:
         	prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":

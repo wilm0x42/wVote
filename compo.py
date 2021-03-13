@@ -53,6 +53,7 @@ def get_week(get_next_week: bool) -> dict:
         except FileNotFoundError:
             current_week = blank_week()
             current_week["submissions_open"] = False
+
     if next_week is None:
         try:
             next_week = pickle.load(open("weeks/next-week.pickle", "rb"))
@@ -172,9 +173,6 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
 
 def verify_votes(week: dict) -> None:
-    if not "votes" in week:
-        week["votes"] = []
-
     # Makes sure a single user can only vote on the same parameter
     # for the same entry a single time
     userVotes = set({})
@@ -192,7 +190,7 @@ def verify_votes(week: dict) -> None:
                 v["ratings"].remove(r)
 
 
-def normalize_votes(votes: dict) -> dict:
+def normalize_votes(votes: list) -> dict:
     """Trim away 0-votes and normalize each user's scores
        into the 1-5 range.
     """
@@ -212,7 +210,10 @@ def normalize_votes(votes: dict) -> dict:
         extent = maximum - minimum
 
         for r in valid_ratings:
-            normalized = (float(r["rating"]) - (minimum - 1)) / (extent + 1) * 5
+            if extent == 0:
+                normalized = 3.0
+            else:
+                normalized = (float(r["rating"]) - minimum) / extent * 4 + 1
 
             scores.setdefault(r["entryUUID"], []).append((normalized, r["voteParam"]))
 
