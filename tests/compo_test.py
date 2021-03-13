@@ -81,7 +81,7 @@ class TestLoadWeeks:
 
 class TestSaveWeeks:
     def mock_pickle(self, mocker):
-        mocker.patch("compo.pickle.dump")
+        mocker.patch("compo.pickle.dump", return_value=None)
         mocker.patch("compo.open")
 
     def test_valid_write(self, mocker):
@@ -117,7 +117,7 @@ class TestSaveWeeks:
 
 class TestMoveWeeks:
     def mock_pickle(self, mocker):
-        mocker.patch("compo.pickle.dump")
+        mocker.patch("compo.pickle.dump", return_value=None)
         mocker.patch("compo.open")
 
 
@@ -202,3 +202,131 @@ class TestCountValidEntries:
 
         assert compo.entry_valid(entry)
         assert compo.count_valid_entries(week) == 1
+
+class TestVerifyVotes:
+    def test_all_is_good_by_default(self):
+        week = compo.blank_week()
+
+        compo.verify_votes(week)
+
+        assert week["votes"] == []
+
+    def test_a_single_vote_is_ok(self):
+        week = compo.blank_week()
+        votes = [{
+            "userID": 1234,
+            "ratings": [{
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": 3
+            }]
+        }]
+        week["votes"] = votes.copy()
+
+        compo.verify_votes(week)
+
+        assert week["votes"] == votes
+
+    def test_cant_vote_too_high(self):
+        week = compo.blank_week()
+        votes = [{
+            "userID": 1234,
+            "ratings": [{
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": 10
+            }]
+        }]
+        week["votes"] = votes.copy()
+
+        compo.verify_votes(week)
+
+        assert week["votes"][0]["ratings"] == []
+
+    def test_cant_vote_too_low(self):
+        week = compo.blank_week()
+        votes = [{
+            "userID": 1234,
+            "ratings": [{
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": -5
+            }]
+        }]
+        week["votes"] = votes.copy()
+
+        compo.verify_votes(week)
+
+        assert week["votes"][0]["ratings"] == []
+
+    def test_duped_votes_are_discarded(self):
+        week = compo.blank_week()
+        rating1 = {
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": 3
+            }
+        rating2 = {
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": 4
+            }
+        votes = [{
+            "userID": 1234,
+            "ratings": [rating1, rating2]
+        }]
+        week["votes"] = votes.copy()
+
+        compo.verify_votes(week)
+
+        assert week["votes"][0]["ratings"] == [rating1]
+
+class TestNormalizeVotes:
+    def test_no_votes_means_no_scores(self):
+        votes = []
+
+        scores = compo.normalize_votes(votes)
+
+        assert scores == {}
+
+    def test_a_single_vote_is_averaged(self):
+        votes = [{
+            "userID": 1234,
+            "ratings": [{
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": 2
+            }]
+        }]
+
+        scores = compo.normalize_votes(votes)
+
+        assert scores == {"123": [(3, "overall")]}
+
+    def test_no_ratings_left_still_works(self):
+        votes = [{
+            "userID": 1234,
+            "ratings": []
+        }]
+
+        scores = compo.normalize_votes(votes)
+
+        assert scores == {}
+
+    def test_two_votes_become_extreme(self):
+        votes = [{
+            "userID": 1234,
+            "ratings": [{
+                "voteParam": "overall",
+                "entryUUID": "123",
+                "rating": 2
+            }, {
+                "voteParam": "overall",
+                "entryUUID": "777",
+                "rating": 3
+            }]
+        }]
+
+        scores = compo.normalize_votes(votes)
+
+        assert scores == {"123": [(1, "overall")], "777": [(5, "overall")]}
