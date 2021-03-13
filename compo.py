@@ -189,7 +189,7 @@ def verify_votes(week: dict) -> None:
                 v["ratings"].remove(r)
 
 
-def normalize_votes(votes: dict) -> dict:
+def normalize_votes(votes: list) -> dict:
     """Trim away 0-votes and normalize each user's scores
        into the 1-5 range.
     """
