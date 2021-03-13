@@ -172,9 +172,6 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
 
 def verify_votes(week: dict) -> None:
-    if not "votes" in week:
-        week["votes"] = []
-
     # Makes sure a single user can only vote on the same parameter
     # for the same entry a single time
     userVotes = set({})
