@@ -33,6 +33,9 @@ class TestCreateKey():
                 passing = False
             assert passing
 
+    def test_return_str(self):
+        assert isinstance(keys.create_key(8), str)
+
 class TestCreateEditKey():
     @pytest.fixture(scope="class")
     def edit_key(self):
