@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from random import randint
 from string import ascii_letters, digits
 from uuid import uuid4
 import json
@@ -55,19 +56,16 @@ class TestKeyValid():
         assert isinstance(keys.key_valid(expired_key[0], expired_key[1]), bool)
 
 class TestCreateKey():
-    def test_key_valid_chars(self):
+    @pytest.mark.parametrize("len", [randint(0, 999) for _ in range(12)])
+    def test_key_valid_chars(self, len):
         alphanumeric = ascii_letters + digits
-        for i in range(12):
-            key = keys.create_key(i)
-            assert all(char in alphanumeric for char in key)
+        key = keys.create_key(len)
+        assert all(char in alphanumeric for char in key)
     
-    def test_key_correct_length(self):
-        passing = True
-        for i in range(16):
-            key = keys.create_key(i)
-            if len(key) != i:
-                passing = False
-            assert passing
+    @pytest.mark.parametrize("length", [randint(0, 999) for _ in range(12)])
+    def test_key_correct_length(self, length):
+        key = keys.create_key(length)
+        assert len(key) == length
     
     def test_return_str(self):
         assert isinstance(keys.create_key(8), str)
