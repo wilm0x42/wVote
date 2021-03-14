@@ -48,7 +48,7 @@ class TestKeyValid():
         keys.key_valid(key, store)
         assert key not in store
 
-    # everything past here is maybe a little unnecessary but whatevs....
+    # everything past here is maybe a little overkill but whatevs....
     def test_return_bool(self, valid_key, expired_key):
         assert isinstance(keys.key_valid(valid_key[0], valid_key[1]), bool)
         assert isinstance(keys.key_valid(valid_key[0], {}), bool)
