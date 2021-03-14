@@ -4,6 +4,7 @@ import asyncio
 import io
 import urllib.parse
 import logging
+import statistics
 
 import discord
 from discord.ext import commands
@@ -100,7 +101,7 @@ async def submission_message(entry: dict, user_was_admin: bool) -> None:
     await notify_admins(notification_message)
 
 
-def help_message() -> str:
+def help_message(full: bool = False, is_admin: bool = False) -> str:
     """
     Creates and returns a help message for guiding users in the right direction.
     Additionally lets users know whether the submissions for this week are
@@ -113,18 +114,43 @@ def help_message() -> str:
     """
     global config
 
+    commands = ["howmany", "submit", "vote", "status", "myresults"]
+    admin_commands = ["getentryplacements", "postentries", "postentriespreview", "manage"]
+
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
 
     if compo.get_week(True)["submissionsOpen"]:
         msg += "Submissions for this week's prompt are currently open.\n"
         msg += "If you'd like to submit an entry, DM me the command `" + \
-            config["command_prefix"][0] + "submit`, and I'll give you "
-        msg += "a secret link to a personal submission form."
+            client.command_prefix[0] + "submit`, and I'll give you "
+        msg += "a secret link to a personal submission form. \n"
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
         msg += ("To see the already submitted entries for this week, "
-                "head on over to " + config["url_prefix"])
+                "head on over to " + config["url_prefix"]) + "\n"
+
+    if not full:
+        msg += "Send `" + client.command_prefix[0] + "help` to see all available "
+        msg += "commands."
+    else:
+        msg += "\nI understand the following commands: \n"
+
+        for command in commands:
+            msg += "`" + client.command_prefix[0] + command + "`: "
+            msg += client.get_command(command).short_doc + "\n"
+
+        if is_admin:
+            msg += "\nAlso since you're an admin, here are some secret commands: \n"
+
+            for command in admin_commands:
+                msg += "`" + client.command_prefix[0] + command + "`: "
+                msg += client.get_command(command).short_doc + "\n"
+
+        if len(client.command_prefix) > 1:
+            msg += "\n"
+            msg += "Besides `" + client.command_prefix[0] + "` I understand the "
+            msg += "following prefixes: " + ", ".join("`" + prefix + "`" for prefix in client.command_prefix[1:])
 
     return msg
 
@@ -154,6 +180,23 @@ def expiry_message() -> str:
     return "\nThis link will expire in %d minutes" % config["default_ttl"]
 
 
+@client.listen('on_message')
+async def unhandled_dm(message):
+    """
+    When a DM is received and it didn't match any known commands, show the help prompt.
+    """
+    if message.author == client.user:
+        # Don't reply to self
+        return
+
+    if message.channel != message.author.dm_channel:
+        # Only DMs
+        return
+
+    if not any(message.content.startswith(prefix) for prefix in client.command_prefix):
+        await message.channel.send(help_message())
+
+
 @client.event
 async def on_ready() -> None:
     """
@@ -166,7 +209,7 @@ async def on_ready() -> None:
           (len(client.guilds), len(set(client.get_all_members()))))
     logging.info(("DISCORD: Invite link: "
            "https://discordapp.com/oauth2/authorize?client_id="
-           "%s&scope=bot&permissions=335936592" % str(client.user.id)))
+           "%d&scope=bot&permissions=335936592" % client.user.id))
     activity = discord.Game(name="Preventing Voter Fraud")
     return await client.change_presence(activity=activity)
 
@@ -178,7 +221,9 @@ async def on_command_error(context: commands.Context,
     if isinstance(error, commands.errors.CommandNotFound):
         if context.channel.type == discord.ChannelType.private:
             await context.send(help_message())
-            return
+        else:
+            await context.author.send(help_message())
+        return
 
     if isinstance(error, commands.errors.PrivateMessageOnly):
         await context.send(dm_reminder)
@@ -191,7 +236,7 @@ async def on_command_error(context: commands.Context,
         return
 
     if isinstance(error, WrongChannelError):
-        await context.send("This isn't the right channel" " for this!")
+        await context.send("This isn't the right channel for this!")
         return
 
     logging.error("DISCORD: Unhandled command error: %s" % str(error))
@@ -204,7 +249,7 @@ async def is_admin(context: commands.Context) -> bool:
     """
     global config
 
-    if str(context.author.id) not in config["admins"]:
+    if context.author.id not in config["admins"]:
         raise IsNotAdminError()
 
     return True
@@ -276,7 +321,7 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                         discord.File(io.BytesIO(bytes(entry["mp3"])),
                                      filename=entry["mp3Filename"]))
                 elif entry["mp3Format"] == "external":
-                    upload_message += "\n" + str(entry["mp3"])
+                    upload_message += "\n" + entry["mp3"]
 
                 upload_files.append(
                     discord.File(io.BytesIO(bytes(entry["pdf"])),
@@ -317,10 +362,7 @@ async def manage(context: commands.Context) -> None:
 @client.command()
 @commands.dm_only()
 async def submit(context: commands.Context) -> None:
-    """
-    Creates a submission entry for the user.
-    Replies with a link to the management panel with options to create or edit.
-    """
+    """Provides a link to submit your entry."""
     global config
 
     week = compo.get_week(True)
@@ -341,7 +383,8 @@ async def submit(context: commands.Context) -> None:
 
     new_entry = compo.create_blank_entry(context.author.name,
                                          context.author.id)
-    key = keys.create_edit_key(new_entry)
+    week["entries"].append(new_entry)
+    key = keys.create_edit_key(new_entry["uuid"])
     url = "%s/edit/%s" % (config["url_prefix"], key)
 
     await context.send("Submission form: " + url + expiry_message())
@@ -363,11 +406,13 @@ async def vote(context: commands.Context) -> None:
 
     await context.send(message)
 
+
 @client.command()
 @commands.check(is_admin)
 @commands.dm_only()
 async def getentryplacements(context: commands.Context) -> None:
-    ranked = compo.get_ranked_entrant_list(False)
+    """Prints the entries ranked according to the STAR algoritm."""
+    ranked = compo.get_ranked_entrant_list(compo.get_week(False))
 
     message = "```\n"
 
@@ -375,29 +420,10 @@ async def getentryplacements(context: commands.Context) -> None:
         message += "%d - %s - %s (%f)\n" \
             % (e["votePlacement"], e["entrantName"],
                e["entryName"], e["voteScore"])
-    
+
     message += "\n```"
 
     await context.send(message)
-
-@client.command()
-@commands.check(is_admin)
-async def googleformslist(context: commands.Context) -> None:
-    """
-    Generates the list of Google forms for the entries.
-    """
-    entries = compo.get_week(False)["entries"]
-
-    response = "```\n"
-
-    for e in entries:
-        if not compo.entry_valid(e):
-            continue
-        response += "%s - %s\n" % (e["entrantName"], e["entryName"])
-
-    response += "\n```"
-
-    await context.send(response)
 
 
 @client.command()
@@ -406,19 +432,20 @@ async def howmany(context: commands.Context) -> None:
     Prints how many entries are currently submitted for the upcoming week.
     """
 
-    response = "%d, so far." % compo.count_valid_entries(True)
+    response = "%d, so far." % compo.count_valid_entries(compo.get_week(True))
 
     await context.send(response)
 
 
 @client.command()
 async def help(context: commands.Context) -> None:
-    await context.send(help_message())
+    await context.send(help_message(True, await is_admin(context)))
 
 
 @client.command()
 @commands.dm_only()
 async def status(context: commands.Context) -> None:
+    """Displays the status of your entry for this week."""
     global config
 
     week = compo.get_week(True)
@@ -429,11 +456,12 @@ async def status(context: commands.Context) -> None:
             return
 
     await context.send("You haven't submitted anything yet! "
-                       "But if you want to you can with %ssubmit !" % config["command_prefix"][0])
+                       "But if you want to you can with %ssubmit !" % client.command_prefix[0])
 
 @client.command()
 @commands.dm_only()
 async def myresults(context: commands.Context) -> None:
+    """Shows you your results on the latest vote."""
     week = compo.get_week(False)
 
     if week["votingOpen"]:
@@ -442,8 +470,7 @@ async def myresults(context: commands.Context) -> None:
         return
 
     user_entry = None
-    
-    # change to list comp or some other search method?
+
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
             user_entry = entry
@@ -453,24 +480,14 @@ async def myresults(context: commands.Context) -> None:
         return
 
     compo.verify_votes(week)
-    
-    ratings = [rating
-        for vote in week["votes"]
-        for rating in vote["ratings"]
-        if rating["entryUUID"] == user_entry["uuid"]]
+    scores = compo.normalize_votes(week["votes"])
 
-    if not ratings:
+    if user_entry["uuid"] not in scores:
         await context.send("Well this is awkward, no one voted on your entry...")
         return
 
-    results = {}
+    entry_scores = scores[user_entry["uuid"]]
 
-    for rating in ratings:
-        score = results.setdefault(rating["voteParam"], [0, 0])
-        if rating["rating"] > 0: # unset rating
-            score[0] += rating["rating"]
-            score[1] += 1
-    
     message = []
     message.append("Please keep in mind that music is subjective, and that "
                    "these scores shouldn't be taken to represent the quality of"
@@ -478,11 +495,29 @@ async def myresults(context: commands.Context) -> None:
                    " what results it was awarded, so don't worry too much about it")
     message.append("And with that out of the way...")
     message.append("*drumroll please*")
-    for category in results:
-        total = results[category][0]
-        text = "%s: You got %d stars total for an average of %f" \
-            % (category[4:], total, total / results[category][1])
-        # im slicing to get rid of the vote in the category name
+    for category in week["voteParams"]:
+        category_scores = [s[0] for s in entry_scores if s[1] == category]
+        if len(category_scores) == 0:
+            # The user received votes, but not in this category
+            category_scores = [0]
+        text = "%s: You got an average score of %1.2f" \
+            % (category, statistics.mean(category_scores))
         message.append(text)
 
+    message.append("Your total average was: %1.2f!" % statistics.mean(s[0] for s in entry_scores))
+
     await context.send("\n".join(message))
+
+
+@client.command()
+async def crudbroke(context: commands.Context) -> None:
+    week = compo.get_week(True)
+
+    if not "crudbroke" in week:
+        week["crudbroke"] = 0
+
+    week["crudbroke"] += 1
+
+    message = "Dang, that's happened %d times this week." % week["crudbroke"]
+
+    await context.send(message)

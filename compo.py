@@ -12,6 +12,18 @@ current_week = None
 next_week = None
 
 
+def blank_week() -> dict:
+    return {
+        "theme": "Week XYZ: Fill this in by hand!",
+        "date": "Month day'th 20XX",
+        "submissionsOpen": True,
+        "votingOpen": True,
+        "entries": [],
+        "votes": [],
+        "voteParams": ["prompt", "score", "overall"]
+    }
+
+
 def get_week(get_next_week: bool) -> dict:
     """
     Returns a dictionary that encodes information for a week's challenge. If
@@ -39,24 +51,14 @@ def get_week(get_next_week: bool) -> dict:
         try:
             current_week = pickle.load(open("weeks/current-week.pickle", "rb"))
         except FileNotFoundError:
-            current_week = {
-                "theme": "Week XYZ: Fill this in by hand!",
-                "date": "Month day'th 20XX",
-                "submissionsOpen": False,
-                "votingOpen": True,
-                "entries": []
-            }
+            current_week = blank_week()
+            current_week["submissions_open"] = False
+
     if next_week is None:
         try:
             next_week = pickle.load(open("weeks/next-week.pickle", "rb"))
         except FileNotFoundError:
-            next_week = {
-                "theme": "Week XYZ: Fill this in by hand!",
-                "date": "Month day'th 20XX",
-                "submissionsOpen": True,
-                "votingOpen": True,
-                "entries": []
-            }
+            next_week = blank_week()
 
     if get_next_week:
         return next_week
@@ -89,20 +91,13 @@ def move_to_next_week() -> None:
     pickle.dump(current_week, open(archive_filename, "wb"))
 
     current_week = next_week
-    next_week = {
-        "theme": "Week XYZ: Fill this in by hand!",
-        "date": "Month day'th 20XX",
-        "submissionsOpen": True,
-        "votingOpen": True,
-        "entries": []
-    }
+    next_week = blank_week()
 
     save_weeks()
 
 
 def create_blank_entry(entrant_name: str,
-                       discord_id: Optional[int],
-                       get_next_week: bool = True) -> str:
+                       discord_id: int) -> dict:
     """
     Create a blank entry for an entrant and returns a UUID
 
@@ -110,10 +105,8 @@ def create_blank_entry(entrant_name: str,
     ----------
     entrant_name : str
         The name of the entrant
-    discord_id : Optional[int]
+    discord_id : int
         The entrant's Discord ID
-    get_next_week : bool, optional
-        Whether the entry should be for the folowing week, by default True
 
     Returns
     -------
@@ -126,9 +119,8 @@ def create_blank_entry(entrant_name: str,
         "discordID": discord_id,
         "uuid": str(uuid.uuid4())
     }
-    get_week(get_next_week)["entries"].append(entry)
 
-    return entry["uuid"]
+    return entry
 
 
 def find_entry_by_uuid(uuid: str) -> Optional[dict]:
@@ -162,14 +154,8 @@ def entry_valid(entry: dict) -> bool:
     return True
 
 
-def count_valid_entries(which_week: bool) -> int:
-    count = 0
-
-    for e in get_week(which_week)["entries"]:
-        if entry_valid(e):
-            count += 1
-
-    return count
+def count_valid_entries(week: dict) -> int:
+    return len([e for e in week["entries"] if entry_valid(e)])
 
 
 def get_entry_file(uuid: str, filename: str) -> tuple:
@@ -187,67 +173,68 @@ def get_entry_file(uuid: str, filename: str) -> tuple:
 
 
 def verify_votes(week: dict) -> None:
-    
-    if not "votes" in week:
-        week["votes"] = []
+    # Makes sure a single user can only vote on the same parameter
+    # for the same entry a single time
+    userVotes = set({})
 
-    # Keeps track of set vs. unset votes, and makes sure a single user can
-    # only vote on the same parameter for the same entry a single time
-    userVotes = {}
-    
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
-            if not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes \
-                    and r["rating"] <= 5 \
-                    and r["rating"] >= 0:
-                if r["rating"] == 0: # Unset rating
-                    userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
-                        = False
-                else:
-                    userVotes[(v["userID"], r["entryUUID"], r["voteParam"])] \
-                        = True
-                # TODO: throw out ratings for made-up categories
-                # (this will involve data-ifying the voteParams into the week)
+            if 0 <= r["rating"] <= 5 \
+                and r["voteParam"] in week["voteParams"] \
+                and not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes:
+                userVotes.add((v["userID"], r["entryUUID"], r["voteParam"]))
             else:
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
                 logging.warning("Sus rating: " + str(r))
                 v["ratings"].remove(r)
 
-def get_ranked_entrant_list(which_week: bool) -> list:
+
+def normalize_votes(votes: list) -> dict:
+    """Trim away 0-votes and normalize each user's scores
+       into the 1-5 range.
+    """
+    scores = {}
+
+    for v in votes:
+        valid_ratings = [r for r in v["ratings"] if r["rating"] != 0]
+
+        if len(valid_ratings) == 0:
+            # The user cleared all votes
+            continue
+
+        rating_values = [r["rating"] for r in valid_ratings]
+
+        minimum = min(rating_values)
+        maximum = max(rating_values)
+        extent = maximum - minimum
+
+        for r in valid_ratings:
+            if extent == 0:
+                normalized = 3.0
+            else:
+                normalized = (float(r["rating"]) - minimum) / extent * 4 + 1
+
+            scores.setdefault(r["entryUUID"], []).append((normalized, r["voteParam"]))
+
+    return scores
+
+
+def get_ranked_entrant_list(week: dict) -> list:
     """Bloc STAR Voting wooooo"""
 
-    week = get_week(which_week)
-    
+    param_weights = {
+        "prompt": 0.3,
+        "score": 0.3,
+        "overall": 0.4
+    }
+
     if len(week["entries"]) < 1: # lol no one submitted
         return []
 
     verify_votes(week)
 
-    scores = {}
-
-    # Get rating extents, for normalization
-    for v in week["votes"]:
-        v["minimum"] = 5
-        v["maximum"] = 1
-        for r in v["ratings"]:
-            if r["rating"] == 0: # Unset rating
-                continue
-            if r["rating"] > v["maximum"]:
-                v["maximum"] = r["rating"]
-            if r["rating"] < v["minimum"]:
-                v["minimum"] = r["rating"]
-
-    # Evaluate scores
-    for v in week["votes"]:
-        for r in v["ratings"]:
-            if not r["entryUUID"] in scores:
-                scores[r["entryUUID"]] = []
-            if r["rating"] != 0:
-                normalized = float(r["rating"] - (v["minimum"] - 1))
-                normalized /= float(v["maximum"] - (v["minimum"] -1))
-                normalized *= 5
-                scores[r["entryUUID"]].append(normalized)
+    scores = normalize_votes(week["votes"])
 
     entry_pool = []
     ranked_entries = []
@@ -255,15 +242,12 @@ def get_ranked_entrant_list(which_week: bool) -> list:
     # Write final scores to entry data, and put 'em all in entry_pool
     for e in week["entries"]:
         if entry_valid(e):
-            if e["uuid"] in scores:
-                e["voteScore"] = statistics.mean(scores[e["uuid"]])
-            else:
-                e["voteScore"] = 0
+            e["voteScore"] = statistics.mean(score[0] for score in scores.get(e["uuid"], [(0, None)]))
             entry_pool.append(e)
 
     # Now that we have scores calculated, run the actual STAR algorithm
     while len(entry_pool) > 1:
-        entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"])
+        entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"], reverse=True)
 
         entryA = entry_pool[0]
         entryB = entry_pool[1]
@@ -272,15 +256,9 @@ def get_ranked_entrant_list(which_week: bool) -> list:
         preferEntryB = 0
 
         for v in week["votes"]:
-            scoreA = 0
-            scoreB = 0
-
             # note that normalization doesn't matter for comparing preference
-            for r in v["ratings"]:
-                if r["entryUUID"] == entryA["uuid"]:
-                    scoreA += r["rating"]
-                elif r["entryUUID"] == entryB["uuid"]:
-                    scoreB += r["rating"]
+            scoreA = sum(r["rating"] * param_weights[r["voteParam"]] for r in v["ratings"] if r["entryUUID"] == entryA["uuid"])
+            scoreB = sum(r["rating"] * param_weights[r["voteParam"]] for r in v["ratings"] if r["entryUUID"] == entryB["uuid"])
 
             if scoreA > scoreB:
                 preferEntryA += 1
@@ -295,9 +273,9 @@ def get_ranked_entrant_list(which_week: bool) -> list:
             ranked_entries.append(entry_pool.pop(1))
 
     # Add the one remaining entry
-    ranked_entries.insert(0, entry_pool.pop(0))
+    ranked_entries.append(entry_pool.pop(0))
 
-    for place, e in enumerate(reversed(ranked_entries)):
+    for place, e in enumerate(ranked_entries):
         e["votePlacement"] = place + 1
 
     return list(reversed(ranked_entries))

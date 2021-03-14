@@ -83,7 +83,7 @@ async def edit_handler(request: web_request.Request) -> web.Response:
 # API handlers
 async def get_entries_handler(request: web_request.Request) -> web.Response:
     """Display this weeks votable entries"""
-    return web.json_response(get_week_viewer(False, True))
+    return web.json_response(format_week(False, False))
 
 
 async def get_entry_handler(request: web_request.Request) -> web.Response:
@@ -116,9 +116,11 @@ async def admin_get_data_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="File not found")
 
+    this_week = get_week(False)
+    next_week = get_week(True)
 
-    weeks = [get_week_viewer(False, False), get_week_viewer(True, False)]
-    votes = get_week_votes(False)
+    weeks = [format_week(this_week, True), format_week(next_week, True)]
+    votes = get_week_votes(this_week)
 
     data = {
         "weeks": weeks,
@@ -135,10 +137,9 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="Invalid key")
 
-    return web.json_response(get_week_viewer(True, True))
+    return web.json_response(format_week(get_week(True), False))
 
 
-# TODO: handle?
 async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
     """?"""
     auth_key = request.match_info["authKey"]
@@ -149,9 +150,6 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
 
     week = compo.get_week(False)
 
-    if not "votes" in week:
-        week["votes"] = []
-
     for v in week["votes"]:
         if int(v["userID"]) == int(user_id):
             return web.Response(status=200,
@@ -159,6 +157,22 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
                                 content_type="application/json")
 
     return web.Response(status=404, text="File not found")
+
+
+async def admin_deletevote_handler(request: web_request.Request) -> web.Response:
+    """Delete every vote from an user"""
+    auth_key = request.match_info["authKey"]
+    user_id = request.match_info["userID"]
+
+    if not keys.key_valid(auth_key, keys.admin_keys):
+        return web.Response(status=401, text="Invalid key")
+
+    week = compo.get_week(False)
+    week["votes"] = [vote for vote in week["votes"] if vote["userID"] != user_id]
+
+    compo.save_weeks()
+
+    return web.Response(status=204)
 
 
 async def admin_control_handler(request: web_request.Request) -> web.Response:
@@ -209,7 +223,9 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
 
     entry_data = await request.json()
 
-    compo.create_blank_entry(entry_data["entrantName"], entry_data["discordId"], entry_data["nextWeek"])
+    new_entry = compo.create_blank_entry(entry_data["entrantName"], entry_data["discordId"])
+    week = compo.get_week(entry_data["nextWeek"])
+    week["entries"].append(new_entry)
 
     return web.Response(status=204, text="Nice")
 
@@ -330,11 +346,9 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
 
     user_id = keys.vote_keys[auth_key]["userID"]
     user_name = keys.vote_keys[auth_key]["userName"]
+    user_votes = vote_input["votes"]
 
     week = compo.get_week(False)
-
-    if not "votes" in week:
-        week["votes"] = []
 
     # If user has submitted a vote already, then remove it, so we can
     # replace it with the new one
@@ -342,8 +356,36 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
         if int(v["userID"]) == int(user_id):
             week["votes"].remove(v)
 
+    # Find the user's entry
+    user_entry = None
+
+    for entry in week["entries"]:
+        if entry["discordID"] == user_id:
+            user_entry = entry
+            break
+
+    # Remove the user's vote on their own entry (Search by UUID to prevent name spoofing).
+    if user_entry is not None:
+        user_votes = [vote
+                       for vote in user_votes
+                       if vote["entryUUID"] != user_entry["uuid"]]
+
+        # Find the user's highest rating
+        max_vote = max(vote["rating"] for vote in user_votes)
+
+        # Grant the user rating equal to their highest vote on each category
+        for param in week["voteParams"]:
+            user_votes.append(
+                {
+                    "entryUUID": user_entry["uuid"],
+                    "voteForName": user_name,
+                    "voteParam": param,
+                    "rating": max_vote
+                }
+            )
+
     vote_data = {
-        "ratings": vote_input["votes"],
+        "ratings": user_votes,
         "userID": user_id,
         "userName": user_name
     }
@@ -362,17 +404,15 @@ async def allowed_hosts_handler(request: web_request.Request) -> web.Response:
 
 
 # Helpers
-def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
+def format_week(week: dict, is_admin: bool) -> dict:
     """
     Massages week data into the format that will be output as JSON.
     """
-    week = compo.get_week(which_week)
-
     entryData = []
 
     for e in week["entries"]:
         is_valid = compo.entry_valid(e)
-        if only_valid and not is_valid:
+        if not is_admin and not is_valid:
             continue
 
         prunedEntry = {
@@ -383,8 +423,8 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
             "entrantName": e["entrantName"],
             "isValid": is_valid,
         }
-        
-        if "entryNotes" in e:
+
+        if is_admin and "entryNotes" in e:
         	prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":
@@ -392,10 +432,9 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
         else:
             prunedEntry["mp3Url"] = e.get("mp3")
 
-        # this data is just here for the benefit of the client
-        # TODO: actually store these voting categories in the week structure
-        for voteParam in ["votePrompt", "voteScore", "voteOverall"]:
-            prunedEntry[voteParam] = 0
+        # dummy vote data for the client's benefit
+        for voteParam in week["voteParams"]:
+            prunedEntry[voteParam] = None
 
         entryData.append(prunedEntry)
 
@@ -405,17 +444,13 @@ def get_week_viewer(which_week: bool, only_valid: bool) -> dict:
         "date": week["date"],
         "submissionsOpen": week["submissionsOpen"],
         "votingOpen": week["votingOpen"],
+        "voteParams": week["voteParams"]
     }
 
     return data
 
 
-def get_week_votes(which_week: bool) -> str:
-    week = compo.get_week(which_week)
-
-    if "votes" not in week:
-        week["votes"] = []
-
+def get_week_votes(week: dict) -> str:
     adaptedData = week["votes"].copy()
 
     # JavaScript is very silly and won't work if we send these huge
@@ -461,6 +496,7 @@ server.add_routes([
     web.post("/admin/edit/{authKey}", admin_control_handler),
     web.post("/admin/archive/{authKey}", admin_archive_handler),
     web.post("/admin/spoof/{authKey}", admin_spoof_handler),
+    web.post("/admin/delete_vote/{authKey}/{userID}", admin_deletevote_handler),
     web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
     web.post("/submit_vote", submit_vote_handler),
     web.static("/static", "static")

@@ -100,3 +100,9 @@ hr
 	width: 500px;
 	border: 1px solid black;
 }
+
+.admin-progress-img
+{
+    width: 200px;
+    margin: auto;
+}

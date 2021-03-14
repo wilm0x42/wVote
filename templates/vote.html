@@ -61,7 +61,7 @@
 					<div class="vote-submit-area" v-else>
 						<p>Voting for this week is now closed.</p>
 					</div>
-					
+
 				</div>
 			</transition>
 
@@ -147,12 +147,14 @@
 			},
 			template:
 				`<table cellpadding='0'>
-					<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
-						<button @click="vote(starNum)" class="vote-star">
-							<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
-							<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
-						</button>
-					</td>
+					<tr>
+						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
+							<button @click="vote(starNum)" class="vote-star">
+								<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
+								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
+							</button>
+						</td>
+					</tr>
 				</table>`,
 			methods: {
 				vote(value) {
@@ -172,7 +174,6 @@
 			data: function () {
 				return {
 					mode: null,
-					voteParams: ["votePrompt", "voteScore", "voteOverall"],
 					showEntryList: true,
 					pdfColorInvert: true,
 					entries: null,
@@ -198,16 +199,17 @@
 				}
 
 				if (!weekResponse.ok) {
-					// TODO: Error handling
+					alert("Something went wrong: " + await weekResponse.text());
+				} else {
+					let weekData = await weekResponse.json()
+
+					this.entries = weekData.entries
+					this.theme = weekData.theme
+					this.date = weekData.date
+					this.votingOpen = weekData.votingOpen
+					this.voteParams = weekData.voteParams
+					this.mode = "vote";
 				}
-
-				let weekData = await weekResponse.json()
-
-				this.entries = weekData.entries
-				this.theme = weekData.theme
-				this.date = weekData.date
-				this.votingOpen = weekData.votingOpen
-				this.mode = "vote";
 
 				this.working = false;
 			},
@@ -240,16 +242,13 @@
 				updateNumEntriesRated: function () {
 					var total = 0
 
-					for (var i = 0; i < this.entries.length; i++) {
-						var hasRating = false
-						for (var p = 0; p < this.voteParams.length; p++) {
-							if (this.entries[i][this.voteParams[p]] != 0) {
-								hasRating = true
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != null && entry[param] != 0) {
+								total++
 								break
 							}
 						}
-						if (hasRating)
-							total++
 					}
 
 					this.numEntriesRated = total
@@ -262,19 +261,19 @@
 						return
 					}
 
-					var voteData = {
+					let voteData = {
 						votes: [],
 						voteKey: this.userVoteKey
 					}
 
-					for (var e = 0; e < this.entries.length; e++) {
-						for (var p = 0; p < this.voteParams.length; p++) {
-							if (this.entries[e][this.voteParams[p]] != null) {
-								newData = {
-									entryUUID: this.entries[e].uuid,
-									voteForName: this.entries[e].entrantName,
-									voteParam: this.voteParams[p],
-									rating: this.entries[e][this.voteParams[p]]
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != null) {
+								let newData = {
+									entryUUID: entry.uuid,
+									voteForName: entry.entrantName,
+									voteParam: param,
+									rating: entry[param]
 								}
 								voteData.votes.push(newData)
 							}

@@ -25,8 +25,8 @@
 				<p>The submissions are also labeled "(valid)" or "(invalid!)". To be valid, an entry must be adequately filled out, with mp3 and pdf uploaded. An entry will only be displayed in the voting interface if it is valid.</p>
 				<p>If you need help, or if something seems amiss, message @wilm0x42, and he'll ii V us back to I.</p>
 			</div>
-			<div v-show="working">
-				PUT A SPINNER HERE OR SOMETHING I'M LAZY
+			<div class="admin-progress-img" v-show="working">
+				<img class="admin-progress-img" src="/static/kirb_phone.gif" />
 			</div>
 			<div class="admin-controls">
 				<!-- TODO: Style -->
@@ -62,15 +62,15 @@
 						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
 								:value="false" /> No</label>
 					</p>
-					
+
 					<hr />
 
 					<p>
 						<button @click="save">Save changes</button>
 					</p>
-					
+
 					<hr />
-					
+
 					<p>
 						<label>Archive current week, and make next week current <input type="checkbox"
 								v-model="confirmArchive"></label>
@@ -103,6 +103,7 @@
 			<div class="vote-list">
 				<div v-for="vote in votes" class="vote-data">
 					<a :href="'/admin/viewvote/' + authKey + '/' + vote.userID.toString()">Vote from {{ vote.userName }}</a>
+					<button @click="deleteVote(vote)">Delete</button>
 				</div>
 			</div>
 		</div>
@@ -205,7 +206,7 @@
 					formData.append("entryName", this.entry.entryName);
 					formData.append("entrantName", this.entry.entrantName);
 					formData.append("entryNotes", this.entry.entryNotes);
-					
+
 					if (this.pdfFormat === 'upload') {
 						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
 					}
@@ -215,7 +216,7 @@
 					} else if (this.mp3Format === 'upload') {
 						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
 					}
-					
+
 					if (this.deleteEntry === true) {
 						formData.append("deleteEntry", "true")
 					}
@@ -243,7 +244,7 @@
 					}
 				},
 				async updateEntry() {
-				}
+				},
 			}
 		});
 
@@ -309,10 +310,10 @@
 					});
 
 					if (!req.ok) {
-						// TODO: Error handling.
+						alert("Something went wrong: " + await req.text());
+					} else {
+						this.updateWeeks();
 					}
-
-					this.updateWeeks();
 
 					this.working = false;
 				},
@@ -332,28 +333,43 @@
 					});
 
 					if (!req.ok) {
-						// TODO: Error handling.
+						alert("Something went wrong: " + await req.text());
+					} else {
+						this.spoofedEntry = {
+							entrantName: "Wiglaf",
+							discordId: "",
+							placeInCurrentWeek: false,
+						};
+
+						await this.updateWeeks();
 					}
 
-					this.spoofedEntry = {
-						entrantName: "Wiglaf",
-						discordId: "",
-						placeInCurrentWeek: false,
-					};
-
-					await this.updateWeeks();
 					this.working = false;
 				},
 				async updateWeeks() {
 					let req = await fetch("/admin/get_admin_data/" + this.authKey);
 
-					// TODO: Error handling.
-					let result = await req.json();
-					this.votes = result.votes;
-					this.weeks = result.weeks;
+					if (!req.ok) {
+						alert("Something went wrong: " + await req.text());
+					} else {
+						let result = await req.json();
+						this.votes = result.votes;
+						this.weeks = result.weeks;
 
-					this.votingOpen = this.weeks[0].votingOpen;
-					this.submissionsOpen = this.weeks[1].submissionsOpen;
+						this.votingOpen = this.weeks[0].votingOpen;
+						this.submissionsOpen = this.weeks[1].submissionsOpen;
+					}
+				},
+				async deleteVote(vote) {
+					let request = await fetch("/admin/delete_vote/" + this.authKey + "/" + vote.userID, {
+						method: "POST"
+					});
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						await this.updateWeeks();
+					}
 				}
 			}
 		})
