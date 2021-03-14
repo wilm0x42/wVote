@@ -6,7 +6,7 @@ import json
 import pytest
 import keys
 
-config = json.load(open("botconf.json", "r"))
+config = {"default_ttl": 30}
 keys.configure(config)
 
 class TestKeyValid():
@@ -57,13 +57,9 @@ class TestKeyValid():
 class TestCreateKey():
     def test_key_valid_chars(self):
         alphanumeric = ascii_letters + digits
-        passing = True
         for i in range(12):
             key = keys.create_key(i)
-            for char in key:
-                if char not in alphanumeric:
-                    passing = False
-                assert passing
+            assert all(char in alphanumeric for char in key)
     
     def test_key_correct_length(self):
         passing = True
