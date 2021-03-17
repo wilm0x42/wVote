@@ -83,7 +83,7 @@ async def edit_handler(request: web_request.Request) -> web.Response:
 # API handlers
 async def get_entries_handler(request: web_request.Request) -> web.Response:
     """Display this weeks votable entries"""
-    return web.json_response(format_week(False, False))
+    return web.json_response(format_week(compo.get_week(False), False))
 
 
 async def get_entry_handler(request: web_request.Request) -> web.Response:
