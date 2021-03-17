@@ -116,8 +116,8 @@ async def admin_get_data_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="File not found")
 
-    this_week = get_week(False)
-    next_week = get_week(True)
+    this_week = compo.get_week(False)
+    next_week = compo.get_week(True)
 
     weeks = [format_week(this_week, True), format_week(next_week, True)]
     votes = get_week_votes(this_week)
@@ -137,7 +137,7 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="Invalid key")
 
-    return web.json_response(format_week(get_week(True), False))
+    return web.json_response(format_week(compo.get_week(True), False))
 
 
 async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
