@@ -361,6 +361,12 @@
 					}
 				},
 				async deleteVote(vote) {
+					let confirmation = window.confirm("Are you sure you want to delete " + vote.userName + "'s vote? This cannot be undone.");
+
+					if (!confirmation) {
+						return;
+					}
+
 					let request = await fetch("/admin/delete_vote/" + this.authKey + "/" + vote.userID, {
 						method: "POST"
 					});
