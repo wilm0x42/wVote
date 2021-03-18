@@ -46,7 +46,7 @@
 								<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
 							</td>
 							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
-								<vote-star-widget v-model="entry[voteParam]" @input="updateNumEntriesRated">
+								<vote-star-widget v-model="entries[entryIndex][voteParam]" @input="updateNumEntriesRated">
 								</vote-star-widget>
 							</td>
 						</tr>
@@ -81,6 +81,20 @@
 					</div>
 				</object>
 			</div>
+
+			<table v-if="viewedEntryIndex != null" cellpadding='0' class="current-stars">
+				<tr>
+					<td class="entry-cell" v-for="voteParam in voteParams">
+						{{ voteParam }}
+					</td>
+				</tr>
+				<tr>
+					<td class="entry-cell" v-for="voteParam in voteParams" >
+						<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" @input="updateNumEntriesRated">
+						</vote-star-widget>
+					</td>
+				</tr>
+			</table>
 
 			<table cellpadding='0' class="viewer-control-bar">
 				<td width="48px" class="viewer-control">
@@ -140,31 +154,24 @@
 			props: [
 				"value"
 			],
-			data() {
-				return {
-					starsData: this.value
-				}
-			},
 			template:
 				`<table cellpadding='0'>
 					<tr>
 						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
 							<button @click="vote(starNum)" class="vote-star">
-								<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
+								<img class="vote-star-img" v-if="value >= starNum" src="/static/interface-star-yes.svg" />
 								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
 							</button>
 						</td>
 					</tr>
 				</table>`,
 			methods: {
-				vote(value) {
-					if (this.starsData == value) {
-						this.starsData = 0;
+				vote(newValue) {
+					if (this.value == newValue) {
+						this.$emit("input", 0);
 					} else {
-						this.starsData = value;
+						this.$emit("input", newValue);
 					}
-
-					this.$emit("input", this.starsData);
 				}
 			}
 		})
