@@ -140,31 +140,24 @@
 			props: [
 				"value"
 			],
-			data() {
-				return {
-					starsData: this.value
-				}
-			},
 			template:
 				`<table cellpadding='0'>
 					<tr>
 						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
 							<button @click="vote(starNum)" class="vote-star">
-								<img class="vote-star-img" v-if="starsData >= starNum" src="/static/interface-star-yes.svg" />
+								<img class="vote-star-img" v-if="value >= starNum" src="/static/interface-star-yes.svg" />
 								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
 							</button>
 						</td>
 					</tr>
 				</table>`,
 			methods: {
-				vote(value) {
-					if (this.starsData == value) {
-						this.starsData = 0;
+				vote(newValue) {
+					if (this.value == newValue) {
+						this.$emit("input", 0);
 					} else {
-						this.starsData = value;
+						this.$emit("input", newValue);
 					}
-
-					this.$emit("input", this.starsData);
 				}
 			}
 		})
