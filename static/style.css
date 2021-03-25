@@ -223,6 +223,7 @@ button:hover
 	width: 100vw;
 	position: fixed;
 	top: calc(100vh - 48px);
+	border-collapse: collapse;
 }
 
 .viewer-control
@@ -237,6 +238,8 @@ button:hover
 .vote-star-widget
 {
 	border-collapse: collapse;
+	margin: 0px;
+	padding: 0px;
 }
 
 .vote-star-cell
@@ -255,6 +258,8 @@ button:hover
 	width: 1.2em;
 	height: 1.2em;
 	overflow: hidden;
+	position: relative;
+	top: 2px;
 }
 
 .vote-star-img
@@ -262,6 +267,28 @@ button:hover
 	width: 1.2em;
 	margin: 0px;
 	padding: 0px;
+}
+
+.vote-star-bottom-label
+{
+	height: 0.75em;
+	margin: 0px 2px 0px 0px;
+	text-align: center;
+	position: relative;
+	top: -4px;
+}
+
+.vote-stars-bottom-panel
+{
+	display: none;
+}
+
+@media only screen and (min-width: 1280px) and (orientation: landscape)
+{ 
+	.vote-stars-bottom-panel
+	{
+		display: block;
+	}
 }
 
 .vote-label
