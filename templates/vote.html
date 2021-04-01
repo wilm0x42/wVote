@@ -82,20 +82,6 @@
 				</object>
 			</div>
 
-			<table v-if="viewedEntryIndex != null" cellpadding='0' class="current-stars">
-				<tr>
-					<td class="entry-cell" v-for="voteParam in voteParams">
-						{{ voteParam }}
-					</td>
-				</tr>
-				<tr>
-					<td class="entry-cell" v-for="voteParam in voteParams" >
-						<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" @input="updateNumEntriesRated">
-						</vote-star-widget>
-					</td>
-				</tr>
-			</table>
-
 			<table cellpadding='0' class="viewer-control-bar">
 				<td width="48px" class="viewer-control">
 					<button class="icon-button" @click="toggleEntryContainer()">
@@ -117,7 +103,7 @@
 						entries[viewedEntryIndex].entryName, 60) }}
 					<p>
 				</td>
-				<td v-if="viewedEntryIndex != null" class="viewer-control">
+				<td v-if="viewedEntryIndex != null" class="viewer-control" style="width: 250px;">
 					<div v-if="entries[viewedEntryIndex].mp3Format == 'mp3'">
 						<audio controls :src="entries[viewedEntryIndex].mp3Url" type="audio/mpeg"></audio>
 					</div>
@@ -126,6 +112,17 @@
 						<a :href="entries[viewedEntryIndex].mp3Url" style="position: relative; top: -12px;">Listen
 							Here!</a>
 					</div>
+				</td>
+				<td v-if="viewedEntryIndex != null" class="vote-stars-bottom-panel" style="width: 320px;">
+					<table cellpadding='0' class="current-stars">
+						<tr>
+							<td class="entry-cell" style="padding: 2px;" v-for="voteParam in voteParams">
+								<p class="vote-star-bottom-label">{{ voteParam }}</p>
+								<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" @input="updateNumEntriesRated">
+								</vote-star-widget>
+							</td>
+						</tr>
+					</table>
 				</td>
 				<td>
 					<!-- empty cell to expand and fill space -->
@@ -155,7 +152,7 @@
 				"value"
 			],
 			template:
-				`<table cellpadding='0'>
+				`<table class="vote-star-widget" cellpadding='0'>
 					<tr>
 						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
 							<button @click="vote(starNum)" class="vote-star">
