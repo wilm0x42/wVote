@@ -36,7 +36,7 @@
 				</div>
 				<div class='entry-param' v-else-if="mp3Format === 'upload'">
 					<label for='mp3'>Upload MP3</label>
-					<input name='mp3' type='file' @change="setFile('mp3', $event)" />
+					<input name='mp3' type='file' @change="setFile('mp3', $event)" accept=".mp3" />
 				</div>
 				<div class='entry-param' v-else-if="mp3Format === 'external'">
 					<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
@@ -57,7 +57,7 @@
 				</div>
 				<div class='entry-param' v-else-if="pdfFormat === 'upload'">
 					<label for='pdf'>Upload PDF</label>
-					<input name='pdf' type='file' @change="setFile('pdf', $event)" />
+					<input name='pdf' type='file' @change="setFile('pdf', $event)" accept=".pdf" />
 				</div>
 				<br>
 				<input class='entry-param submit-button' type='submit' value='Submit Entry' :disabled="!valid" @click="submit" />
