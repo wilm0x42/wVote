@@ -474,19 +474,18 @@ async def myresults(context: commands.Context) -> None:
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
             user_entry = entry
+            break
 
     if not user_entry:
         await context.send("You didn't submit anything for this week!")
         return
 
     compo.verify_votes(week)
-    scores = compo.normalize_votes(week["votes"])
+    scores = compo.fetch_votes_for_entry(week["votes"], entry["uuid"])
 
-    if user_entry["uuid"] not in scores:
+    if len(scores) == 0:
         await context.send("Well this is awkward, no one voted on your entry...")
         return
-
-    entry_scores = scores[user_entry["uuid"]]
 
     message = []
     message.append("Please keep in mind that music is subjective, and that "
@@ -496,7 +495,7 @@ async def myresults(context: commands.Context) -> None:
     message.append("And with that out of the way...")
     message.append("*drumroll please*")
     for category in week["voteParams"]:
-        category_scores = [s[0] for s in entry_scores if s[1] == category]
+        category_scores = [s['rating'] for s in scores if s['voteParam'] == category]
         if len(category_scores) == 0:
             # The user received votes, but not in this category
             category_scores = [0]
@@ -504,7 +503,7 @@ async def myresults(context: commands.Context) -> None:
             % (category, statistics.mean(category_scores))
         message.append(text)
 
-    message.append("Your total average was: %1.2f!" % statistics.mean(s[0] for s in entry_scores))
+    message.append("Your total average was: %1.2f!" % statistics.mean(s['rating'] for s in scores))
 
     await context.send("\n".join(message))
 

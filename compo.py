@@ -279,3 +279,13 @@ def get_ranked_entrant_list(week: dict) -> list:
         e["votePlacement"] = place + 1
 
     return list(reversed(ranked_entries))
+
+
+def fetch_votes_for_entry(votes: list, entry_uuid: str) -> list:
+    """List all non-zero votes for an entry"""
+
+    return [r
+            for v in votes
+            for r in v["ratings"]
+            if r["rating"] != 0
+            and r["entryUUID"] == entry_uuid]
