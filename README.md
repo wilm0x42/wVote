@@ -29,16 +29,24 @@ root
 |- "theme": Title of week, e.g. "Week 23: Test Drive"
 |- "date": Pretty display of week's date: "June 27th 2020"
 |- "submissionsOpen": whether or not !submit is allowed. The _next_ week is the one from which this parameter governs.
-'- "entries": List of submitted entries for this week
-	|- "pdf": byte data of PDF
-	|- "pdfFilename": Name of PDF file
-	|-mp3: byte data of MP3, or URL to soundcloud/whatever
-	|-mp3Format: "mp3" if is raw mp3 file, or "external" if is simply to be linked to.
-	|	TODO: Support specific "soundcloud" format, so we can embed SC players in the page
-	|-entryName: Formal title of this entry
-	|-entrantName: Entrant's discord username. Can be edited by admins.
-	|-discordID: Entrant's discord ID
-	'-uuid: UUID assigned to each entry, so they can be unambiguously addressed.
+|- "entries": List of submitted entries for this week
+|	|- "pdf": byte data of PDF
+|	|- "pdfFilename": Name of PDF file
+|	|-mp3: byte data of MP3, or URL to soundcloud/whatever
+|	|-mp3Format: "mp3" if is raw mp3 file, or "external" if is simply to be linked to.
+|	|	TODO: Support specific "soundcloud" format, so we can embed SC players in the page
+|	|-entryName: Formal title of this entry
+|	|-entrantName: Entrant's discord username. Can be edited by admins.
+|	|-discordID: Entrant's discord ID
+|	'-uuid: UUID assigned to each entry, so they can be unambiguously addressed.
+'- "votes": list of submitted votes
+	|- "ratings": list of the ratings in the vote
+	|	|- "entryUUID": uuid of the entry being rated
+	|	|- "voteForName": discord name of the composer of the entry being rated
+	|	|- "voteParam": the name of category the entry is being rated on
+	|	'- "rating": the rating of the entry for the category, [1, 5]
+	|- "userID": discord ID of who cast the vote 
+	'- "userName" : discord name of who cast the vote
 ```
 
 ## Running tests

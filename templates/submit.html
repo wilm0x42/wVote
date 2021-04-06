@@ -1,26 +1,204 @@
 <!doctype html>
 <html>
+
 <head>
 	<meta charset="utf-8" />
 	<title>Submit Entry - 8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
 	<link rel="stylesheet" href="/static/form.css" type="text/css" media="all">
+	<script src="[VUE-URL]"></script>
 </head>
+
 <body>
 	<h1>
 		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
 	</h1>
 	<div id="content">
-		<div class="submit-babble">
-			<h2>Hello, [ENTRANT-NAME]!</h2>
-			<p>Thanks for participating this week, and congratulations for exercising your musical skills!</p>
+		<div v-if="mode === null">Loading...</div>
+		<div v-else-if="mode === 'submit'">
+			<div class="submit-babble">
+				<h2>Hello, {{ entry.entrantName }}!</h2>
+				<p>Thanks for participating this week, and congratulations for exercising your musical skills!</p>
+			</div>
+			<div class="submit-form">
+				<div class='entry-param'>
+					<label for='entryName'>Entry Name</label>
+					<input name='entryName' type='text' v-model="entry.entryName" />
+				</div>
+				<br>
+				<div class='entry-param'>
+					<label><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
+					<label><input type="radio" value="upload" v-model="mp3Format"/> Upload MP3</label>
+					<label><input type="radio" value="external" v-model="mp3Format"/> Link MP3</label>
+				</div>
+				<div class='entry-param' v-if="mp3Format === 'keep'">
+					<a :href="entry.mp3Url">Link to MP3</a>
+				</div>
+				<div class='entry-param' v-else-if="mp3Format === 'upload'">
+					<label for='mp3'>Upload MP3</label>
+					<input name='mp3' type='file' @change="setFile('mp3', $event)" accept=".mp3" />
+				</div>
+				<div class='entry-param' v-else-if="mp3Format === 'external'">
+					<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
+						can enter that here.</label>
+					<input name='mp3Link' type='text' v-model="mp3Link" />
+
+					<div v-if="mp3LinkError" class="error-message">
+						{{ mp3LinkError }}
+					</div>
+				</div>
+				<br>
+				<div class='entry-param'>
+					<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
+					<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
+				</div>
+				<div class='entry-param' v-if="pdfFormat === 'keep'">
+					<a :href="entry.pdfUrl">Link to PDF</a>
+				</div>
+				<div class='entry-param' v-else-if="pdfFormat === 'upload'">
+					<label for='pdf'>Upload PDF</label>
+					<input name='pdf' type='file' @change="setFile('pdf', $event)" accept=".pdf" />
+				</div>
+				<br>
+				<input class='entry-param submit-button' type='submit' value='Submit Entry' :disabled="!valid" @click="submit" />
+			</div>
 		</div>
-		<div class="submit-form">
-			[ENTRY-FORM]
+		<div v-else-if="mode === 'thanks'">
+			<div id="content">
+				<div class="submit-babble">
+					<h2>Your entry has been recorded -- Good luck!</h2>
+					<p>You can DM @8Bot the command <pre>vote!status</pre> to check the status of your entry!</p>
+					<p>If you have any issues, let us know in #weekly-challenge-discussion, or DM one of our friendly
+						moderators.</p>
+					<img width="500px" src="/static/kirb_thanks.png" />
+				</div>
+			</div>
 		</div>
 	</div>
 
 	<script>
+		var submitApp = new Vue({
+			el: "#content",
+			data() {
+				return {
+					mode: null,
+					working: false,
+					entrant: "",
+					entry: null,
+					pdfFile: null,
+					pdfFormat: 'keep',
+					mp3File: null,
+					mp3Link: "",
+					mp3Format: 'keep'
+				}
+			},
+			async mounted() {
+				this.working = true;
+
+				let hostsRequest = await fetch("/allowed_hosts");
+				if (!hostsRequest.ok) {
+					// TODO: A better way to handle errors...
+					alert("Something went wrong: " + await hostsRequest.text());
+				} else {
+					this.validHosts = await hostsRequest.json();
+
+					let parts = window.location.pathname.split("/");
+					this.authKey = parts[parts.length - 1];
+
+					let request = await fetch("/entry_data/" + this.authKey);
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						let entryData = await request.json();
+						this.mode = "submit";
+						this.entry = entryData;
+
+						if (!this.entry.mp3Format == 'mp3') {
+							// If it's a link, populate the field
+							this.mp3Link = this.entry.mp3Url;
+						}
+					}
+				}
+
+				this.working = false;
+			},
+			methods: {
+				async submit() {
+					this.working = true;
+
+					const formData = new FormData();
+
+					formData.append("entryName", this.entry.entryName);
+
+					if (this.pdfFormat === 'upload') {
+						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+					}
+
+					if (this.mp3Format === 'external') {
+						formData.append("mp3Link", this.mp3Link);
+					} else if (this.mp3Format === 'upload') {
+						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
+					}
+
+					let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
+						method: "POST",
+						body: formData,
+					});
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						this.mode = "thanks";
+					}
+
+					this.working = false;
+				},
+				setFile(type, event){
+					let file = event.target.files[0];
+
+					this[type + "File"] = {
+						filename: event.target.files[0].name,
+						file
+					}
+				},
+			},
+			computed: {
+				valid() {
+					if (this.entry.entryName === '') {
+						return false;
+					}
+
+					if (this.pdfFormat === 'upload' && this.pdfFile === null) {
+						return false;
+					}
+
+					if (this.mp3Format === 'external' && this.mp3Link === '') {
+						return false;
+					}
+
+					if (this.mp3Format === 'upload' && this.mp3File === null) {
+						return false;
+					}
+
+					return true;
+				},
+				mp3LinkError() {
+					if (this.mp3Link === '') {
+						return "Link can't be empty.";
+					}
+
+					for (let host of this.validHosts) {
+						if (this.mp3Link.startsWith(host)) {
+							return false;
+						}
+					}
+
+					return "This audio hosting website is not in the approved list. Please use any of these: " + this.validHosts.join(", ") + ".";
+				}
+			}
+		});
 	</script>
 </body>
+
 </html>

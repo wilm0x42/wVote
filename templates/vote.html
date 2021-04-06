@@ -1,40 +1,311 @@
 <!doctype html>
-<html>
+<html lang="en_US">
+
 <head>
-	<meta charset="utf-8" />
+	<meta charset="utf-8">
+	<meta name="theme-color" content="#ee34e7">
 	<title>8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
+	<script src="[VUE-URL]"></script>
 </head>
+
 <body>
 	<h1>
 		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
 	</h1>
 	<div id="content">
-		<div class="entries-container">
-			[VOTE-CONTROLS]
-		</div>
+		<div v-if="mode === null">Loading...</div>
+		<div v-else-if="mode === 'vote'">
+			<div v-show="working">
+				PUT A SPINNER HERE OR SOMETHING I'M LAZY
+			</div>
+			<transition name="entry-list-toggle">
+				<div class="entries-container" v-show="showEntryList">
+					<h2 class="week-title">{{ theme }}</h2>
+					<h3 class="week-subtitle">{{ date }} - {{ entries.length }} entries</h3>
+					<table cellpadding='0' class='entry-table'>
+						<tr class="entry-table-header-row">
+							<th class="entry-table-header">Entrant</th>
+							<th class="entry-table-header">Composition Title</th>
+							<th class="entry-table-header">View & Listen</th>
+							<th class="entry-table-header">Download</th>
+							<th class="entry-table-header">Use Of Prompt Theme</th>
+							<th class="entry-table-header">Score Quality</th>
+							<th class="entry-table-header">Overall Rating</th>
+						</tr>
+						<tr v-for="(entry, entryIndex) in entries">
+							<td class="entry-cell">{{ entry.entrantName }}</td>
+							<td class="entry-cell">{{ entry.entryName }}</td>
+							<td class="entry-cell" :class="{ 'entry-cell-selected': viewedEntryIndex == entryIndex }">
+								<button class="icon-button" @click="viewEntry(entryIndex)">
+									<img src="/static/interface-video-play.png" alt="Play" />
+								</button>
+							</td>
+							<td class="entry-cell">
+								<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
+								<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
+							</td>
+							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
+								<vote-star-widget v-model="entries[entryIndex][voteParam]" @input="updateNumEntriesRated">
+								</vote-star-widget>
+							</td>
+						</tr>
+					</table>
+					<div class="vote-submit-area" v-if="votingOpen">
+						<p>You've rated {{ numEntriesRated }}/{{ entries.length }} entries.</p>
+						<input v-model="userVoteKey" placeholder="Paste your vote token here" />
+						<button @click="submitVote()" class="text-button">Submit Vote</button>
+						<br>
+						<p style="font-size: 0.8em;">DM @8Bot the command "vote!vote" to obtain a vote token.</p>
+					</div>
+					<div class="vote-submit-area" v-else>
+						<p>Voting for this week is now closed.</p>
+					</div>
 
-		<div class="pdf-container" id="pdf-container">
-			<div id="pdf-viewer" class="pdf-viewer-welcome">
-				<div id="pdf-alt" class="pdf-alt">
-					<img width="100%" src="/static/kirb_phones.png" />
-					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+				</div>
+			</transition>
+
+			<div class="pdf-container"
+				:class="{ 'pdf-container-full': !showEntryList, 'pdf-container-small': showEntryList }">
+				<div v-if="viewedEntryIndex === null" id="pdf-viewer" class="pdf-viewer-welcome">
+					<div id="pdf-alt" class="pdf-alt">
+						<img width="150px" src="/static/kirb_phones.png" />
+						<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+					</div>
+				</div>
+				<object v-else id="pdf-viewer" class="pdf-viewer-live" :class="{ 'pdf-color-invert': pdfColorInvert }"
+					:data="entries[viewedEntryIndex].pdfUrl" type="application/pdf">
+					<div id="pdf-alt" class="pdf-alt">
+						<img width="150px" src="/static/kirb_think.png">
+						<h2><a :href="entries[viewedEntryIndex].pdfUrl">Link to PDF (embedded viewer failed)</a></h2>
+					</div>
+				</object>
+			</div>
+
+			<table cellpadding='0' class="viewer-control-bar">
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="toggleEntryContainer()">
+						<img src="/static/interface-category-grid.png" />
+					</button>
+				</td>
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="selectAdjacentEntry(-1)">
+						<img src="/static/interface-up-arrow.png" />
+					</button>
+				</td>
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="selectAdjacentEntry(1)">
+						<img src="/static/interface-down-arrow.png" />
+					</button>
+				</td>
+				<td v-if="viewedEntryIndex != null" class="viewer-control" style="text-align: center;" width="400px">
+					<p>{{ truncateString(entries[viewedEntryIndex].entrantName + " - " +
+						entries[viewedEntryIndex].entryName, 60) }}
+					<p>
+				</td>
+				<td v-if="viewedEntryIndex != null" class="viewer-control" style="width: 250px;">
+					<div v-if="entries[viewedEntryIndex].mp3Format == 'mp3'">
+						<audio controls :src="entries[viewedEntryIndex].mp3Url" type="audio/mpeg"></audio>
+					</div>
+					<div v-else>
+						<img src="/static/interface-play.png" />
+						<a :href="entries[viewedEntryIndex].mp3Url" style="position: relative; top: -12px;">Listen
+							Here!</a>
+					</div>
+				</td>
+				<td v-if="viewedEntryIndex != null" class="vote-stars-bottom-panel" style="width: 320px;">
+					<table cellpadding='0' class="current-stars">
+						<tr>
+							<td class="entry-cell" style="padding: 2px;" v-for="voteParam in voteParams">
+								<p class="vote-star-bottom-label">{{ voteParam }}</p>
+								<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" @input="updateNumEntriesRated">
+								</vote-star-widget>
+							</td>
+						</tr>
+					</table>
+				</td>
+				<td>
+					<!-- empty cell to expand and fill space -->
+				</td>
+				<td width="48px" class="viewer-control">
+					<button class="icon-button" @click="toggleNightMode()">
+						<img src="/static/interface-bulb.png" />
+					</button>
+				</td>
+			</table>
+		</div>
+		<div v-else-if="mode === 'thanks'">
+			<div id="content">
+				<div class="submit-babble">
+					<h2>Thank you for voting!</h2>
+					<p>Your vote has been recorded.  I will guard it with my life. :)</p>
+					<img width="500px" src="/static/kirb_thanks.png" />
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<script>
-		function viewPDF(url)
-		{
-			document.getElementById("pdf-container").innerHTML =
-				`<object id="pdf-viewer" class="pdf-viewer-live" data="${url}" type="application/pdf">
-					<div id="pdf-alt" class="pdf-alt">
-						<img width="100%" src="/static/kirb_think.png">
-						<h2><a href="${url}">Link to PDF (embedded viewer failed)</a></h2>
-					</div>
-				</object>`;
-		}
+
+		Vue.component("vote-star-widget", {
+			props: [
+				"value"
+			],
+			template:
+				`<table class="vote-star-widget" cellpadding='0'>
+					<tr>
+						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
+							<button @click="vote(starNum)" class="vote-star">
+								<img class="vote-star-img" v-if="value >= starNum" src="/static/interface-star-yes.svg" />
+								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
+							</button>
+						</td>
+					</tr>
+				</table>`,
+			methods: {
+				vote(newValue) {
+					if (this.value == newValue) {
+						this.$emit("input", 0);
+					} else {
+						this.$emit("input", newValue);
+					}
+				}
+			}
+		})
+
+		var app = new Vue({
+			el: '#content',
+			data: function () {
+				return {
+					mode: null,
+					showEntryList: true,
+					pdfColorInvert: true,
+					entries: null,
+					viewedEntryIndex: null,
+					theme: null,
+					date: null,
+					numEntriesRated: 0,
+					userVoteKey: "",
+					working: false,
+				}
+			},
+			async mounted() {
+				this.working = true;
+
+				// Are we admin?
+				let weekResponse;
+				if (window.location.pathname == "/") {
+					weekResponse = await fetch("/entry_data")
+				} else {
+					let parts = window.location.pathname.split("/");
+					let authKey = parts[parts.length - 1];
+					weekResponse = await fetch("/admin/get_preview_data/" + authKey)
+				}
+
+				if (!weekResponse.ok) {
+					alert("Something went wrong: " + await weekResponse.text());
+				} else {
+					let weekData = await weekResponse.json()
+
+					this.entries = weekData.entries
+					this.theme = weekData.theme
+					this.date = weekData.date
+					this.votingOpen = weekData.votingOpen
+					this.voteParams = weekData.voteParams
+					this.mode = "vote";
+				}
+
+				this.working = false;
+			},
+			methods: {
+				viewEntry: function (entryIndex) {
+					this.viewedEntryIndex = entryIndex
+					this.showEntryList = false
+				},
+				toggleEntryContainer: function () {
+					this.showEntryList = !this.showEntryList
+				},
+				toggleNightMode() {
+					this.pdfColorInvert = !this.pdfColorInvert
+				},
+				selectAdjacentEntry: function (offset) {
+					if (this.viewedEntryIndex === null)
+						return
+
+					let index = this.viewedEntryIndex + offset
+
+					if (index < 0) {
+						index = 0
+					} else if (index >= this.entries.length) {
+						index = this.entries.length - 1
+					}
+
+					this.viewedEntryIndex = index
+					this.showEntryList = false
+				},
+				updateNumEntriesRated: function () {
+					var total = 0
+
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != null && entry[param] != 0) {
+								total++
+								break
+							}
+						}
+					}
+
+					this.numEntriesRated = total
+				},
+				submitVote: async function () {
+					this.working = true;
+
+					if (this.userVoteKey == "") {
+						alert("Please enter a vote key! (To obtain a vote key, DM the command \"vote!vote\" to @8Bot on the 8BMT discord server.")
+						return
+					}
+
+					let voteData = {
+						votes: [],
+						voteKey: this.userVoteKey
+					}
+
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != null) {
+								let newData = {
+									entryUUID: entry.uuid,
+									voteForName: entry.entrantName,
+									voteParam: param,
+									rating: entry[param]
+								}
+								voteData.votes.push(newData)
+							}
+						}
+					}
+
+					try {
+						let response = await fetch("submit_vote", { method: "POST", body: JSON.stringify(voteData) });
+						if (!response.ok) {
+							throw new Error("...");
+						}
+
+						this.mode = 'thanks';
+					} catch (e) {
+						alert("Something went wrong :/\nMake sure you entered a valid vote key");
+					}
+
+					this.working = false;
+				},
+				truncateString: function (s, length) {
+					if (s.length > length) {
+						return s.slice(0, length - 1) + "..."
+					}
+					return s
+				}
+			}
+		})
 	</script>
 </body>
+
 </html>

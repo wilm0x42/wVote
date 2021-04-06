@@ -1,84 +1,383 @@
 <!doctype html>
-<html>
+<html lang="en_US">
+
 <head>
 	<meta charset="utf-8" />
 	<title>Admin Interface - 8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
 	<link rel="stylesheet" href="/static/admin.css" type="text/css" media="all">
+	<script src="[VUE-URL]"></script>
 </head>
+
 <body>
 	<h1>
 		<img src="/static/banner.png" alt="8BIT MUSIC THEORY WEEKLIES" />
 	</h1>
 	<div id="content">
-		<div class="submit-babble">
-			<p>Welcome to the super-ugly administration interface!</p>
-			<p>On the left is a preview of what the interface will look like to the public, once we roll out the next week.</p>
-			<p>On the right are submission forms you can use to edit or delete existing submissions, from the current week as well as the next.</p>
-			<p>The submissions are also labeled "(valid)" or "(invalid!)". To be valid, an entry must be adequately filled out, with mp3 and pdf uploaded. An entry will only be displayed in the voting interface if it is valid.</p>
-			<p>If you need help, or if something seems amiss, message @wilm0x42, and he'll ii V us back to I.</p>
+		<div v-if="votes === null">
+			Loading...
 		</div>
-		<div class="admin-controls">
-			[ADMIN-CONTROLS]
-		</div>
-		<div class="entries-container">
-			[VOTE-CONTROLS]
-		</div>
-		<div class="pdf-container" id="pdf-container">
-			<div id="pdf-viewer" class="pdf-viewer-welcome">
-				<div id="pdf-alt" class="pdf-alt">
-					<img width="100%" src="/static/kirb_phones.png" />
-					<h2>Welcome!<br>Select one of the entries on the left to view its score.</h2>
+		<div v-else>
+			<div class="submit-babble">
+				<p>Welcome to the super-ugly administration interface!</p>
+				<p>For instructions on how to use this, <a href="https://github.com/wilm0x42/wVote/wiki/Admin-Guide">check out our barely-adequate wiki.</a></p>
+				<p>If you need help, or if something seems amiss, message @wilm0x42, and he'll ii V us back to I.</p>
+			</div>
+			<div class="admin-progress-img" v-show="working">
+				<img class="admin-progress-img" src="/static/kirb_phone.gif" />
+			</div>
+			<div class="admin-controls">
+				<!-- TODO: Style -->
+				<div id="weeks">
+					<p>
+						<label>Theme/title of current week <input class="admin-week-text-param" type="text" v-model="weeks[0].theme" /></label>
+					</p>
+					<p>
+						<label>Date of current week <input class="admin-week-text-param" type="text" v-model="weeks[0].date" /></label>
+					</p>
+					<p>Voting is currently {{ votingOpen ? "OPEN" : "CLOSED" }}</p>
+					<p>
+						<label>Voting Open:</label>
+						<label><input type="radio" name="votingOpen" v-model="weeks[0].votingOpen" :value="true" />
+							Yes</label>
+						<label><input type="radio" name="votingOpen" v-model="weeks[0].votingOpen" :value="false" />
+							No</label>
+					</p>
+
+					<hr />
+
+					<p>
+						<label>Theme/title of next week <input class="admin-week-text-param" type="text" v-model="weeks[1].theme" /></label>
+					</p>
+					<p>
+						<label>Date of next week <input class="admin-week-text-param" type="text" v-model="weeks[1].date" /></label>
+					</p>
+					<p>Submissions are currently {{ submissionsOpen ? "OPEN" : "CLOSED" }}</p>
+					<p>
+						<label>Submissions Open:</label>
+						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
+								:value="true" /> Yes</label>
+						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
+								:value="false" /> No</label>
+					</p>
+
+					<hr />
+
+					<p>
+						<button @click="save">Save changes</button>
+					</p>
+
+					<hr />
+
+					<p>
+						<label>Archive current week, and make next week current <input type="checkbox"
+								v-model="confirmArchive"></label>
+						<button @click="archive" :disabled="!confirmArchive">Archive</button>
+					</p>
+				</div>
+
+				<div id="createEntry">
+					<p><label for='newEntryEntrant'>Spoofed entrant name</label><input type='text'
+							name='newEntryEntrant' v-model='spoofedEntry.entrantName'></p>
+					<p><label for='newEntryDiscordID'>(Optional) Spoofed entrant discord ID</label><input type='text'
+							name='newEntryDiscordID' v-model='spoofedEntry.discordId'></p>
+					<p><label for='newEntryWeek'>Place entry in current week instead of next week?</label><input
+							type='checkbox' name='newEntryWeek' v-model='spoofedEntry.placeInCurrentWeek'></p>
+					<p><button type='submit' @click="spoof">Spoof</button></p>
 				</div>
 			</div>
-		</div>
-		<div class="entry-list">
-			[ENTRY-LIST]
+
+			<iframe :src="'/admin/preview/' + authKey" class="entries-preview"></iframe>
+
+			<div class="entry-list">
+				<div>
+					<Entry v-for="entry in weeks[1].entries" :key="entry.uuid" :entry="entry" :next-week="true" @editedentry="updateWeeks" />
+				</div>
+				<div>
+					<Entry v-for="entry in weeks[0].entries" :key="entry.uuid" :entry="entry" :next-week="false" @editedentry="updateWeeks" />
+				</div>
+			</div>
+
+			<div class="vote-list">
+				<div v-for="vote in votes" class="vote-data">
+					<a :href="'/admin/viewvote/' + authKey + '/' + vote.userID.toString()">Vote from {{ vote.userName }}</a>
+					<button @click="deleteVote(vote)">Delete</button>
+				</div>
+			</div>
 		</div>
 	</div>
 
 	<script>
-	    function foldForm(form)
-	    {
-	        var params = form.getElementsByClassName("admin-entry-param");
-	        var breaks = form.getElementsByTagName("br");
+		var entryComponent = Vue.component("Entry", {
+			props: [
+				"entry",
+				"nextWeek",
+			],
+			data() {
+				return {
+					hide: true,
+					mode: null,
+					working: false,
+					entrant: "",
+					pdfFile: null,
+					pdfFormat: 'keep',
+					mp3File: null,
+					mp3Link: "",
+					mp3Format: 'keep',
+					deleteEntry: false
+				}
+			},
+			async mounted() {
+				this.working = true;
 
-	        var setTo = !params[0].hidden;
+				let parts = window.location.pathname.split("/");
+				this.authKey = parts[parts.length - 1];
 
-	        for (var i = 0; i < params.length; i++)
-	        {
-	            // We skip the second parameter, as it indentifies
-	            // the entry by the entrant's name.
-	            if (i == 1)
-	                continue
-	            params[i].hidden = setTo;
-	        }
-
-	        for (var i = 0; i < breaks.length; i++)
-	        {
-	            breaks[i].hidden = setTo;
-	        }
-	    }
-
-	    adminForms = document.getElementsByClassName("admin-entry-form")
-
-	    for (var i = 0; i < adminForms.length; i++)
-	    {
-	        foldForm(adminForms[i])
-	    }
-	</script>
-
-	<script>
-		function viewPDF(url)
-		{
-			document.getElementById("pdf-container").innerHTML =
-				`<object id="pdf-viewer" class="pdf-viewer-live" data="${url}" type="application/pdf">
-					<div id="pdf-alt" class="pdf-alt">
-						<img width="100%" src="/static/kirb_think.png">
-						<h2><a href="${url}">Link to PDF (embedded viewer failed)</a></h2>
+				this.working = false;
+			},
+			template: `
+				<div
+					class="admin-entry-form"
+					:class="{'form-current-week': !nextWeek, 'form-next-week': nextWeek, 'form-invalid': !entry.isValid}">
+					<h3 @click="hide = !hide">Entry for {{ nextWeek ? "NEXT" : "CURRENT" }} week ({{ entry.isValid ? "valid" : "invalid!" }}) - {{ entry.entrantName }}</h3>
+					<div v-show="!hide">
+						<div class="admin-entry-param">
+							<label for="entryName">Entry Name</label>
+							<input name="entryName" type="text" v-model="entry.entryName">
+						</div>
+						<br>
+						<div class="admin-entry-param">
+							<label for="entrantName">Discord Username</label>
+							<input name="entrantName" type="text" v-model="entry.entrantName">
+						</div>
+						<br>
+						<div class="admin-entry-param">
+							<label for="entryNotes">Additional Notes</label>
+							<input name="entryNotes" type="text" v-model="entry.entryNotes">
+						</div>
+						<br>
+						<div class='admin-entry-param'>
+							<label><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
+							<label><input type="radio" value="upload" v-model="mp3Format"/> Upload MP3</label>
+							<label><input type="radio" value="external" v-model="mp3Format"/> Link MP3</label>
+						</div>
+						<div class='admin-entry-param' v-if="mp3Format === 'keep'">
+							<a :href="entry.mp3Url">Link to MP3</a>
+						</div>
+						<div class='admin-entry-param' v-else-if="mp3Format === 'upload'">
+							<label for='mp3'>Upload MP3</label>
+							<input name='mp3' type='file' @change="setFile('mp3', $event)" />
+						</div>
+						<div class='admin-entry-param' v-else-if="mp3Format === 'external'">
+							<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
+								can enter that here.</label>
+							<input name='mp3Link' type='text' v-model="mp3Link" />
+						</div>
+						<br>
+						<div class='admin-entry-param'>
+							<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
+							<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
+						</div>
+						<div class='admin-entry-param' v-if="pdfFormat === 'keep'">
+							<a :href="entry.pdfUrl">Link to PDF</a>
+						</div>
+						<div class='admin-entry-param' v-else-if="pdfFormat === 'upload'">
+							<label for='pdf'>Upload PDF</label>
+							<input name='pdf' type='file' @change="setFile('pdf', $event)" />
+						</div>
+						<br>
+						<div class="admin-entry-param">
+							<label for="deleteEntry">Delete Entry</label>
+							<input type="checkbox" name="deleteEntry" v-model="deleteEntry" />
+						</div>
+						<br>
+						<input type="submit" value="Submit Entry" class="admin-entry-param admin-submit-button" @click="submit">
 					</div>
-				</object>`;
-		}
+				</div>
+			`,
+			methods: {
+				async submit() {
+					this.working = true;
+
+					const formData = new FormData();
+
+					formData.append("entryName", this.entry.entryName);
+					formData.append("entrantName", this.entry.entrantName);
+					formData.append("entryNotes", this.entry.entryNotes);
+
+					if (this.pdfFormat === 'upload') {
+						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+					}
+
+					if (this.mp3Format === 'external') {
+						formData.append("mp3Link", this.mp3Link);
+					} else if (this.mp3Format === 'upload') {
+						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
+					}
+
+					if (this.deleteEntry === true) {
+						formData.append("deleteEntry", "true")
+					}
+
+					let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
+						method: "POST",
+						body: formData,
+					});
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						this.mode = "thanks";
+					}
+
+					this.working = false;
+					this.$emit('editedentry')
+				},
+				setFile(type, event){
+					let file = event.target.files[0];
+
+					this[type + "File"] = {
+						filename: event.target.files[0].name,
+						file
+					}
+				},
+				async updateEntry() {
+				},
+			}
+		});
+
+		var adminApp = new Vue({
+			el: "#content",
+			components: { Entry: entryComponent },
+			data() {
+				return {
+					authKey: "",
+					votes: null,
+					weeks: null,
+					working: false,
+					confirmArchive: false,
+					spoofedEntry: {
+						entrantName: "Wiglaf",
+						discordId: "",
+						placeInCurrentWeek: false,
+					},
+					// We keep these separate because we don't want them to update with the radio buttons.
+					submissionsOpen: null,
+					votingOpen: null,
+				}
+			},
+			async mounted() {
+				let parts = window.location.pathname.split("/");
+				this.authKey = parts[parts.length - 1];
+
+				await this.updateWeeks();
+			},
+			methods: {
+				async save() {
+					this.working = true;
+					let saveData = {
+						weeks: [
+							{
+								theme: this.weeks[0].theme,
+								date: this.weeks[0].date,
+								votingOpen: this.weeks[0].votingOpen,
+							},
+							{
+								theme: this.weeks[1].theme,
+								date: this.weeks[1].date,
+								submissionsOpen: this.weeks[1].submissionsOpen,
+							}
+						]
+					};
+
+					let req = await fetch("/admin/edit/" + this.authKey, {
+						method: "POST",
+						contentType: "application/json",
+						body: JSON.stringify(saveData),
+					});
+
+					await this.updateWeeks();
+
+					this.working = false;
+				},
+				async archive() {
+					this.working = true;
+
+					let req = await fetch("/admin/archive/" + this.authKey, {
+						method: "POST",
+					});
+
+					if (!req.ok) {
+						alert("Something went wrong: " + await req.text());
+					} else {
+						this.updateWeeks();
+					}
+
+					this.working = false;
+				},
+				async spoof() {
+					this.working = true;
+
+					let saveData = {
+						entrantName: this.spoofedEntry.entrantName,
+						discordId: this.spoofedEntry.discordId,
+						nextWeek: !this.spoofedEntry.placeInCurrentWeek
+					};
+
+					let req = await fetch("/admin/spoof/" + this.authKey, {
+						method: "POST",
+						contentType: "application/json",
+						body: JSON.stringify(saveData),
+					});
+
+					if (!req.ok) {
+						alert("Something went wrong: " + await req.text());
+					} else {
+						this.spoofedEntry = {
+							entrantName: "Wiglaf",
+							discordId: "",
+							placeInCurrentWeek: false,
+						};
+
+						await this.updateWeeks();
+					}
+
+					this.working = false;
+				},
+				async updateWeeks() {
+					let req = await fetch("/admin/get_admin_data/" + this.authKey);
+
+					if (!req.ok) {
+						alert("Something went wrong: " + await req.text());
+					} else {
+						let result = await req.json();
+						this.votes = result.votes;
+						this.weeks = result.weeks;
+
+						this.votingOpen = this.weeks[0].votingOpen;
+						this.submissionsOpen = this.weeks[1].submissionsOpen;
+					}
+				},
+				async deleteVote(vote) {
+					let confirmation = window.confirm("Are you sure you want to delete " + vote.userName + "'s vote? This cannot be undone.");
+
+					if (!confirmation) {
+						return;
+					}
+
+					let request = await fetch("/admin/delete_vote/" + this.authKey + "/" + vote.userID, {
+						method: "POST"
+					});
+
+					if (!request.ok) {
+						alert("Something went wrong: " + await request.text());
+					} else {
+						await this.updateWeeks();
+					}
+				}
+			}
+		})
 	</script>
 </body>
+
 </html>

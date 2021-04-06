@@ -1,0 +1,15 @@
+{
+    "command_prefix": [ "8!" ],
+    "test_mode": true,
+    "admins": [ ADD SOME ADMINS ],
+    "default_ttl": 30,
+    "postentries_channel": ADD A CHANNEL,
+    "notify_admins_channel": ADD A CHANNEL,
+    "bot_key": SET YOUR KEY,
+    "url_prefix": "http://127.0.0.1:8251",
+    "http_port": 8251,
+    "allowed_hosts": [
+        "https://soundcloud.com/",
+        "https://clyp.it/"
+    ]
+}
