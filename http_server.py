@@ -276,6 +276,8 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
             elif field.name == "entryNotes":
                 entry["entryNotes"] = \
                     (await field.read(decode=True)).decode("utf-8")
+                if entry["entryNotes"] == "undefined":
+                	entry["entryNotes"] = ""
             elif field.name == "deleteEntry":
                 week["entries"].remove(entry)
                 compo.save_weeks()
