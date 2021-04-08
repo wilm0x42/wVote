@@ -76,7 +76,7 @@ def entry_info_message(entry: dict) -> str:
         entry_message += "This entry is valid, and good to go!\n"
     else:
         entry_message += ("This entry isn't valid! "
-                                 "(Something is missing or broken!)\n")
+                          "(Something is missing or broken!)\n")
     return entry_message
 
 
@@ -115,7 +115,9 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
     global config
 
     commands = ["howmany", "submit", "vote", "status", "myresults"]
-    admin_commands = ["getentryplacements", "postentries", "postentriespreview", "manage"]
+    admin_commands = [
+        "getentryplacements", "postentries", "postentriespreview", "manage"
+    ]
 
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
            "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
@@ -131,7 +133,8 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
                 "head on over to " + config["url_prefix"]) + "\n"
 
     if not full:
-        msg += "Send `" + client.command_prefix[0] + "help` to see all available "
+        msg += "Send `" + client.command_prefix[
+            0] + "help` to see all available "
         msg += "commands."
     else:
         msg += "\nI understand the following commands: \n"
@@ -149,8 +152,10 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
 
         if len(client.command_prefix) > 1:
             msg += "\n"
-            msg += "Besides `" + client.command_prefix[0] + "` I understand the "
-            msg += "following prefixes: " + ", ".join("`" + prefix + "`" for prefix in client.command_prefix[1:])
+            msg += "Besides `" + client.command_prefix[
+                0] + "` I understand the "
+            msg += "following prefixes: " + ", ".join(
+                "`" + prefix + "`" for prefix in client.command_prefix[1:])
 
     return msg
 
@@ -193,7 +198,9 @@ async def unhandled_dm(message):
         # Only DMs
         return
 
-    if not any(message.content.startswith(prefix) for prefix in client.command_prefix):
+    if not any(
+            message.content.startswith(prefix)
+            for prefix in client.command_prefix):
         await message.channel.send(help_message())
 
 
@@ -204,12 +211,12 @@ async def on_ready() -> None:
     connection was successful.
     """
     logging.info("DISCORD: Logged in as %s (ID: %s)" %
-          (client.user.name, client.user.id))
+                 (client.user.name, client.user.id))
     logging.info("DISCORD: Connected to %d servers, and %d users" %
-          (len(client.guilds), len(set(client.get_all_members()))))
+                 (len(client.guilds), len(set(client.get_all_members()))))
     logging.info(("DISCORD: Invite link: "
-           "https://discordapp.com/oauth2/authorize?client_id="
-           "%d&scope=bot&permissions=335936592" % client.user.id))
+                  "https://discordapp.com/oauth2/authorize?client_id="
+                  "%d&scope=bot&permissions=335936592" % client.user.id))
     activity = discord.Game(name="Preventing Voter Fraud")
     return await client.change_presence(activity=activity)
 
@@ -231,8 +238,8 @@ async def on_command_error(context: commands.Context,
 
     if isinstance(error, IsNotAdminError):
         logging.warning(
-              "DISCORD: %s (%d) attempted to use an admin command: %s" %
-              (context.author.name, context.author.id, context.command.name))
+            "DISCORD: %s (%d) attempted to use an admin command: %s" %
+            (context.author.name, context.author.id, context.command.name))
         return
 
     if isinstance(error, WrongChannelError):
@@ -389,6 +396,7 @@ async def submit(context: commands.Context) -> None:
 
     await context.send("Submission form: " + url + expiry_message())
 
+
 @client.command()
 @commands.dm_only()
 async def vote(context: commands.Context) -> None:
@@ -439,7 +447,16 @@ async def howmany(context: commands.Context) -> None:
 
 @client.command()
 async def help(context: commands.Context) -> None:
-    await context.send(help_message(True, await is_admin(context)))
+    try:
+        await is_admin(context)
+        admin_context = True
+    except IsNotAdminError:
+        admin_context = False
+
+    await context.send(help_message(True, admin_context))
+
+    if not admin_context:
+        raise IsNotAdminError()
 
 
 @client.command()
@@ -456,7 +473,9 @@ async def status(context: commands.Context) -> None:
             return
 
     await context.send("You haven't submitted anything yet! "
-                       "But if you want to you can with %ssubmit !" % client.command_prefix[0])
+                       "But if you want to you can with %ssubmit !" %
+                       client.command_prefix[0])
+
 
 @client.command()
 @commands.dm_only()
@@ -465,8 +484,10 @@ async def myresults(context: commands.Context) -> None:
     week = compo.get_week(False)
 
     if week["votingOpen"]:
-        await context.send("You can't really get results while they're still coming "
-                           "in, despite what election coverage would lead you to believe; sorry.")
+        await context.send(
+            "You can't really get results while they're still coming "
+            "in, despite what election coverage would lead you to believe; sorry."
+        )
         return
 
     user_entry = None
@@ -484,18 +505,22 @@ async def myresults(context: commands.Context) -> None:
     scores = compo.fetch_votes_for_entry(week["votes"], entry["uuid"])
 
     if len(scores) == 0:
-        await context.send("Well this is awkward, no one voted on your entry...")
+        await context.send(
+            "Well this is awkward, no one voted on your entry...")
         return
 
     message = []
-    message.append("Please keep in mind that music is subjective, and that "
-                   "these scores shouldn't be taken to represent the quality of"
-                   " your entry-- your artistic work is valuable, regardless of"
-                   " what results it was awarded, so don't worry too much about it")
+    message.append(
+        "Please keep in mind that music is subjective, and that "
+        "these scores shouldn't be taken to represent the quality of"
+        " your entry-- your artistic work is valuable, regardless of"
+        " what results it was awarded, so don't worry too much about it")
     message.append("And with that out of the way...")
     message.append("*drumroll please*")
     for category in week["voteParams"]:
-        category_scores = [s['rating'] for s in scores if s['voteParam'] == category]
+        category_scores = [
+            s['rating'] for s in scores if s['voteParam'] == category
+        ]
         if len(category_scores) == 0:
             # The user received votes, but not in this category
             category_scores = [0]
@@ -503,7 +528,8 @@ async def myresults(context: commands.Context) -> None:
             % (category, statistics.mean(category_scores))
         message.append(text)
 
-    message.append("Your total average was: %1.2f!" % statistics.mean(s['rating'] for s in scores))
+    message.append("Your total average was: %1.2f!" %
+                   statistics.mean(s['rating'] for s in scores))
 
     await context.send("\n".join(message))
 

@@ -26,13 +26,12 @@ def load_config() -> dict:
 
     return config
 
+
 logging.basicConfig(format="%(asctime)s %(message)s",
                     level=logging.INFO,
                     handlers=[
                         logging.handlers.TimedRotatingFileHandler(
-                            "logs/wvote.log",
-                            when="W0",
-                            backupCount=10),
+                            "logs/wvote.log", when="W0", backupCount=10),
                         logging.StreamHandler()
                     ])
 
