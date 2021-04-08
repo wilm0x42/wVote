@@ -16,51 +16,57 @@
 	<div id="content">
 		<div v-if="mode === null">Loading...</div>
 		<div v-else-if="mode === 'submit'">
-			<div class="submit-babble">
-				<h2>Hello, {{ entry.entrantName }}!</h2>
-				<p>Thanks for participating this week, and congratulations for exercising your musical skills!</p>
+			<div v-if="working" class="progress-img">
+				<img class="progress-img" src="/static/kirb_phone.gif" />
+				<p>I'm taking good care of things, hold on!</p>
 			</div>
-			<div class="submit-form">
-				<div class='entry-param'>
-					<label for='entryName'>Entry Name</label>
-					<input name='entryName' type='text' v-model="entry.entryName" />
+			<div v-else>
+				<div class="submit-babble">
+					<h2>Hello, {{ entry.entrantName }}!</h2>
+					<p>Thanks for participating this week, and congratulations for exercising your musical skills!</p>
 				</div>
-				<br>
-				<div class='entry-param'>
-					<label><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
-					<label><input type="radio" value="upload" v-model="mp3Format"/> Upload MP3</label>
-					<label><input type="radio" value="external" v-model="mp3Format"/> Link MP3</label>
-				</div>
-				<div class='entry-param' v-if="mp3Format === 'keep'">
-					<a :href="entry.mp3Url">Link to MP3</a>
-				</div>
-				<div class='entry-param' v-else-if="mp3Format === 'upload'">
-					<label for='mp3'>Upload MP3</label>
-					<input name='mp3' type='file' @change="setFile('mp3', $event)" accept=".mp3" />
-				</div>
-				<div class='entry-param' v-else-if="mp3Format === 'external'">
-					<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
-						can enter that here.</label>
-					<input name='mp3Link' type='text' v-model="mp3Link" />
-
-					<div v-if="mp3LinkError" class="error-message">
-						{{ mp3LinkError }}
+				<div class="submit-form">
+					<div class='entry-param'>
+						<label for='entryName'>Entry Name</label>
+						<input name='entryName' type='text' v-model="entry.entryName" />
 					</div>
+					<br>
+					<div class='entry-param'>
+						<label><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
+						<label><input type="radio" value="upload" v-model="mp3Format"/> Upload MP3</label>
+						<label><input type="radio" value="external" v-model="mp3Format"/> Link MP3</label>
+					</div>
+					<div class='entry-param' v-if="mp3Format === 'keep'">
+						<a :href="entry.mp3Url">Link to MP3</a>
+					</div>
+					<div class='entry-param' v-else-if="mp3Format === 'upload'">
+						<label for='mp3'>Upload MP3</label>
+						<input name='mp3' type='file' @change="setFile('mp3', $event)" accept=".mp3" />
+					</div>
+					<div class='entry-param' v-else-if="mp3Format === 'external'">
+						<label for='mp3Link'>If you have an external link to your submission (e.g. SoundCloud), you
+							can enter that here.</label>
+						<input name='mp3Link' type='text' v-model="mp3Link" />
+
+						<div v-if="mp3LinkError" class="error-message">
+							{{ mp3LinkError }}
+						</div>
+					</div>
+					<br>
+					<div class='entry-param'>
+						<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
+						<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
+					</div>
+					<div class='entry-param' v-if="pdfFormat === 'keep'">
+						<a :href="entry.pdfUrl">Link to PDF</a>
+					</div>
+					<div class='entry-param' v-else-if="pdfFormat === 'upload'">
+						<label for='pdf'>Upload PDF</label>
+						<input name='pdf' type='file' @change="setFile('pdf', $event)" accept=".pdf" />
+					</div>
+					<br>
+					<input :disabled="working" class='entry-param submit-button' type='submit' value='Submit Entry' :disabled="!valid" @click="submit" />
 				</div>
-				<br>
-				<div class='entry-param'>
-					<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
-					<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
-				</div>
-				<div class='entry-param' v-if="pdfFormat === 'keep'">
-					<a :href="entry.pdfUrl">Link to PDF</a>
-				</div>
-				<div class='entry-param' v-else-if="pdfFormat === 'upload'">
-					<label for='pdf'>Upload PDF</label>
-					<input name='pdf' type='file' @change="setFile('pdf', $event)" accept=".pdf" />
-				</div>
-				<br>
-				<input class='entry-param submit-button' type='submit' value='Submit Entry' :disabled="!valid" @click="submit" />
 			</div>
 		</div>
 		<div v-else-if="mode === 'thanks'">
