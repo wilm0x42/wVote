@@ -42,8 +42,8 @@
 								</button>
 							</td>
 							<td class="entry-cell">
-								<a :href="entry.mp3Url" style="font-size: 0.7em;">MP3</a>
-								<a :href="entry.pdfUrl" style="font-size: 0.7em;">PDF</a>
+								<a :href="entry.mp3Url" target="_blank" style="font-size: 0.7em;">MP3</a>
+								<a :href="entry.pdfUrl" target="_blank" style="font-size: 0.7em;">PDF</a>
 							</td>
 							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
 								<vote-star-widget v-model="entries[entryIndex][voteParam]" @input="updateNumEntriesRated">
