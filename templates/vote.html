@@ -46,7 +46,7 @@
 								<a :href="entry.pdfUrl" target="_blank" style="font-size: 0.7em;">PDF</a>
 							</td>
 							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
-								<vote-star-widget v-model="entries[entryIndex][voteParam]" @input="updateNumEntriesRated">
+								<vote-star-widget :helptipdefs="helpTipDefs[voteParam]" v-model="entries[entryIndex][voteParam]" @input="updateNumEntriesRated">
 								</vote-star-widget>
 							</td>
 						</tr>
@@ -149,13 +149,14 @@
 
 		Vue.component("vote-star-widget", {
 			props: [
-				"value"
+				"value",
+				"helptipdefs",
 			],
 			template:
 				`<table class="vote-star-widget" cellpadding='0'>
 					<tr>
 						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
-						        <div class="helptip"><span class="helptiptext">{{starNum}} - {{ voteLabels[starNum] }} </span>
+						        <div class="helptip"><span class="helptiptext">{{starNum}} - {{helptipdefs[starNum]}} </span>
 							<button @click="vote(starNum)" class="vote-star">
 
 								<img class="vote-star-img" v-if="value >= starNum" src="/static/interface-star-yes.svg" />
@@ -193,6 +194,7 @@
 					numEntriesRated: 0,
 					userVoteKey: "",
 					working: false,
+					helpTipDefs: null,
 				}
 			},
 			async mounted() {
@@ -218,6 +220,7 @@
 					this.date = weekData.date
 					this.votingOpen = weekData.votingOpen
 					this.voteParams = weekData.voteParams
+					this.helpTipDefs = weekData.helpTipDefs
 					this.mode = "vote";
 				}
 

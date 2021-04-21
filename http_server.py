@@ -440,13 +440,27 @@ def format_week(week: dict, is_admin: bool) -> dict:
 
         entryData.append(prunedEntry)
 
+    if not week.get("helpTipDefs"):
+        helpTipDefs = {}
+        for voteParam in week["voteParams"]:
+            helpTipDefs[voteParam] = {
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5",
+            }
+    else:
+        helpTipDefs = week["helpTipDefs"]
+
     data = {
         "entries": entryData,
         "theme": week["theme"],
         "date": week["date"],
         "submissionsOpen": week["submissionsOpen"],
         "votingOpen": week["votingOpen"],
-        "voteParams": week["voteParams"]
+        "voteParams": week["voteParams"],
+        "helpTipDefs": helpTipDefs,
     }
 
     return data
