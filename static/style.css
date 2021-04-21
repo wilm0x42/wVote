@@ -310,3 +310,38 @@ button:hover
 .progress-img {
 	text-align: center;
 }
+
+
+.helptip {
+  position: relative;
+  display: inline-block;
+}
+
+.helptip .helptiptext {
+  position: absolute;
+  visibility: hidden;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+  padding: 10px 10px 10px 10px;
+  z-index: 1;
+  bottom: 100%;
+  margin-left: -100px;
+  width: 200px;
+}
+
+.helptip .helptiptext::after {
+  border-width: 7px;
+  border-style: solid;
+  position: absolute;
+  top: 100%;
+  margin-left: -6px;
+  left: 50%;
+  content: "";
+  border-color: black transparent transparent transparent;
+}
+
+.helptip:hover .helptiptext {
+  visibility: visible;
+}

@@ -155,10 +155,13 @@
 				`<table class="vote-star-widget" cellpadding='0'>
 					<tr>
 						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
+						        <div class="helptip"><span class="helptiptext">{{starNum}} - {{ voteLabels[starNum] }} </span>
 							<button @click="vote(starNum)" class="vote-star">
+
 								<img class="vote-star-img" v-if="value >= starNum" src="/static/interface-star-yes.svg" />
 								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
 							</button>
+							</div>
 						</td>
 					</tr>
 				</table>`,
@@ -170,7 +173,10 @@
 						this.$emit("input", newValue);
 					}
 				}
-			}
+			},
+			data: function() {
+				return { voteLabels: {1: "Just not for me", 2: "It's got potential", 3: "I like this!", 4: "Above average for me!", 5: "Simply outstanding!"}
+			}}
 		})
 
 		var app = new Vue({
