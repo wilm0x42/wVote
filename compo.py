@@ -39,11 +39,11 @@ def blank_week() -> dict:
             },
             "overall":
             {
-                "1": "overall 1",
-                "2": "overall 2",
-                "3": "overall 3",
-                "4": "overall 4",
-                "5": "overall 5",
+                "1": "1 - Just not for me",
+                "2": "2 - It's got potential",
+                "3": "3 - I like this!",
+                "4": "4 - Above average for me!",
+                "5": "5 - Simply outstanding!",
             },
         }
     }
