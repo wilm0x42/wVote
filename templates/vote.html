@@ -6,7 +6,9 @@
 	<meta name="theme-color" content="#ee34e7">
 	<title>8 Bit Music Theory Weeklies</title>
 	<link rel="stylesheet" href="/static/style.css" type="text/css" media="all">
+	<script src="[POPPER-URL]"></script>
 	<script src="[VUE-URL]"></script>
+	<script src="[TOOLTIP-URL]"></script>
 </head>
 
 <body>
@@ -156,13 +158,15 @@
 				`<table class="vote-star-widget" cellpadding='0'>
 					<tr>
 						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
-						        <div class="helptip"><span class="helptiptext">{{starNum}} - {{helptipdefs[starNum]}} </span>
+							<span v-tooltip="helptipdefs[starNum]">
+
+						        
 							<button @click="vote(starNum)" class="vote-star">
 
 								<img class="vote-star-img" v-if="value >= starNum" src="/static/interface-star-yes.svg" />
 								<img class="vote-star-img" src="/static/interface-star-no.svg" v-else />
-							</button>
-							</div>
+							</button></span>
+							
 						</td>
 					</tr>
 				</table>`,
