@@ -20,7 +20,32 @@ def blank_week() -> dict:
         "votingOpen": True,
         "entries": [],
         "votes": [],
-        "voteParams": ["prompt", "score", "overall"]
+        "voteParams": ["prompt", "score", "overall"],
+        "helpTipDefs": {
+            "prompt":{
+                "1": "prompt 1",
+                "2": "prompt 2",
+                "3": "prompt 3",
+                "4": "prompt 4",
+                "5": "prompt 5",
+            },
+            "score":
+            {
+                "1": "score 1",
+                "2": "score 2",
+                "3": "score 3",
+                "4": "score 4",
+                "5": "score 5",
+            },
+            "overall":
+            {
+                "1": "1 - Just not for me",
+                "2": "2 - It's got potential",
+                "3": "3 - I like this!",
+                "4": "4 - Above average for me!",
+                "5": "5 - Simply outstanding!",
+            },
+        }
     }
 
 

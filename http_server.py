@@ -27,13 +27,21 @@ and provide us with a link. If you need help, ask us in
 """
 
 # TODO: Put in config
-def get_vue_url() -> str:
+def get_urls() -> str:
     global config
 
     if config["test_mode"]:
-        return "https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"
+        return {
+            "popper": "https://cdn.jsdelivr.net/npm/popper.js",
+            "vue": "https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js",
+            "v-tooltip": "https://cdn.jsdelivr.net/npm/v-tooltip@2.0.2",
+            }
     else:
-        return "https://cdn.jsdelivr.net/npm/vue@2"
+        return {
+            "vue": "https://cdn.jsdelivr.net/npm/vue@2",
+            "v-tooltip": "https://cdn.jsdelivr.net/npm/v-tooltip@2.0.2",
+            "popper": "https://cdn.jsdelivr.net/npm/popper.js",
+            }
 
 
 # Static/semi-static files:
@@ -55,7 +63,10 @@ async def week_files_handler(request: web_request.Request) -> web.Response:
 
 async def vote_handler(request: web_request.Request) -> web.Response:
     """Display the vote form (No data; will be fetched by Vue)"""
-    html = vote_template.replace("[VUE-URL]", get_vue_url())
+    urls = get_urls()
+    html = vote_template.replace("[VUE-URL]", urls["vue"])
+    html = html.replace("[POPPER-URL]", urls["popper"])
+    html = html.replace("[TOOLTIP-URL]", urls["v-tooltip"])
 
     return web.Response(text=html, content_type="text/html")
 
@@ -67,7 +78,10 @@ async def admin_handler(request: web_request.Request) -> web.Response:
     if not keys.key_valid(auth_key, keys.admin_keys):
         return web.Response(status=404, text="File not found")
 
-    html = admin_template.replace("[VUE-URL]", get_vue_url())
+    urls = get_urls()
+    html = admin_template.replace("[VUE-URL]", urls["vue"])
+    html = html.replace("[POPPER-URL]", urls["popper"])
+    html = html.replace("[TOOLTIP-URL]", urls["v-tooltip"])
 
     return web.Response(status=200, body=html, content_type="text/html")
 
@@ -75,7 +89,10 @@ async def admin_handler(request: web_request.Request) -> web.Response:
 async def edit_handler(request: web_request.Request) -> web.Response:
     """Display edit forms (No data; will be fetched by Vue)"""
 
-    html = submit_template.replace("[VUE-URL]", get_vue_url())
+    urls = get_urls()
+    html = submit_template.replace("[VUE-URL]", urls["vue"])
+    html = html.replace("[POPPER-URL]", urls["popper"])
+    html = html.replace("[TOOLTIP-URL]", urls["v-tooltip"])
 
     return web.Response(status=200, body=html, content_type="text/html")
 
@@ -440,13 +457,27 @@ def format_week(week: dict, is_admin: bool) -> dict:
 
         entryData.append(prunedEntry)
 
+    if not week.get("helpTipDefs"):
+        helpTipDefs = {}
+        for voteParam in week["voteParams"]:
+            helpTipDefs[voteParam] = {
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5",
+            }
+    else:
+        helpTipDefs = week["helpTipDefs"]
+
     data = {
         "entries": entryData,
         "theme": week["theme"],
         "date": week["date"],
         "submissionsOpen": week["submissionsOpen"],
         "votingOpen": week["votingOpen"],
-        "voteParams": week["voteParams"]
+        "voteParams": week["voteParams"],
+        "helpTipDefs": helpTipDefs,
     }
 
     return data
