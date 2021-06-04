@@ -429,7 +429,9 @@ async def getentryplacements(context: commands.Context) -> None:
             % (e["votePlacement"], e["entrantName"],
                e["entryName"], e["voteScore"])
 
-    message += "\n```"
+    message += "\n```\n"
+    message += "Use `%sclosevoting` to close voting for this week." \
+        % client.command_prefix[0]
 
     await context.send(message)
 
@@ -533,6 +535,24 @@ async def myresults(context: commands.Context) -> None:
 
     await context.send("\n".join(message))
 
+
+@client.command()
+@commands.check(is_admin)
+async def closevoting(context: commands.Context) -> None:
+    week = compo.get_week(False)
+    week["votingOpen"] = False
+    
+    await context.send("Voting for the current week is now closed.")
+    compo.save_weeks()
+
+@client.command()
+@commands.check(is_admin)
+async def openvoting(context: commands.Context) -> None:
+    week = compo.get_week(False)
+    week["votingOpen"] = True
+    
+    await context.send("Voting for the current week is now open.")
+    compo.save_weeks()
 
 @client.command()
 async def crudbroke(context: commands.Context) -> None:
