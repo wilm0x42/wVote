@@ -5,6 +5,8 @@ import io
 import urllib.parse
 import logging
 import statistics
+import datetime
+import random
 
 import discord
 from discord.ext import commands
@@ -445,6 +447,54 @@ async def howmany(context: commands.Context) -> None:
     response = "%d, so far." % compo.count_valid_entries(compo.get_week(True))
 
     await context.send(response)
+
+
+@client.command()
+async def howlong(context: commands.Context) -> None:
+    """
+    Prints how long is left until the deadline
+    """
+
+    timezone_offset = datetime.timedelta(hours=config["timezone_offset"])
+
+    today = datetime.date.today()
+    date_offset = datetime.timedelta((4 - today.weekday()) % 7)
+
+    # If the next friday is not the target date, it should be manually chosen
+    # friday_date = datetime.date(2020, 12, 25)
+    friday_date = today + date_offset
+
+    # Target time is Friday at midnight EST
+    target_time = datetime.datetime.combine(friday_date, datetime.time(0))
+
+    time_difference = target_time - datetime.datetime.now() + timezone_offset
+    days = time_difference.days
+    hours = time_difference.seconds // 3600
+    minutes = (time_difference.seconds % 3600) / 60
+    minutes = round(minutes)
+
+    result = ""
+    if days > 1:
+        result += '{} days, '.format(days)
+    elif days > 0:
+        result += '{} day, '.format(days)
+
+    if hours > 1:
+        result += '{} hours, '.format(hours)
+    elif hours > 0:
+        result += '{} hour, '.format(hours)
+
+    if minutes > 1:
+        result += '{} minutes, '.format(minutes)
+    elif minutes > 0:
+        result += '{} minute, '.format(minutes)
+    result += 'until submissions close.'
+
+    # a very serious feature
+    if random.random() <= (1/10000):
+        result = "longer than yours *lmao*"
+
+    await context.send(result)
 
 
 @client.command()

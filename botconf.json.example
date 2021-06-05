@@ -11,5 +11,6 @@
     "allowed_hosts": [
         "https://soundcloud.com/",
         "https://clyp.it/"
-    ]
+    ],
+    "timezone_offset": 0
 }
