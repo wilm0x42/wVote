@@ -455,8 +455,6 @@ async def howlong(context: commands.Context) -> None:
     Prints how long is left until the deadline
     """
 
-    # 8bot is in UTC+1 and eastern time is UTC-5
-    # Therefore 6 hours difference
     timezone_offset = datetime.timedelta(hours=config["timezone_offset"])
 
     today = datetime.date.today()
