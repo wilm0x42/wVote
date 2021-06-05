@@ -487,7 +487,7 @@ async def howlong(context: commands.Context) -> None:
     if minutes > 1:
         result += '{} minutes, '.format(minutes)
     elif minutes > 0:
-        result += '{} minutec, '.format(minutes)
+        result += '{} minute, '.format(minutes)
     result += 'until submissions close.'
 
     # a very serious feature
