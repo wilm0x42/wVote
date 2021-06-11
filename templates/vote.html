@@ -120,7 +120,7 @@
 						<tr>
 							<td class="entry-cell" style="padding: 2px;" v-for="voteParam in voteParams">
 								<p class="vote-star-bottom-label">{{ voteParam }}</p>
-								<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" @input="updateNumEntriesRated">
+								<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" :helptipdefs="helpTipDefs[voteParam]" @input="updateNumEntriesRated">
 								</vote-star-widget>
 							</td>
 						</tr>
