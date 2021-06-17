@@ -76,7 +76,7 @@ async def admin_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=404, text="File not found")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     urls = get_urls()
     html = admin_template.replace("[VUE-URL]", urls["vue"])
@@ -112,7 +112,7 @@ async def get_entry_handler(request: web_request.Request) -> web.Response:
                             text="Submissions are currently closed!")
 
     if not keys.key_valid(auth_key, keys.edit_keys):
-        return web.Response(status=401, text="File not found")
+        return web.Response(status=401, text="Invalid or expired link")
 
     key = keys.edit_keys[auth_key]
 
@@ -131,7 +131,7 @@ async def admin_get_data_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=404, text="File not found")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     this_week = compo.get_week(False)
     next_week = compo.get_week(True)
@@ -152,7 +152,7 @@ async def admin_preview_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=404, text="Invalid key")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     return web.json_response(format_week(compo.get_week(True), False))
 
@@ -163,7 +163,7 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
     user_id = request.match_info["userID"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=401, text="Invalid key")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     week = compo.get_week(False)
 
@@ -182,7 +182,7 @@ async def admin_deletevote_handler(request: web_request.Request) -> web.Response
     user_id = request.match_info["userID"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=401, text="Invalid key")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     week = compo.get_week(False)
     week["votes"] = [vote for vote in week["votes"] if vote["userID"] != user_id]
@@ -197,7 +197,7 @@ async def admin_control_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=404, text="File not found")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     this_week = compo.get_week(False)
     next_week = compo.get_week(True)
@@ -221,7 +221,7 @@ async def admin_archive_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=404, text="File not found")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     compo.move_to_next_week()
 
@@ -236,7 +236,7 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not keys.key_valid(auth_key, keys.admin_keys):
-        return web.Response(status=404, text="File not found")
+        return web.Response(status=401, text="Invalid or expired admin link")
 
     entry_data = await request.json()
 
@@ -263,7 +263,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
     is_admin = keys.key_valid(auth_key, keys.admin_keys)
     is_authorized = is_authorized_user or is_admin
     if not is_authorized:
-        return web.Response(status=403, text="Not happening babe")
+        return web.Response(status=401, text="Invalid or expired link")
 
     # Find the entry
     choice = None
@@ -276,14 +276,14 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                 break
 
     if choice is None:
-        return web.Response(status=400, text="That entry doesn't seem to exist")
+        return web.Response(status=404, text="That entry doesn't seem to exist")
 
     week, entryIndex, entry = choice
 
     # Process it
     reader = await request.multipart()
     if reader is None:
-        return web.Response(status=400, text="Not happening babe")
+        return web.Response(status=400, text="Error uploading data idk")
 
     async for field in reader:
         if is_admin:
@@ -309,7 +309,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
             if len(url) > 1:
                 if not any(url.startswith(host) for host in config["allowed_hosts"]):
                     return web.Response(status=400,
-                                        text="This host is not allowed.")
+                                        text="You entered a link to a website we don't allow.")
 
                 entry["mp3"] = url
                 entry["mp3Format"] = "external"
@@ -361,7 +361,7 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     auth_key = vote_input["voteKey"]
 
     if not keys.key_valid(auth_key, keys.vote_keys):
-        return web.Response(status=403, text="Not happening babe")
+        return web.Response(status=401, text="Invalid or expired vote token")
 
     user_id = keys.vote_keys[auth_key]["userID"]
     user_name = keys.vote_keys[auth_key]["userName"]
