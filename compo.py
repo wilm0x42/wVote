@@ -20,23 +20,8 @@ def blank_week() -> dict:
         "votingOpen": True,
         "entries": [],
         "votes": [],
-        "voteParams": ["prompt", "score", "overall"],
+        "voteParams": ["overall"],
         "helpTipDefs": {
-            "prompt":{
-                "1": "1 - Blatantly breaks rules",
-                "2": "2 - Not really in the spirit of things",
-                "3": "3 - Fits fine as far as I'm concerned!",
-                "4": "4 - Exemplary interpretation!",
-                "5": "5 - Incredibly creative!",
-            },
-            "score":
-            {
-                "1": "1 - Not useful",
-                "2": "2 - Some important issues",
-                "3": "3 - Not bad!",
-                "4": "4 - Looks very nice!",
-                "5": "5 - Beautiful!",
-            },
             "overall":
             {
                 "1": "1 - Just not for me",
@@ -249,9 +234,7 @@ def get_ranked_entrant_list(week: dict) -> list:
     """Bloc STAR Voting wooooo"""
 
     param_weights = {
-        "prompt": 0.3,
-        "score": 0.3,
-        "overall": 0.4
+        "overall": 1.0
     }
 
     if len(week["entries"]) < 1: # lol no one submitted
