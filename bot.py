@@ -116,23 +116,13 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
     """
     global config
 
-    commands = ["howmany", "submit", "vote", "status", "myresults"]
+    commands = ["howmany", "submit", "vote", "status"]
     admin_commands = [
         "getentryplacements", "postentries", "postentriespreview", "manage"
     ]
 
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
-           "the 8Bit Music Theory Discord Weekly Composition Competition.\n")
-
-    if compo.get_week(True)["submissionsOpen"]:
-        msg += "Submissions for this week's prompt are currently open.\n"
-        msg += "If you'd like to submit an entry, DM me the command `" + \
-            client.command_prefix[0] + "submit`, and I'll give you "
-        msg += "a secret link to a personal submission form. \n"
-    else:
-        msg += "Submissions for this week's prompt are now closed.\n"
-        msg += ("To see the already submitted entries for this week, "
-                "head on over to " + config["url_prefix"]) + "\n"
+           "the Pokemonth Competition.\n")
 
     if not full:
         msg += "Send `" + client.command_prefix[
@@ -458,14 +448,15 @@ async def howlong(context: commands.Context) -> None:
     timezone_offset = datetime.timedelta(hours=config["timezone_offset"])
 
     today = datetime.date.today()
-    date_offset = datetime.timedelta((4 - today.weekday()) % 7)
+    #date_offset = datetime.timedelta((4 - today.weekday()) % 7)
 
     # If the next friday is not the target date, it should be manually chosen
     # friday_date = datetime.date(2020, 12, 25)
-    friday_date = today + date_offset
+    #friday_date = today + date_offset
 
     # Target time is Friday at midnight EST
-    target_time = datetime.datetime.combine(friday_date, datetime.time(0))
+    #target_time = datetime.datetime.combine(friday_date, datetime.time(0))
+    target_time = datetime.datetime(2021, 7, 11)
 
     time_difference = target_time - datetime.datetime.now() + timezone_offset
     days = time_difference.days
@@ -530,6 +521,7 @@ async def status(context: commands.Context) -> None:
 
 
 @client.command()
+@commands.check(is_admin)
 @commands.dm_only()
 async def myresults(context: commands.Context) -> None:
     """Shows you your results on the latest vote."""
