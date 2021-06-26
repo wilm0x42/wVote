@@ -201,39 +201,60 @@
 				async submit() {
 					this.working = true;
 
-					const formData = new FormData();
+					try {
+						const formData = new FormData();
 
-					formData.append("entryName", this.entry.entryName);
-					formData.append("entrantName", this.entry.entrantName);
-					formData.append("entryNotes", this.entry.entryNotes);
+						if (this.deleteEntry === true) {
+							formData.append("deleteEntry", "true")
+						} else {
+							if (this.entry.entryName.length === 0) {
+								throw new("Please set an entry name");
+							}
 
-					if (this.pdfFormat === 'upload') {
-						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
-					}
+							if (this.entry.entrantName.length === 0) {
+								throw new("Please set an entry name");
+							}
 
-					if (this.mp3Format === 'external') {
-						formData.append("mp3Link", this.mp3Link);
-					} else if (this.mp3Format === 'upload') {
-						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
-					}
+							formData.append("entryName", this.entry.entryName);
+							formData.append("entrantName", this.entry.entrantName);
+							formData.append("entryNotes", this.entry.entryNotes);
 
-					if (this.deleteEntry === true) {
-						formData.append("deleteEntry", "true")
-					}
+							if (this.pdfFormat === 'upload') {
+								try {
+									formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+								} catch {
+									throw new Error("You've chosen to upload a PDF but haven't picked one.");
+								}
+							}
 
-					let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
-						method: "POST",
-						body: formData,
-					});
+							if (this.mp3Format === 'external') {
+								// WARN: We're not checking for invalid hosts.
+								formData.append("mp3Link", this.mp3Link);
+							} else if (this.mp3Format === 'upload') {
+								try {
+									formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
+								} catch {
+									throw new Error("You've chosen to upload an MP3 but haven't picked one.");
+								}
+							}
+						}
 
-					if (!request.ok) {
-						alert("Something went wrong: " + await request.text());
-					} else {
+						let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
+							method: "POST",
+							body: formData,
+						});
+
+						if (!request.ok) {
+							throw new Error("Something went wrong: " + await request.text());
+						}
+
 						this.mode = "thanks";
+						this.$emit('editedentry');
+					} catch (e) {
+						alert(e.toString());
+					} finally {
+						this.working = false;
 					}
-
-					this.working = false;
-					this.$emit('editedentry')
 				},
 				setFile(type, event){
 					let file = event.target.files[0];
@@ -242,8 +263,6 @@
 						filename: event.target.files[0].name,
 						file
 					}
-				},
-				async updateEntry() {
 				},
 			}
 		});
@@ -298,7 +317,6 @@
 						body: JSON.stringify(saveData),
 					});
 
-					document.getElementById('submissions').contentWindow.location.reload();
 					await this.updateWeeks();
 
 					this.working = false;
@@ -352,14 +370,17 @@
 
 					if (!req.ok) {
 						alert("Something went wrong: " + await req.text());
-					} else {
-						let result = await req.json();
-						this.votes = result.votes;
-						this.weeks = result.weeks;
-
-						this.votingOpen = this.weeks[0].votingOpen;
-						this.submissionsOpen = this.weeks[1].submissionsOpen;
+						return;
 					}
+
+					let result = await req.json();
+					this.votes = result.votes;
+					this.weeks = result.weeks;
+
+					this.votingOpen = this.weeks[0].votingOpen;
+					this.submissionsOpen = this.weeks[1].submissionsOpen;
+
+					document.getElementById('submissions').contentWindow.location.reload();
 				},
 				async deleteVote(vote) {
 					let confirmation = window.confirm("Are you sure you want to delete " + vote.userName + "'s vote? This cannot be undone.");
