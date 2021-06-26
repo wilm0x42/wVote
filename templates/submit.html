@@ -135,32 +135,48 @@
 				async submit() {
 					this.working = true;
 
-					const formData = new FormData();
+					try {
+						const formData = new FormData();
 
-					formData.append("entryName", this.entry.entryName);
+						if (this.entry.entryName.length < 1) {
+							throw new Error("Please enter a name");
+						}
 
-					if (this.pdfFormat === 'upload') {
-						formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
-					}
+						formData.append("entryName", this.entry.entryName);
 
-					if (this.mp3Format === 'external') {
-						formData.append("mp3Link", this.mp3Link);
-					} else if (this.mp3Format === 'upload') {
-						formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
-					}
+						if (this.pdfFormat === 'upload') {
+							try {
+								formData.append("pdf", this.pdfFile.file, this.pdfFile.fileName);
+							} catch {
+								throw new Error("You've chosen to upload a PDF but haven't picked one.");
+							}
+						}
 
-					let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
-						method: "POST",
-						body: formData,
-					});
+						if (this.mp3Format === 'external') {
+							formData.append("mp3Link", this.mp3Link);
+						} else if (this.mp3Format === 'upload') {
+							try {
+								formData.append("mp3", this.mp3File.file, this.mp3File.fileName);
+							} catch {
+								throw new Error("You've chosen to upload am MP3 but haven't picked one.");
+							}
+						}
 
-					if (!request.ok) {
-						alert("Something went wrong: " + await request.text());
-					} else {
+						let request = await fetch("/edit/post/" + this.entry.uuid + "/" + this.authKey, {
+							method: "POST",
+							body: formData,
+						});
+
+						if (!request.ok) {
+							throw new Error("Something went wrong: " + await request.text());
+						}
+
 						this.mode = "thanks";
+					} catch(e) {
+						alert(e.toString());
+					} finally {
+						this.working = false;
 					}
-
-					this.working = false;
 				},
 				setFile(type, event){
 					let file = event.target.files[0];
