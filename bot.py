@@ -177,25 +177,6 @@ def expiry_message() -> str:
     return "\nThis link will expire in %d minutes" % config["default_ttl"]
 
 
-@client.listen('on_message')
-async def unhandled_dm(message):
-    """
-    When a DM is received and it didn't match any known commands, show the help prompt.
-    """
-    if message.author == client.user:
-        # Don't reply to self
-        return
-
-    if message.channel != message.author.dm_channel:
-        # Only DMs
-        return
-
-    if not any(
-            message.content.startswith(prefix)
-            for prefix in client.command_prefix):
-        await message.channel.send(help_message())
-
-
 @client.event
 async def on_ready() -> None:
     """
