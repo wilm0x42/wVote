@@ -34,9 +34,9 @@
 					</div>
 					<br>
 					<div class='entry-param'>
-						<label><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
 						<label><input type="radio" value="upload" v-model="mp3Format"/> Upload MP3</label>
 						<label><input type="radio" value="external" v-model="mp3Format"/> Link MP3</label>
+						<label v-show="entry.mp3Url"><input type="radio" value="keep" v-model="mp3Format"/> Keep current MP3 file</label>
 					</div>
 					<div class='entry-param' v-if="mp3Format === 'keep'">
 						<a :href="entry.mp3Url">Link to MP3</a>
@@ -56,8 +56,8 @@
 					</div>
 					<br>
 					<div class='entry-param'>
-						<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
 						<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
+						<label v-show="entry.pdfUrl"><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
 					</div>
 					<div class='entry-param' v-if="pdfFormat === 'keep'">
 						<a :href="entry.pdfUrl">Link to PDF</a>
@@ -94,10 +94,10 @@
 					entrant: "",
 					entry: null,
 					pdfFile: null,
-					pdfFormat: 'keep',
+					pdfFormat: 'upload',
 					mp3File: null,
 					mp3Link: "",
-					mp3Format: 'keep'
+					mp3Format: 'upload'
 				}
 			},
 			async mounted() {

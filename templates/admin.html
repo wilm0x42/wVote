@@ -89,7 +89,7 @@
 				</div>
 			</div>
 
-			<iframe :src="'/admin/preview/' + authKey" class="entries-preview"></iframe>
+			<iframe :src="'/admin/preview/' + authKey" class="entries-preview" id="submissions"></iframe>
 
 			<div class="entry-list">
 				<div>
@@ -298,6 +298,7 @@
 						body: JSON.stringify(saveData),
 					});
 
+					document.getElementById('submissions').contentWindow.location.reload();
 					await this.updateWeeks();
 
 					this.working = false;

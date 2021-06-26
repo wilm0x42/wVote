@@ -499,7 +499,7 @@ def get_editable_entry(entry: dict) -> dict:
         "uuid": entry["uuid"],
         "entryName": entry["entryName"],
         "entrantName": entry["entrantName"],
-        "pdfUrl": "/files/%s/%s" % (entry["uuid"], entry.get("pdfFilename")),
+        "pdfUrl": None,
         "mp3Format": entry.get("mp3Format"),
     }
 
@@ -507,6 +507,9 @@ def get_editable_entry(entry: dict) -> dict:
         entry_data["mp3Url"] = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
     else:
         entry_data["mp3Url"] = entry.get("mp3")
+
+    if entry.get("pdfFilename") is not None:
+        entry_data["pdfUrl"] = "/files/%s/%s" % (entry["uuid"], entry.get("pdfFilename"))
 
     return entry_data
 
