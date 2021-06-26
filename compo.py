@@ -123,11 +123,15 @@ def create_blank_entry(entrant_name: str,
     str
         A randomly generated UUID
     """
+    dummy_pdf = open("dummy.pdf", "rb").read()
+    
     entry = {
         "entryName": "",
         "entrantName": entrant_name,
         "discordID": discord_id,
-        "uuid": str(uuid.uuid4())
+        "uuid": str(uuid.uuid4()),
+        "pdf": dummy_pdf,
+        "pdfFilename": "dummy.pdf"
     }
 
     return entry

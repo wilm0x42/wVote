@@ -56,7 +56,7 @@
 					</div>
 					<br>
 					<div class='entry-param'>
-						<label><input type="radio" value="keep" v-model="pdfFormat"/> Keep current PDF file</label>
+						<label><input type="radio" value="keep" v-model="pdfFormat"/> Don't submit PDF</label>
 						<label><input type="radio" value="upload" v-model="pdfFormat"/> Upload PDF</label>
 					</div>
 					<div class='entry-param' v-if="pdfFormat === 'keep'">
