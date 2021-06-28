@@ -103,11 +103,12 @@
 			async mounted() {
 				this.working = true;
 
-				let hostsRequest = await fetch("/allowed_hosts");
-				if (!hostsRequest.ok) {
-					// TODO: A better way to handle errors...
-					alert("Something went wrong: " + await hostsRequest.text());
-				} else {
+				try {
+					let hostsRequest = await fetch("/allowed_hosts");
+					if (!hostsRequest.ok) {
+						throw new Error("Something went wrong: " + await hostsRequest.text() + " - Try refreshing the page or notify the admins in Discord");
+					}
+
 					this.validHosts = await hostsRequest.json();
 
 					let parts = window.location.pathname.split("/");
@@ -116,20 +117,22 @@
 					let request = await fetch("/entry_data/" + this.authKey);
 
 					if (!request.ok) {
-						alert("Something went wrong: " + await request.text());
-					} else {
-						let entryData = await request.json();
-						this.mode = "submit";
-						this.entry = entryData;
-
-						if (!this.entry.mp3Format == 'mp3') {
-							// If it's a link, populate the field
-							this.mp3Link = this.entry.mp3Url;
-						}
+						throw new Error("Something went wrong: " + await request.text());
 					}
-				}
 
-				this.working = false;
+					let entryData = await request.json();
+					this.mode = "submit";
+					this.entry = entryData;
+
+					if (!this.entry.mp3Format == 'mp3') {
+						// If it's a link, populate the field
+						this.mp3Link = this.entry.mp3Url;
+					}
+				} catch (e) {
+					alert(e.toString());
+				} finally {
+					this.working = false;
+				}
 			},
 			methods: {
 				async submit() {
