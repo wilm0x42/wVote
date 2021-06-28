@@ -249,9 +249,9 @@ def get_ranked_entrant_list(week: dict) -> list:
     """Bloc STAR Voting wooooo"""
 
     param_weights = {
-        "prompt": 0.3,
-        "score": 0.3,
-        "overall": 0.4
+        "prompt": 0.33,
+        "score": 0.33,
+        "overall": 0.33
     }
 
     if len(week["entries"]) < 1: # lol no one submitted
