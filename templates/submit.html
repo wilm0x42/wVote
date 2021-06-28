@@ -124,7 +124,7 @@
 					this.mode = "submit";
 					this.entry = entryData;
 
-					if (!this.entry.mp3Format == 'mp3') {
+					if (this.entry.mp3Format !== 'mp3') {
 						// If it's a link, populate the field
 						this.mp3Link = this.entry.mp3Url;
 					}
