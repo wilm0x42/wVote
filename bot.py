@@ -454,44 +454,77 @@ async def howlong(context: commands.Context) -> None:
     """
     Prints how long is left until the deadline
     """
-
+    # This *should* be the timezone offset between where 8bot is hosted and the
+    # local timezone where the weeklies are hosted
     timezone_offset = datetime.timedelta(hours=config["timezone_offset"])
 
+    # An offset of 15:30 in botconf.json would mean it would close at
+    # 3:30pm Eastern on a given date
+    deadline_time_offset = datetime.datetime.strptime(
+        config["deadline_time_offset"], "%H:%M")
+    # Any date information is redundant
+    deadline_time_offset = deadline_time_offset.time()
+
     today = datetime.date.today()
-    date_offset = datetime.timedelta((4 - today.weekday()) % 7)
+    # In the config file, monday is 0, tuesday is 1, etc.
+    date_offset = datetime.timedelta(
+        (config["deadline_weekday"] - today.weekday()) % 7)
 
     # If the next friday is not the target date, it should be manually chosen
-    # friday_date = datetime.date(2020, 12, 25)
-    friday_date = today + date_offset
+    # target_date = datetime.date(2020, 12, 25)
+    target_date = today + date_offset
+
+    # We only want to add 7 days if we are already past the time offset
+    if today == target_date and datetime.datetime.now().time(
+    ) > deadline_time_offset:
+        target_date += datetime.timedelta(days=7)
 
     # Target time is Friday at midnight EST
-    target_time = datetime.datetime.combine(friday_date, datetime.time(0))
+    target_time = datetime.datetime.combine(target_date, deadline_time_offset)
 
     time_difference = target_time - datetime.datetime.now() + timezone_offset
     days = time_difference.days
     hours = time_difference.seconds // 3600
-    minutes = (time_difference.seconds % 3600) / 60
+    minutes = (time_difference.seconds % 3600) // 60
     minutes = round(minutes)
-
     result = ""
     if days > 1:
-        result += '{} days, '.format(days)
+        result += '{} days'.format(days)
     elif days > 0:
-        result += '{} day, '.format(days)
+        result += '{} day'.format(days)
+    if days > 0:
+        if hours > 0 and minutes > 0:
+            result += ', '
+        elif (hours > 0) ^ (minutes > 0):
+            result += ' and '
+        else:
+            result += ' '
 
     if hours > 1:
-        result += '{} hours, '.format(hours)
+        result += '{} hours'.format(hours)
     elif hours > 0:
-        result += '{} hour, '.format(hours)
+        result += '{} hour'.format(hours)
+    if hours > 0:
+        if days > 0 and minutes > 0:
+            result += ', and '
+        elif minutes > 0:
+            result += ' and '
+        else:
+            result += ' '
 
+    if days == 0 and hours == 0:
+        result += 'Approximately '
     if minutes > 1:
-        result += '{} minutes, '.format(minutes)
+        result += '{} minutes '.format(minutes)
     elif minutes > 0:
-        result += '{} minute, '.format(minutes)
+        result += '{} minute '.format(minutes)
+
+    if days == 0 and hours == 0 and minutes == 0:
+        result = 'Less than 60 seconds '
     result += 'until submissions close.'
 
     # a very serious feature
-    if random.random() <= (1/10000):
+    if random.random() <= (1 / 10000):
         result = "longer than yours *lmao*"
 
     await context.send(result)
@@ -591,18 +624,20 @@ async def myresults(context: commands.Context) -> None:
 async def closevoting(context: commands.Context) -> None:
     week = compo.get_week(False)
     week["votingOpen"] = False
-    
+
     await context.send("Voting for the current week is now closed.")
     compo.save_weeks()
+
 
 @client.command()
 @commands.check(is_admin)
 async def openvoting(context: commands.Context) -> None:
     week = compo.get_week(False)
     week["votingOpen"] = True
-    
+
     await context.send("Voting for the current week is now open.")
     compo.save_weeks()
+
 
 @client.command()
 async def crudbroke(context: commands.Context) -> None:
