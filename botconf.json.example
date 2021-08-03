@@ -12,5 +12,7 @@
         "https://soundcloud.com/",
         "https://clyp.it/"
     ],
-    "timezone_offset": 0
+    "timezone_offset": 0,
+    "deadline_time_offset": "00:00",
+    "deadline_weekday": 4,
 }
