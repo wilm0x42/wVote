@@ -211,7 +211,7 @@
 					return true;
 				},
 				mp3LinkError() {
-					if (this.mp3Link === '') {
+					if (this.mp3Link === '' || this.mp3Link === null) {
 						return "Link can't be empty.";
 					}
 
