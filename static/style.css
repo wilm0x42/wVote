@@ -311,6 +311,10 @@ button:hover
 	text-align: center;
 }
 
+.submit-babble
+{
+	text-align: center;
+}
 
 .tooltip {
 	display: block !important;
