@@ -19,7 +19,10 @@
 		<div v-if="mode === null">Loading...</div>
 		<div v-else-if="mode === 'vote'">
 			<div v-show="working">
-				PUT A SPINNER HERE OR SOMETHING I'M LAZY
+				<div class="progress-img">
+					<img src="/static/kirb_phone.gif" />
+					<p>I'm taking good care of things, hold on!</p>
+				</div>
 			</div>
 			<transition name="entry-list-toggle">
 				<div class="entries-container" v-show="showEntryList">
