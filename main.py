@@ -19,7 +19,6 @@ def load_config() -> dict:
     channel updates should be posted in, the bot key used to log in with
     discord.py, and which IDs are treated as admins.
     """
-
     config = json.load(open("botconf.json", "r"))
 
     logging.info("MAIN: Loaded bot.conf")
