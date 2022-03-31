@@ -20,7 +20,7 @@ client = commands.Bot(description="Musical Voting Platform",
                       command_prefix=[],
                       case_insensitive=True,
                       help_command=None)
-config = None
+config = {}
 
 
 async def start(_config):
@@ -135,29 +135,29 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
                 "head on over to " + config["url_prefix"]) + "\n"
 
     if not full:
-        msg += "Send `" + client.command_prefix[
-            0] + "help` to see all available "
+        msg += (f"Send `{client.command_prefix[0]}" +
+                "help` to see all available ")
         msg += "commands."
     else:
         msg += "\nI understand the following commands: \n"
 
         for command in commands:
-            msg += "`" + client.command_prefix[0] + command + "`: "
+            msg += f"`{client.command_prefix[0]}{command}`: "
             msg += client.get_command(command).short_doc + "\n"
 
         if is_admin:
             msg += "\nAlso since you're an admin, here are some secret commands: \n"
 
             for command in admin_commands:
-                msg += "`" + client.command_prefix[0] + command + "`: "
+                msg += f"`{client.command_prefix[0]}{command}`: "
                 msg += client.get_command(command).short_doc + "\n"
 
         if len(client.command_prefix) > 1:
             msg += "\n"
-            msg += "Besides `" + client.command_prefix[
-                0] + "` I understand the "
+            msg += (f"Besides `{client.command_prefix[0]}" +
+                    "` I understand the ")
             msg += "following prefixes: " + ", ".join(
-                "`" + prefix + "`" for prefix in client.command_prefix[1:])
+                f"`{prefix}`" for prefix in client.command_prefix[1:])
 
     return msg
 
@@ -212,13 +212,21 @@ async def on_ready() -> None:
     Connects/logs in the bot to discord. Also outputs to the console that the
     connection was successful.
     """
-    logging.info("DISCORD: Logged in as %s (ID: %s)" %
-                 (client.user.name, client.user.id))
+    user = client.user
+    if user is None:
+        user_name = None
+        user_id = None
+    else:
+        user_name = user.name
+        user_id = user.id
+    logging.info(
+        f"DISCORD: Logged in as {user_name} (ID: {user_id})")
+
     logging.info("DISCORD: Connected to %d servers, and %d users" %
                  (len(client.guilds), len(set(client.get_all_members()))))
     logging.info(("DISCORD: Invite link: "
                   "https://discordapp.com/oauth2/authorize?client_id="
-                  "%d&scope=bot&permissions=335936592" % client.user.id))
+                  f"{user_id}&scope=bot&permissions=335936592"))
     activity = discord.Game(name="Preventing Voter Fraud")
     return await client.change_presence(activity=activity)
 
@@ -270,6 +278,7 @@ def is_postentries_channel():
     proper channel.
     Throws `WrongChannelError` on failure.
     """
+
     def predicate(context: commands.Context):
         if context.channel.id == config.get("postentries_channel"):
             return True

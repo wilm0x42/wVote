@@ -7,7 +7,6 @@ import statistics
 from typing import Optional
 import pickle
 
-
 current_week = None
 next_week = None
 
@@ -22,23 +21,21 @@ def blank_week() -> dict:
         "votes": [],
         "voteParams": ["prompt", "score", "overall"],
         "helpTipDefs": {
-            "prompt":{
+            "prompt": {
                 "1": "1 - Blatantly breaks rules",
                 "2": "2 - Not really in the spirit of things",
                 "3": "3 - Fits fine as far as I'm concerned!",
                 "4": "4 - Exemplary interpretation!",
                 "5": "5 - Incredibly creative!",
             },
-            "score":
-            {
+            "score": {
                 "1": "1 - Not useful",
                 "2": "2 - Some important issues",
                 "3": "3 - Not bad!",
                 "4": "4 - Looks very nice!",
                 "5": "5 - Beautiful!",
             },
-            "overall":
-            {
+            "overall": {
                 "1": "1 - Just not for me",
                 "2": "2 - It's got potential",
                 "3": "3 - I like this!",
@@ -85,10 +82,7 @@ def get_week(get_next_week: bool) -> dict:
         except FileNotFoundError:
             next_week = blank_week()
 
-    if get_next_week:
-        return next_week
-    else:
-        return current_week
+    return next_week if get_next_week else current_week
 
 
 def save_weeks() -> None:
@@ -99,7 +93,8 @@ def save_weeks() -> None:
     if current_week is not None and next_week is not None:
         pickle.dump(current_week, open("weeks/current-week.pickle", "wb"))
         pickle.dump(next_week, open("weeks/next-week.pickle", "wb"))
-        logging.info("COMPO: current-week.pickle and next-week.pickle overwritten")
+        logging.info(
+            "COMPO: current-week.pickle and next-week.pickle overwritten")
 
 
 def move_to_next_week() -> None:
@@ -121,8 +116,7 @@ def move_to_next_week() -> None:
     save_weeks()
 
 
-def create_blank_entry(entrant_name: str,
-                       discord_id: int) -> dict:
+def create_blank_entry(entrant_name: str, discord_id: int) -> dict:
     """
     Create a blank entry for an entrant and returns a UUID
 
@@ -138,14 +132,12 @@ def create_blank_entry(entrant_name: str,
     str
         A randomly generated UUID
     """
-    entry = {
+    return {
         "entryName": "",
         "entrantName": entrant_name,
         "discordID": discord_id,
         "uuid": str(uuid.uuid4())
     }
-
-    return entry
 
 
 def find_entry_by_uuid(uuid: str) -> Optional[dict]:
@@ -168,15 +160,10 @@ def entry_valid(entry: dict) -> bool:
         "entrantName",
     ]
 
-    for requirement in requirements:
-        if requirement not in entry:
-            return False
+    if any(requirement not in entry for requirement in requirements):
+        return False
 
-    for param in ["mp3", "pdf"]:
-        if entry[param] is None:
-            return False
-
-    return True
+    return all(entry[param] is not None for param in ["mp3", "pdf"])
 
 
 def count_valid_entries(week: dict) -> int:
@@ -205,13 +192,13 @@ def verify_votes(week: dict) -> None:
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
         for r in v["ratings"]:
-            if 0 <= r["rating"] <= 5 \
-                and r["voteParam"] in week["voteParams"] \
-                and not (v["userID"], r["entryUUID"], r["voteParam"]) in userVotes:
+            if (0 <= r["rating"] <= 5 and r["voteParam"] in week["voteParams"]
+                    and (v["userID"], r["entryUUID"], r["voteParam"])
+                    not in userVotes):
                 userVotes.add((v["userID"], r["entryUUID"], r["voteParam"]))
             else:
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
-                logging.warning("Sus rating: " + str(r))
+                logging.warning(f"Sus rating: {str(r)}")
                 v["ratings"].remove(r)
 
 
@@ -224,7 +211,7 @@ def normalize_votes(votes: list) -> dict:
     for v in votes:
         valid_ratings = [r for r in v["ratings"] if r["rating"] != 0]
 
-        if len(valid_ratings) == 0:
+        if not valid_ratings:
             # The user cleared all votes
             continue
 
@@ -240,7 +227,8 @@ def normalize_votes(votes: list) -> dict:
             else:
                 normalized = (float(r["rating"]) - minimum) / extent * 4 + 1
 
-            scores.setdefault(r["entryUUID"], []).append((normalized, r["voteParam"]))
+            scores.setdefault(r["entryUUID"], []).append(
+                (normalized, r["voteParam"]))
 
     return scores
 
@@ -248,13 +236,9 @@ def normalize_votes(votes: list) -> dict:
 def get_ranked_entrant_list(week: dict) -> list:
     """Bloc STAR Voting wooooo"""
 
-    param_weights = {
-        "prompt": 0.33,
-        "score": 0.33,
-        "overall": 0.33
-    }
+    param_weights = {"prompt": 0.33, "score": 0.33, "overall": 0.33}
 
-    if len(week["entries"]) < 1: # lol no one submitted
+    if len(week["entries"]) < 1:  # lol no one submitted
         return []
 
     verify_votes(week)
@@ -267,12 +251,15 @@ def get_ranked_entrant_list(week: dict) -> list:
     # Write final scores to entry data, and put 'em all in entry_pool
     for e in week["entries"]:
         if entry_valid(e):
-            e["voteScore"] = statistics.mean(score[0] for score in scores.get(e["uuid"], [(0, None)]))
+            e["voteScore"] = statistics.mean(
+                score[0] for score in scores.get(e["uuid"], [(0, None)]))
             entry_pool.append(e)
 
     # Now that we have scores calculated, run the actual STAR algorithm
     while len(entry_pool) > 1:
-        entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"], reverse=True)
+        entry_pool = sorted(entry_pool,
+                            key=lambda e: e["voteScore"],
+                            reverse=True)
 
         entryA = entry_pool[0]
         entryB = entry_pool[1]
@@ -282,8 +269,12 @@ def get_ranked_entrant_list(week: dict) -> list:
 
         for v in week["votes"]:
             # note that normalization doesn't matter for comparing preference
-            scoreA = sum(r["rating"] * param_weights[r["voteParam"]] for r in v["ratings"] if r["entryUUID"] == entryA["uuid"])
-            scoreB = sum(r["rating"] * param_weights[r["voteParam"]] for r in v["ratings"] if r["entryUUID"] == entryB["uuid"])
+            scoreA = sum(r["rating"] * param_weights[r["voteParam"]]
+                         for r in v["ratings"]
+                         if r["entryUUID"] == entryA["uuid"])
+            scoreB = sum(r["rating"] * param_weights[r["voteParam"]]
+                         for r in v["ratings"]
+                         if r["entryUUID"] == entryB["uuid"])
 
             if scoreA > scoreB:
                 preferEntryA += 1
@@ -309,8 +300,7 @@ def get_ranked_entrant_list(week: dict) -> list:
 def fetch_votes_for_entry(votes: list, entry_uuid: str) -> list:
     """List all non-zero votes for an entry"""
 
-    return [r
-            for v in votes
-            for r in v["ratings"]
-            if r["rating"] != 0
-            and r["entryUUID"] == entry_uuid]
+    return [
+        r for v in votes for r in v["ratings"]
+        if r["rating"] != 0 and r["entryUUID"] == entry_uuid
+    ]

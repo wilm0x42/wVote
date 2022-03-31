@@ -5,30 +5,28 @@ import string
 edit_keys = {
     # "a1b2c3d4":
     # {
-    # 	"entryUUID": "cf56f9c3-e81f-43b0-b16b-de2144b54b02",
-    # 	"creationTime": datetime.datetime.now(),
-    # 	"timeToLive": 200
+    #   "entryUUID": "cf56f9c3-e81f-43b0-b16b-de2144b54b02",
+    #   "creationTime": datetime.datetime.now(),
+    #   "timeToLive": 200
     # }
 }
-
 
 admin_keys = {
     # "a1b2c3d4":
     # {
-    # 	"creationTime": datetime.datetime.now(),
-    # 	"timeToLive": 200
+    #   "creationTime": datetime.datetime.now(),
+    #   "timeToLive": 200
     # }
 }
 
-
 vote_keys = {
-    #"a1b2c3d4":
-    #{
+    # "a1b2c3d4":
+    # {
     #  "userID": 336685325231325184,
     #  "userName": "wilm0x42",
     #  "creationTime": datetime.datetime.now(),
     #  "timeToLive": 200
-    #}
+    # }
 }
 
 
@@ -41,16 +39,14 @@ def key_valid(key: str, keystore: dict) -> bool:
 
     if now - keystore[key]["creationTime"] < ttl:
         return True
-    else:
-        del keystore[key]
-        return False
+    del keystore[key]
+    return False
 
 
 def create_key(length: int = 8) -> str:
     key_characters = string.ascii_letters + string.digits
-    key = ''.join(random.SystemRandom().choice(key_characters)
-                  for _ in range(length))
-    return key
+    return ''.join(random.SystemRandom().choice(key_characters)
+                   for _ in range(length))
 
 
 def create_edit_key(entry_uuid: str) -> str:
@@ -75,6 +71,7 @@ def create_admin_key() -> str:
 
     return key
 
+
 def create_vote_key(user_id: int, user_name) -> str:
     key = create_key()
 
@@ -86,6 +83,7 @@ def create_vote_key(user_id: int, user_name) -> str:
     }
 
     return key
+
 
 def configure(_config: dict) -> None:
     global config
