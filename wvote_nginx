@@ -1,12 +1,12 @@
 server
 {
 	listen 443 ssl;
-	server_name 8bitweekly.xyz;	
+	server_name vote.8bmt.xyz;	
 
 	client_max_body_size 50M;
 
-	ssl_certificate /etc/letsencrypt/live/8bitweekly.xyz/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/8bitweekly.xyz/privkey.pem;	
+	ssl_certificate /etc/letsencrypt/live/vote.8bmt.xyz/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/vote.8bmt.xyz/privkey.pem;	
 
 	location /static/
 	{
