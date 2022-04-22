@@ -321,7 +321,12 @@ async def publish_entries(context: commands.Context, week: dict) -> None:
                 if not compo.entry_valid(entry):
                     continue
 
+
                 discord_user = client.get_user(entry["discordID"])
+                # get_user relies on cache, so if it's not cached, let's try to
+                # get it from the API (which should also cache it afaik)
+                if discord_user is None:
+                    discord_user = await client.fetch_user(entry["discordID"])
 
                 if discord_user is None:
                     entrant_ping = "@" + entry["entrantName"]
