@@ -1,6 +1,6 @@
 #!/bin/sh
 
-excludes="--exclude=logs --exclude=botconf.json --exclude=bot.conf --exclude=devAssets --exclude=weeks --exclude=__pycache__ --exclude=upgrade-log.txt"
+excludes="--exclude=logs --exclude=botconf.json --exclude=botconfig.py --exclude=bot.conf --exclude=devAssets --exclude=weeks --exclude=__pycache__ --exclude=upgrade-log.txt"
 
 
 if [ -z "$1" ]; then
