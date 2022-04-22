@@ -5,20 +5,19 @@ from uuid import uuid4
 
 import pytest
 import keys
+from botconfig import Config as config
 
-config = {"default_ttl": 30}
-keys.configure(config)
 
 class TestKeyValid():
     # is it unneccessary to do all the tests with each type of key?
-    # probably... 
-                           # callable to create key, store 4 key, args 4 keygen
-    @pytest.fixture(params=[(keys.create_edit_key, keys.edit_keys, ("spam",)),
+    # probably...
+    # callable to create key, store 4 key, args 4 keygen
+    @pytest.fixture(params=[(keys.create_edit_key, keys.edit_keys, ("spam", )),
                             (keys.create_admin_key, keys.admin_keys, ()),
                             (keys.create_vote_key, keys.vote_keys, (42, "a"))])
     def multi_run(self, request):
         return request
-    
+
     @pytest.fixture()
     def valid_key(self, multi_run):
         key = multi_run.param[0](*multi_run.param[2])
@@ -40,7 +39,7 @@ class TestKeyValid():
 
     def test_key_not_in_store(self, valid_key):
         assert keys.key_valid(valid_key[0], {}) == False
-    
+
     def test_key_expired(self, expired_key):
         assert keys.key_valid(expired_key[0], expired_key[1]) == False
 
@@ -55,29 +54,33 @@ class TestKeyValid():
         assert isinstance(keys.key_valid(valid_key[0], {}), bool)
         assert isinstance(keys.key_valid(expired_key[0], expired_key[1]), bool)
 
+
 class TestCreateKey():
+
     @pytest.mark.parametrize("len", [randint(0, 999) for _ in range(12)])
     def test_key_valid_chars(self, len):
         alphanumeric = ascii_letters + digits
         key = keys.create_key(len)
         assert all(char in alphanumeric for char in key)
-    
+
     @pytest.mark.parametrize("length", [randint(0, 999) for _ in range(12)])
     def test_key_correct_length(self, length):
         key = keys.create_key(length)
         assert len(key) == length
-    
+
     def test_return_str(self):
         assert isinstance(keys.create_key(8), str)
 
+
 class TestCreateEditKey():
+
     @pytest.fixture()
     def edit_key(self):
         uuid = str(uuid4())
         key = keys.create_edit_key(uuid)
         yield key, uuid
         keys.edit_keys.clear()
-    
+
     def test_return_string(self, edit_key):
         assert type(edit_key[0]) is str
 
@@ -101,15 +104,17 @@ class TestCreateEditKey():
         assert before <= keys.edit_keys[key]["creationTime"] <= after
 
     def test_time_to_live(self, edit_key):
-        assert keys.edit_keys[edit_key[0]]["timeToLive"] == config["default_ttl"]
+        assert keys.edit_keys[edit_key[0]]["timeToLive"] == config.default_ttl
+
 
 class TestCreateAdminKey():
+
     @pytest.fixture()
     def admin_key(self):
         key = keys.create_admin_key()
         yield key
         keys.admin_keys.clear()
-    
+
     def test_return_string(self, admin_key):
         assert type(admin_key) is str
 
@@ -129,9 +134,11 @@ class TestCreateAdminKey():
         assert before <= keys.admin_keys[key]["creationTime"] <= after
 
     def test_time_to_live(self, admin_key):
-        assert keys.admin_keys[admin_key]["timeToLive"] == config["default_ttl"]
+        assert keys.admin_keys[admin_key]["timeToLive"] == config.default_ttl
+
 
 class TestCreateVoteKey():
+
     @pytest.fixture()
     def vote_key(self):
         id = 156896959783895040
@@ -139,7 +146,7 @@ class TestCreateVoteKey():
         key = keys.create_vote_key(id, name)
         yield key, id, name
         keys.vote_keys.clear()
-    
+
     def test_return_string(self, vote_key):
         assert type(vote_key[0]) is str
 
@@ -149,7 +156,7 @@ class TestCreateVoteKey():
     def test_key_user_id(self, vote_key):
         assert keys.vote_keys[vote_key[0]]["userID"] == vote_key[1]
 
-    def test_key_user_name(self, vote_key):    
+    def test_key_user_name(self, vote_key):
         assert keys.vote_keys[vote_key[0]]["userName"] == vote_key[2]
 
     @pytest.fixture()
@@ -165,16 +172,4 @@ class TestCreateVoteKey():
         assert before <= keys.vote_keys[key]["creationTime"] <= after
 
     def test_time_to_live(self, vote_key):
-        assert keys.vote_keys[vote_key[0]]["timeToLive"] == config["default_ttl"]
-
-class TestConfigure():
-    @pytest.fixture()
-    def set_config(self):
-        old_config = keys.config
-        new_config = { "this is": "a config", 1: 0 }
-        keys.configure(new_config)
-        yield new_config
-        keys.config = old_config
-
-    def test_configure(self, set_config):
-        assert keys.config == set_config
+        assert keys.vote_keys[vote_key[0]]["timeToLive"] == config.default_ttl

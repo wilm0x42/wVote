@@ -13,6 +13,7 @@ from discord.ext import commands
 
 import compo
 import keys
+from botconfig import Config as config
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",
@@ -20,16 +21,13 @@ client = commands.Bot(description="Musical Voting Platform",
                       command_prefix=[],
                       case_insensitive=True,
                       help_command=None)
-config = {}
 
 
-async def start(_config):
-    global config
+async def start():
 
-    config = _config
-    client.command_prefix = config["command_prefix"]
+    client.command_prefix = config.command_prefix
 
-    await client.start(config["bot_key"])
+    await client.start(config.bot_key)
 
 
 async def notify_admins(msg: str) -> None:
@@ -43,8 +41,10 @@ async def notify_admins(msg: str) -> None:
     """
     global config
 
-    if config.get("notify_admins_channel"):
-        await client.get_channel(config["notify_admins_channel"]).send(msg)
+    if config.notify_admins_channel:
+        admin_channel = client.get_channel(config.notify_admins_channel)
+        if admin_channel is not None:
+            await admin_channel.send(msg)
 
 
 def entry_info_message(entry: dict) -> str:
@@ -58,7 +58,7 @@ def entry_info_message(entry: dict) -> str:
     if "mp3" in entry:
         if entry["mp3Format"] == "mp3":
             entry_message += "MP3: %s/files/%s/%s %d KB\n" \
-                % (config["url_prefix"],
+                % (config.url_prefix,
                    entry["uuid"],
                    urllib.parse.quote(entry["mp3Filename"]),
                    len(entry["mp3"]) / 1000)
@@ -68,7 +68,7 @@ def entry_info_message(entry: dict) -> str:
     # If a score was attached, make note of it in the message
     if "pdf" in entry:
         entry_message += "PDF: %s/files/%s/%s %d KB\n" \
-            % (config["url_prefix"],
+            % (config.url_prefix,
                entry["uuid"],
                urllib.parse.quote(entry["pdfFilename"]),
                len(entry["pdf"]) / 1000)
@@ -132,7 +132,7 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
     else:
         msg += "Submissions for this week's prompt are now closed.\n"
         msg += ("To see the already submitted entries for this week, "
-                "head on over to " + config["url_prefix"]) + "\n"
+                "head on over to " + config.url_prefix) + "\n"
 
     if not full:
         msg += (f"Send `{client.command_prefix[0]}" +
@@ -184,7 +184,7 @@ def expiry_message() -> str:
     """
     global config
 
-    return "\nThis link will expire in %d minutes" % config["default_ttl"]
+    return "\nThis link will expire in %d minutes" % config.default_ttl
 
 
 @client.listen('on_message')
@@ -266,7 +266,7 @@ async def is_admin(context: commands.Context) -> bool:
     """
     global config
 
-    if context.author.id not in config["admins"]:
+    if context.author.id not in config.admins:
         raise IsNotAdminError()
 
     return True
@@ -280,7 +280,7 @@ def is_postentries_channel():
     """
 
     def predicate(context: commands.Context):
-        if context.channel.id == config.get("postentries_channel"):
+        if context.channel.id == config.postentries_channel:
             return True
 
         raise WrongChannelError()
@@ -373,7 +373,7 @@ async def manage(context: commands.Context) -> None:
 
     key = keys.create_admin_key()
 
-    url = "%s/admin/%s" % (config["url_prefix"], key)
+    url = "%s/admin/%s" % (config.url_prefix, key)
     await context.send("Admin interface: " + url + expiry_message())
 
 
@@ -393,7 +393,7 @@ async def submit(context: commands.Context) -> None:
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
             key = keys.create_edit_key(entry["uuid"])
-            url = "%s/edit/%s" % (config["url_prefix"], key)
+            url = "%s/edit/%s" % (config.url_prefix, key)
             edit_info = ("Link to edit your existing "
                          "submission: " + url + expiry_message())
             await context.send(edit_info)
@@ -403,7 +403,7 @@ async def submit(context: commands.Context) -> None:
                                          context.author.id)
     week["entries"].append(new_entry)
     key = keys.create_edit_key(new_entry["uuid"])
-    url = "%s/edit/%s" % (config["url_prefix"], key)
+    url = "%s/edit/%s" % (config.url_prefix, key)
 
     await context.send("Submission form: " + url + expiry_message())
 
@@ -419,7 +419,7 @@ async def vote(context: commands.Context) -> None:
     await context.send("```%s```" % key)
 
     message = "Thank you for voting!\n"
-    message += "This key will expire in %s minutes. " % config["default_ttl"]
+    message += "This key will expire in %s minutes. " % config.default_ttl
     message += "If you need another key, including if you want to revise your "
     message += "vote, you can use this command again to obtain a new one."
 
@@ -465,19 +465,19 @@ async def howlong(context: commands.Context) -> None:
     """
     # This *should* be the timezone offset between where 8bot is hosted and the
     # local timezone where the weeklies are hosted
-    timezone_offset = datetime.timedelta(hours=config["timezone_offset"])
+    timezone_offset = datetime.timedelta(hours=config.timezone_offset)
 
-    # An offset of 15:30 in botconf.json would mean it would close at
+    # An offset of 15:30 in the bot config would mean it would close at
     # 3:30pm Eastern on a given date
     deadline_time_offset = datetime.datetime.strptime(
-        config["deadline_time_offset"], "%H:%M")
+        config.deadline_time_offset, "%H:%M")
     # Any date information is redundant
     deadline_time_offset = deadline_time_offset.time()
 
     today = datetime.date.today()
     # In the config file, monday is 0, tuesday is 1, etc.
     date_offset = datetime.timedelta(
-        (config["deadline_weekday"] - today.weekday()) % 7)
+        (config.deadline_weekday - today.weekday()) % 7)
 
     # If the next friday is not the target date, it should be manually chosen
     # target_date = datetime.date(2020, 12, 25)

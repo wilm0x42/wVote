@@ -34,7 +34,7 @@ class Config:
     http_port: int = 8251
     '''The port to use for the HTTP server'''
 
-    timezone_offset: int = 0
+    timezone_offset: float = 0
     '''I can't remember what's up with this lmao'''
 
     deadline_time_offset: str = "00:00"

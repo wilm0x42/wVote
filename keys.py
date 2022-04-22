@@ -1,6 +1,7 @@
 import random
 import datetime
 import string
+from botconfig import Config as config
 
 edit_keys = {
     # "a1b2c3d4":
@@ -55,7 +56,7 @@ def create_edit_key(entry_uuid: str) -> str:
     edit_keys[key] = {
         "entryUUID": entry_uuid,
         "creationTime": datetime.datetime.now(),
-        "timeToLive": config["default_ttl"]
+        "timeToLive": config.default_ttl
     }
 
     return key
@@ -66,7 +67,7 @@ def create_admin_key() -> str:
 
     admin_keys[key] = {
         "creationTime": datetime.datetime.now(),
-        "timeToLive": config["default_ttl"]
+        "timeToLive": config.default_ttl
     }
 
     return key
@@ -79,12 +80,7 @@ def create_vote_key(user_id: int, user_name) -> str:
         "userID": user_id,
         "userName": user_name,
         "creationTime": datetime.datetime.now(),
-        "timeToLive": config["default_ttl"]
+        "timeToLive": config.default_ttl
     }
 
     return key
-
-
-def configure(_config: dict) -> None:
-    global config
-    config = _config
