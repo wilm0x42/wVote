@@ -5,7 +5,6 @@ import logging.handlers
 
 import asyncio
 
-import keys
 import http_server
 import bot
 
@@ -25,6 +24,6 @@ loop = asyncio.get_event_loop()
 
 
 bot_task = loop.create_task(bot.start())
-http_task = loop.create_task(http_server.start_http(config))
+http_task = loop.create_task(http_server.start_http())
 
 loop.run_forever()
