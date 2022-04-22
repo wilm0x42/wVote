@@ -1,19 +1,19 @@
 from dataclasses import dataclass
-from typing import List
+from collections.abc import Sequence
 
 
 @dataclass
 class Config:
     '''Holds configuration data for 8bot'''
-    command_prefix: List[str] = ["8!"]
+    command_prefix: Sequence[str] = ("8!")
     '''The list of prefixes'''
 
     test_mode: bool = True
     '''Whether the bot is running in test mode'''
 
-    admins: List[int] = [
+    admins: Sequence[int] = (
         # ADD SOME ADMINS
-    ]
+    )
     '''The list of administrators'''
 
     default_ttl: float = 30
@@ -46,8 +46,8 @@ class Config:
     2 is Tuesday, 3 is Wednesday, 4 is Thursday, 5 is Friday, and 6 is Saturday
     '''
 
-    allowed_hosts: List[str] = [
+    allowed_hosts: Sequence[str] = (
         "https://soundcloud.com/",
         "https://clyp.it/"
-    ]
+    )
     '''Links for embedding playback, I'm pretty sure'''
