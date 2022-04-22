@@ -9,3 +9,4 @@
 /logs/*.log
 /logs/*.log.*
 /botconf.json
+/botconfig.py
