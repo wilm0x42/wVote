@@ -8,10 +8,6 @@ import asyncio
 import http_server
 import bot
 
-
-
-
-
 logging.basicConfig(format="%(asctime)s %(message)s",
                     level=logging.INFO,
                     handlers=[
@@ -21,7 +17,6 @@ logging.basicConfig(format="%(asctime)s %(message)s",
                     ])
 
 loop = asyncio.get_event_loop()
-
 
 bot_task = loop.create_task(bot.start())
 http_task = loop.create_task(http_server.start_http())
