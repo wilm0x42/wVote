@@ -242,7 +242,7 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
     discord_id = None
     if "discordId" in entry_data:
         try:
-            discord_id = entry_data["discordId"]
+            discord_id = int(entry_data["discordId"])
         catch ValueError:
             pass
     new_entry = compo.create_blank_entry(entry_data["entrantName"],
