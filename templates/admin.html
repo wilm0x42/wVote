@@ -22,7 +22,8 @@
 		<div v-else>
 			<div class="submit-babble">
 				<p>Welcome to the super-ugly administration interface!</p>
-				<p>For instructions on how to use this, <a href="https://github.com/wilm0x42/wVote/wiki/Admin-Guide">check out our barely-adequate wiki.</a></p>
+				<p>For instructions on how to use this, <a href="https://github.com/wilm0x42/wVote/wiki/Admin-Guide">check out
+						our barely-adequate wiki.</a></p>
 				<p>If you need help, or if something seems amiss, message @wilm0x42, and he'll ii V us back to I.</p>
 			</div>
 			<div class="admin-progress-img" v-show="working">
@@ -32,10 +33,12 @@
 				<!-- TODO: Style -->
 				<div id="weeks">
 					<p>
-						<label>Theme/title of current week <input class="admin-week-text-param" type="text" v-model="weeks[0].theme" /></label>
+						<label>Theme/title of current week <input class="admin-week-text-param" type="text"
+								v-model="weeks[0].theme" /></label>
 					</p>
 					<p>
-						<label>Date of current week <input class="admin-week-text-param" type="text" v-model="weeks[0].date" /></label>
+						<label>Date of current week <input class="admin-week-text-param" type="text"
+								v-model="weeks[0].date" /></label>
 					</p>
 					<p>Voting is currently {{ votingOpen ? "OPEN" : "CLOSED" }}</p>
 					<p>
@@ -49,7 +52,8 @@
 					<hr />
 
 					<p>
-						<label>Theme/title of next week <input class="admin-week-text-param" type="text" v-model="weeks[1].theme" /></label>
+						<label>Theme/title of next week <input class="admin-week-text-param" type="text"
+								v-model="weeks[1].theme" /></label>
 					</p>
 					<p>
 						<label>Date of next week <input class="admin-week-text-param" type="text" v-model="weeks[1].date" /></label>
@@ -57,10 +61,10 @@
 					<p>Submissions are currently {{ submissionsOpen ? "OPEN" : "CLOSED" }}</p>
 					<p>
 						<label>Submissions Open:</label>
-						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
-								:value="true" /> Yes</label>
-						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen"
-								:value="false" /> No</label>
+						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen" :value="true" />
+							Yes</label>
+						<label><input type="radio" name="submissionsOpen" v-model="weeks[1].submissionsOpen" :value="false" />
+							No</label>
 					</p>
 
 					<hr />
@@ -79,12 +83,12 @@
 				</div>
 
 				<div id="createEntry">
-					<p><label for='newEntryEntrant'>Spoofed entrant name</label><input type='text'
-							name='newEntryEntrant' v-model='spoofedEntry.entrantName'></p>
+					<p><label for='newEntryEntrant'>Spoofed entrant name</label><input type='text' name='newEntryEntrant'
+							v-model='spoofedEntry.entrantName'></p>
 					<p><label for='newEntryDiscordID'>(Optional) Spoofed entrant discord ID</label><input type='text'
 							name='newEntryDiscordID' v-model='spoofedEntry.discordId'></p>
-					<p><label for='newEntryWeek'>Place entry in current week instead of next week?</label><input
-							type='checkbox' name='newEntryWeek' v-model='spoofedEntry.placeInCurrentWeek'></p>
+					<p><label for='newEntryWeek'>Place entry in current week instead of next week?</label><input type='checkbox'
+							name='newEntryWeek' v-model='spoofedEntry.placeInCurrentWeek'></p>
 					<p><button type='submit' @click="spoof">Spoof</button></p>
 				</div>
 			</div>
@@ -93,15 +97,17 @@
 
 			<div class="entry-list">
 				<div>
-					<Entry v-for="entry in weeks[1].entries" :key="entry.uuid" :entry="entry" :next-week="true" @editedentry="updateWeeks" />
+					<Entry v-for="entry in weeks[1].entries" :key="entry.uuid" :entry="entry" :next-week="true"
+						@editedentry="updateWeeks" />
 				</div>
 				<div>
-					<Entry v-for="entry in weeks[0].entries" :key="entry.uuid" :entry="entry" :next-week="false" @editedentry="updateWeeks" />
+					<Entry v-for="entry in weeks[0].entries" :key="entry.uuid" :entry="entry" :next-week="false"
+						@editedentry="updateWeeks" />
 				</div>
 			</div>
 
 			<div class="vote-list">
-				<div v-for="vote in votes" class="vote-data">
+				<div v-for="vote in votes" :key="vote.userID" class="vote-data">
 					<a :href="'/admin/viewvote/' + authKey + '/' + vote.userID.toString()">Vote from {{ vote.userName }}</a>
 					<button @click="deleteVote(vote)">Delete</button>
 				</div>
@@ -208,11 +214,11 @@
 							formData.append("deleteEntry", "true")
 						} else {
 							if (this.entry.entryName.length === 0) {
-								throw new("Please set an entry name");
+								throw new ("Please set an entry name");
 							}
 
 							if (this.entry.entrantName.length === 0) {
-								throw new("Please set an entry name");
+								throw new ("Please set an entry name");
 							}
 
 							formData.append("entryName", this.entry.entryName);
@@ -256,7 +262,7 @@
 						this.working = false;
 					}
 				},
-				setFile(type, event){
+				setFile(type, event) {
 					let file = event.target.files[0];
 
 					this[type + "File"] = {

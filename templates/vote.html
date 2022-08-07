@@ -38,7 +38,7 @@
 							<th class="entry-table-header">Score Quality</th>
 							<th class="entry-table-header">Overall Rating</th>
 						</tr>
-						<tr v-for="(entry, entryIndex) in entries">
+						<tr v-for="(entry, entryIndex) in entries" :key="entry.uuid">
 							<td class="entry-cell">{{ entry.entrantName }}</td>
 							<td class="entry-cell">{{ entry.entryName }}</td>
 							<td class="entry-cell" :class="{ 'entry-cell-selected': viewedEntryIndex == entryIndex }">
@@ -50,7 +50,7 @@
 								<a :href="entry.mp3Url" target="_blank" style="font-size: 0.7em;">MP3</a>
 								<a :href="entry.pdfUrl" target="_blank" style="font-size: 0.7em;">PDF</a>
 							</td>
-							<td class="entry-cell" v-for="voteParam in voteParams" style="margin: auto; width: 6em;">
+							<td class="entry-cell" v-for="voteParam in voteParams" :key="voteParam" style="margin: auto; width: 6em;">
 								<vote-star-widget :helptipdefs="helpTipDefs[voteParam]" v-model="entries[entryIndex][voteParam]" @input="updateNumEntriesRated">
 								</vote-star-widget>
 							</td>
@@ -121,7 +121,7 @@
 				<td v-if="viewedEntryIndex != null" class="vote-stars-bottom-panel" style="width: 320px;">
 					<table cellpadding='0' class="current-stars">
 						<tr>
-							<td class="entry-cell" style="padding: 2px;" v-for="voteParam in voteParams">
+							<td class="entry-cell" style="padding: 2px;" v-for="voteParam in voteParams" :key="voteParam">
 								<p class="vote-star-bottom-label">{{ voteParam }}</p>
 								<vote-star-widget v-model="entries[viewedEntryIndex][voteParam]" :helptipdefs="helpTipDefs[voteParam]" @input="updateNumEntriesRated">
 								</vote-star-widget>
@@ -160,7 +160,7 @@
 			template:
 				`<table class="vote-star-widget" cellpadding='0'>
 					<tr>
-						<td v-for="starNum in [1, 2, 3, 4, 5]" class="vote-star-cell">
+						<td v-for="starNum in [1, 2, 3, 4, 5]" :key="starNum" class="vote-star-cell">
 							<span v-tooltip="helptipdefs[starNum]">
 
 						        
