@@ -6,11 +6,10 @@ from typing import Dict
 
 from aiohttp import web, web_request
 
-import compo
-import keys
-import bot
-
-from botconfig import Config as config
+from wvote import compo
+from wvote import keys
+from wvote import bot
+from wvote.botconfig import Config as config
 
 # TODO: replace [VUE-URL] ASAP?
 vote_template = open("templates/vote.html", "r").read()
@@ -51,8 +50,9 @@ async def favicon_handler(request: web_request.Request) -> web.Response:
 
 async def week_files_handler(request: web_request.Request) -> web.Response:
     """Download the requested file for an entry"""
-    data, content_type = compo.get_entry_file(request.match_info["uuid"],
-                                              request.match_info["filename"])
+    data, content_type = compo.get_entry_file(
+        request.match_info["uuid"], request.match_info["filename"]
+    )
 
     if not data:
         return web.Response(status=404, text="File not found")
@@ -107,8 +107,7 @@ async def get_entry_handler(request: web_request.Request) -> web.Response:
     auth_key = request.match_info["authKey"]
 
     if not compo.get_week(True)["submissionsOpen"]:
-        return web.Response(status=400,
-                            text="Submissions are currently closed!")
+        return web.Response(status=400, text="Submissions are currently closed!")
 
     if not keys.key_valid(auth_key, keys.edit_keys):
         return web.Response(status=401, text="Invalid or expired link")
@@ -123,9 +122,9 @@ async def get_entry_handler(request: web_request.Request) -> web.Response:
 async def admin_get_data_handler(request: web_request.Request) -> web.Response:
     """Display admin data:
 
-       - Week information
-       - Submissions
-       - Votes
+    - Week information
+    - Submissions
+    - Votes
     """
     auth_key = request.match_info["authKey"]
 
@@ -165,15 +164,14 @@ async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
 
     for v in week["votes"]:
         if int(v["userID"]) == int(user_id):
-            return web.Response(status=200,
-                                body=json.dumps(v),
-                                content_type="application/json")
+            return web.Response(
+                status=200, body=json.dumps(v), content_type="application/json"
+            )
 
     return web.Response(status=404, text="File not found")
 
 
-async def admin_deletevote_handler(
-        request: web_request.Request) -> web.Response:
+async def admin_deletevote_handler(request: web_request.Request) -> web.Response:
     """Delete every vote from an user"""
     auth_key = request.match_info["authKey"]
     user_id = request.match_info["userID"]
@@ -182,9 +180,7 @@ async def admin_deletevote_handler(
         return web.Response(status=401, text="Invalid or expired admin link")
 
     week = compo.get_week(False)
-    week["votes"] = [
-        vote for vote in week["votes"] if vote["userID"] != user_id
-    ]
+    week["votes"] = [vote for vote in week["votes"] if vote["userID"] != user_id]
 
     compo.save_weeks()
 
@@ -230,7 +226,7 @@ async def admin_archive_handler(request: web_request.Request) -> web.Response:
 async def admin_spoof_handler(request: web_request.Request) -> web.Response:
     """Create a fake new entry
 
-       TODO: Take in more data?
+    TODO: Take in more data?
     """
     auth_key = request.match_info["authKey"]
 
@@ -239,8 +235,9 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
 
     entry_data = await request.json()
 
-    new_entry = compo.create_blank_entry(entry_data["entrantName"],
-                                         int(entry_data["discordId"]))
+    new_entry = compo.create_blank_entry(
+        entry_data["entrantName"], int(entry_data["discordId"])
+    )
     week = compo.get_week(entry_data["nextWeek"])
     week["entries"].append(new_entry)
 
@@ -249,16 +246,18 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
 
 async def file_post_handler(request: web_request.Request) -> web.Response:
     """Handle user submission.
-       If user was an admin, mark entry as meddled with.
+    If user was an admin, mark entry as meddled with.
 
-       This takes multipart/form-encoding because of large files
+    This takes multipart/form-encoding because of large files
     """
     auth_key = request.match_info["authKey"]
     uuid = request.match_info["uuid"]
 
-    is_authorized_user = (keys.key_valid(auth_key, keys.edit_keys)
-                          and keys.edit_keys[auth_key]["entryUUID"] == uuid
-                          and compo.get_week(True)["submissionsOpen"])
+    is_authorized_user = (
+        keys.key_valid(auth_key, keys.edit_keys)
+        and keys.edit_keys[auth_key]["entryUUID"] == uuid
+        and compo.get_week(True)["submissionsOpen"]
+    )
 
     is_admin = keys.key_valid(auth_key, keys.admin_keys)
     is_authorized = is_authorized_user or is_admin
@@ -276,8 +275,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                 break
 
     if choice is None:
-        return web.Response(status=404,
-                            text="That entry doesn't seem to exist")
+        return web.Response(status=404, text="That entry doesn't seem to exist")
 
     week, entryIndex, entry = choice
 
@@ -289,30 +287,26 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
     async for field in reader:
         if is_admin:
             if field.name == "entrantName":
-                entry["entrantName"] = \
-                    (await field.read(decode=True)).decode("utf-8")
+                entry["entrantName"] = (await field.read(decode=True)).decode("utf-8")
             elif field.name == "entryNotes":
-                entry["entryNotes"] = \
-                    (await field.read(decode=True)).decode("utf-8")
+                entry["entryNotes"] = (await field.read(decode=True)).decode("utf-8")
                 if entry["entryNotes"] == "undefined":
                     entry["entryNotes"] = ""
             elif field.name == "deleteEntry":
                 week["entries"].remove(entry)
                 compo.save_weeks()
-                return web.Response(status=200,
-                                    text="Entry successfully deleted.")
+                return web.Response(status=200, text="Entry successfully deleted.")
 
         if field.name == "entryName":
-            entry["entryName"] = \
-                (await field.read(decode=True)).decode("utf-8")
+            entry["entryName"] = (await field.read(decode=True)).decode("utf-8")
         elif field.name == "mp3Link":
             url = (await field.read(decode=True)).decode("utf-8")
             if len(url) > 1:
-                if not any(
-                        url.startswith(host) for host in config.allowed_hosts):
+                if not any(url.startswith(host) for host in config.allowed_hosts):
                     return web.Response(
                         status=400,
-                        text="You entered a link to a website we don't allow.")
+                        text="You entered a link to a website we don't allow.",
+                    )
 
                 entry["mp3"] = url
                 entry["mp3Format"] = "external"
@@ -389,8 +383,7 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
     # Remove the user's vote on their own entry (Search by UUID to prevent name spoofing).
     if user_entry is not None:
         user_votes = [
-            vote for vote in user_votes
-            if vote["entryUUID"] != user_entry["uuid"]
+            vote for vote in user_votes if vote["entryUUID"] != user_entry["uuid"]
         ]
 
         # Find the user's highest rating
@@ -398,18 +391,16 @@ async def submit_vote_handler(request: web_request.Request) -> web.Response:
 
         # Grant the user rating equal to their highest vote on each category
         for param in week["voteParams"]:
-            user_votes.append({
-                "entryUUID": user_entry["uuid"],
-                "voteForName": user_name,
-                "voteParam": param,
-                "rating": max_vote
-            })
+            user_votes.append(
+                {
+                    "entryUUID": user_entry["uuid"],
+                    "voteForName": user_name,
+                    "voteParam": param,
+                    "rating": max_vote,
+                }
+            )
 
-    vote_data = {
-        "ratings": user_votes,
-        "userID": user_id,
-        "userName": user_name
-    }
+    vote_data = {"ratings": user_votes, "userID": user_id, "userName": user_name}
 
     week["votes"].append(vote_data)
 
@@ -449,8 +440,7 @@ def format_week(week: dict, is_admin: bool) -> dict:
             prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":
-            prunedEntry["mp3Url"] = "/files/%s/%s" % (e["uuid"],
-                                                      e["mp3Filename"])
+            prunedEntry["mp3Url"] = "/files/%s/%s" % (e["uuid"], e["mp3Filename"])
         else:
             prunedEntry["mp3Url"] = e.get("mp3")
 
@@ -507,42 +497,44 @@ def get_editable_entry(entry: dict) -> dict:
     }
 
     if entry.get("mp3Format") == "mp3":
-        entry_data["mp3Url"] = "/files/%s/%s" % (entry["uuid"],
-                                                 entry["mp3Filename"])
+        entry_data["mp3Url"] = "/files/%s/%s" % (entry["uuid"], entry["mp3Filename"])
     else:
         entry_data["mp3Url"] = entry.get("mp3")
 
     if entry.get("pdfFilename") is not None:
-        entry_data["pdfUrl"] = "/files/%s/%s" % (entry["uuid"],
-                                                 entry.get("pdfFilename"))
+        entry_data["pdfUrl"] = "/files/%s/%s" % (
+            entry["uuid"],
+            entry.get("pdfFilename"),
+        )
 
     return entry_data
 
 
 server = web.Application()
 
-server.add_routes([
-    web.get("/", vote_handler),
-    web.get("/favicon.ico", favicon_handler),
-    web.get("/files/{uuid}/{filename}", week_files_handler),
-    web.get("/edit/{authKey}", edit_handler),
-    web.get("/entry_data", get_entries_handler),
-    web.get("/entry_data/{authKey}", get_entry_handler),
-    web.get("/allowed_hosts", allowed_hosts_handler),
-    web.get("/admin/{authKey}", admin_handler),
-    web.get("/admin/get_admin_data/{authKey}", admin_get_data_handler),
-    web.get("/admin/get_preview_data/{authKey}", admin_preview_handler),
-    web.get("/admin/preview/{authKey}", vote_handler),
-    web.get("/admin/viewvote/{authKey}/{userID}", admin_viewvote_handler),
-    web.post("/admin/edit/{authKey}", admin_control_handler),
-    web.post("/admin/archive/{authKey}", admin_archive_handler),
-    web.post("/admin/spoof/{authKey}", admin_spoof_handler),
-    web.post("/admin/delete_vote/{authKey}/{userID}",
-             admin_deletevote_handler),
-    web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
-    web.post("/submit_vote", submit_vote_handler),
-    web.static("/static", "static")
-])
+server.add_routes(
+    [
+        web.get("/", vote_handler),
+        web.get("/favicon.ico", favicon_handler),
+        web.get("/files/{uuid}/{filename}", week_files_handler),
+        web.get("/edit/{authKey}", edit_handler),
+        web.get("/entry_data", get_entries_handler),
+        web.get("/entry_data/{authKey}", get_entry_handler),
+        web.get("/allowed_hosts", allowed_hosts_handler),
+        web.get("/admin/{authKey}", admin_handler),
+        web.get("/admin/get_admin_data/{authKey}", admin_get_data_handler),
+        web.get("/admin/get_preview_data/{authKey}", admin_preview_handler),
+        web.get("/admin/preview/{authKey}", vote_handler),
+        web.get("/admin/viewvote/{authKey}/{userID}", admin_viewvote_handler),
+        web.post("/admin/edit/{authKey}", admin_control_handler),
+        web.post("/admin/archive/{authKey}", admin_archive_handler),
+        web.post("/admin/spoof/{authKey}", admin_spoof_handler),
+        web.post("/admin/delete_vote/{authKey}/{userID}", admin_deletevote_handler),
+        web.post("/edit/post/{uuid}/{authKey}", file_post_handler),
+        web.post("/submit_vote", submit_vote_handler),
+        web.static("/static", "static"),
+    ]
+)
 
 
 async def start_http() -> None:

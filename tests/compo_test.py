@@ -1,5 +1,7 @@
-import compo
+import pytest
 import uuid
+
+from wvote import compo
 
 class TestCreateBlankEntry:
     def test_create_blank_entry_returns_string(self):
@@ -51,8 +53,8 @@ class TestEntryValid:
 
 class TestLoadWeeks:
     def mock_pickle(self, mocker):
-        mocker.patch("compo.pickle.load")
-        mocker.patch("compo.open")
+        mocker.patch("wvote.compo.pickle.load")
+        mocker.patch("wvote.compo.open")
 
     def test_will_load_if_week_is_none(self, mocker):
         self.mock_pickle(mocker)
@@ -81,8 +83,8 @@ class TestLoadWeeks:
 
 class TestSaveWeeks:
     def mock_pickle(self, mocker):
-        mocker.patch("compo.pickle.dump", return_value=None)
-        mocker.patch("compo.open")
+        mocker.patch("wvote.compo.pickle.dump", return_value=None)
+        mocker.patch("wvote.compo.open")
 
     def test_valid_write(self, mocker):
         self.mock_pickle(mocker)
@@ -117,8 +119,8 @@ class TestSaveWeeks:
 
 class TestMoveWeeks:
     def mock_pickle(self, mocker):
-        mocker.patch("compo.pickle.dump", return_value=None)
-        mocker.patch("compo.open")
+        mocker.patch("wvote.compo.pickle.dump", return_value=None)
+        mocker.patch("wvote.compo.open")
 
 
     def test_move_weeks_dumps(self, mocker):
