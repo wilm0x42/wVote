@@ -5,8 +5,8 @@ import logging.handlers
 
 import asyncio
 
-import http_server
-import bot
+from wvote import http_server
+from wvote import bot
 
 logging.basicConfig(format="%(asctime)s %(message)s",
                     level=logging.INFO,

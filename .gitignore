@@ -1,5 +1,5 @@
-/__pycache__
-/tests/__pycache__
+__pycache__/
+.pytest_cache/
 /bot.conf
 /weeks/*.pickle
 /weeks/archive/*.pickle
@@ -9,4 +9,4 @@
 /logs/*.log
 /logs/*.log.*
 /botconf.json
-/botconfig.py
+botconfig.py

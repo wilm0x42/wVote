@@ -4,7 +4,7 @@ Description=wVote
 [Service]
 Type=simple
 WorkingDirectory=/opt/wVote/
-ExecStart=/usr/bin/nohup /usr/bin/python3 /opt/wVote/main.py
+ExecStart=/usr/bin/nohup /usr/bin/python3 -m wvote.main
 KillSignal=SIGINT
 SuccessExitStatus=SIGINT
 RemainAfterExit=no

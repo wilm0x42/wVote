@@ -1,11 +1,12 @@
+import pytest
+
 from datetime import datetime, timedelta
 from random import randint
 from string import ascii_letters, digits
 from uuid import uuid4
 
-import pytest
-import keys
-from botconfig import Config as config
+from wvote import keys
+from wvote.botconfig import Config as config
 
 
 class TestKeyValid():

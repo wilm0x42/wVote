@@ -1,7 +1,7 @@
 import random
 import datetime
 import string
-from botconfig import Config as config
+from wvote.botconfig import Config as config
 
 edit_keys = {
     # "a1b2c3d4":
