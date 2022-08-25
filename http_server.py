@@ -10,7 +10,7 @@ import compo
 import keys
 import bot
 
-from botconfig import Config as config
+from config import config
 
 # TODO: replace [VUE-URL] ASAP?
 vote_template = open("templates/vote.html", "r").read()

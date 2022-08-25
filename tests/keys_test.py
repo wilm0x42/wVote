@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 import keys
-from botconfig import Config as config
+from config import Config as config
 
 
 class TestKeyValid():

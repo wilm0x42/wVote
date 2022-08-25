@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import asyncio
 import io
 import urllib.parse
 import logging
@@ -13,7 +12,7 @@ from discord.ext import commands
 
 import compo
 import keys
-from botconfig import Config as config
+from config import config
 
 dm_reminder = "_Ahem._ DM me to use this command."
 client = commands.Bot(description="Musical Voting Platform",

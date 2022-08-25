@@ -1,7 +1,7 @@
 import random
 import datetime
 import string
-from botconfig import Config as config
+from config import config
 
 edit_keys = {
     # "a1b2c3d4":
