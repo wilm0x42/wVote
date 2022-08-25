@@ -239,8 +239,14 @@ async def admin_spoof_handler(request: web_request.Request) -> web.Response:
 
     entry_data = await request.json()
 
+    discord_id = None
+    if "discordId" in entry_data:
+        try:
+            discord_id = int(entry_data["discordId"])
+        except ValueError:
+            pass
     new_entry = compo.create_blank_entry(entry_data["entrantName"],
-                                         int(entry_data["discordId"]))
+                                         discord_id)
     week = compo.get_week(entry_data["nextWeek"])
     week["entries"].append(new_entry)
 
