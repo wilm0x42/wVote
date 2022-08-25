@@ -545,11 +545,13 @@ async def howlong(context: commands.Context) -> None:
 
 @client.command()
 async def help(context: commands.Context) -> None:
-    try:
-        await is_admin(context)
-        admin_context = True
-    except IsNotAdminError:
-        admin_context = False
+    admin_context = False
+    if isinstance(context.channel, discord.DMChannel):
+        try:
+            await is_admin(context)
+            admin_context = True
+        except IsNotAdminError:
+            pass
 
     await context.send(help_message(True, admin_context))
 
