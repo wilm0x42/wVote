@@ -16,7 +16,7 @@ logging.basicConfig(format="%(asctime)s %(message)s",
                         logging.StreamHandler()
                     ])
 
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 
 bot_task = loop.create_task(bot.start())
 http_task = loop.create_task(http_server.start_http())

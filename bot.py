@@ -15,11 +15,19 @@ import keys
 from config import config
 
 dm_reminder = "_Ahem._ DM me to use this command."
+
+intents = discord.Intents.default()
+intents.messages = True
+intents.emojis = True
+intents.members = True
+intents.message_content = True
+
 client = commands.Bot(description="Musical Voting Platform",
                       pm_help=False,
                       command_prefix=[],
                       case_insensitive=True,
-                      help_command=None)
+                      help_command=None,
+                      intents=intents)
 
 
 async def start():
