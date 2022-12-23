@@ -53,5 +53,7 @@ try:
     from botconfig import Config as cfg 
 
     config = Config(*cfg().__dict__)
-except ImportError:
+except ImportError as e:
+    print(f"Error loading bot config: {e}")
+    print("WARNING: Loading default bot config as fallback; this likely will cause problems with discord.py")
     config = Config()
