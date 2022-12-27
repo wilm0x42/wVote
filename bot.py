@@ -125,7 +125,7 @@ def help_message(full: bool = False, is_admin: bool = False) -> str:
 
     commands = ["howmany", "submit", "vote", "status", "myresults"]
     admin_commands = [
-        "getentryplacements", "postentries", "postentriespreview", "manage"
+        "results", "postentries", "postentriespreview", "manage"
     ]
 
     msg = ("Hey there! I'm 8Bot-- My job is to help you participate in "
@@ -438,10 +438,10 @@ async def vote(context: commands.Context) -> None:
     await context.send(message)
 
 
-@client.command()
+@client.command(aliases=["getentryplacements"])
 @commands.check(is_admin)
 @commands.dm_only()
-async def getentryplacements(context: commands.Context) -> None:
+async def results(context: commands.Context) -> None:
     """Prints the entries ranked according to the STAR algoritm."""
     ranked = compo.get_ranked_entrant_list(compo.get_week(False))
 
