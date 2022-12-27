@@ -1,9 +1,9 @@
+import dataclasses
 from dataclasses import dataclass, field, make_dataclass
 from collections.abc import Sequence
 
-
 @dataclass
-class Config:
+class DefaultConfig:
     """Holds configuration data for 8bot"""
 
     command_prefix: Sequence[str] = field(default_factory=lambda: ("8!",))
@@ -50,10 +50,10 @@ class Config:
 
 
 try:
-    from botconfig import Config as cfg 
+    from botconfig import Config 
 
-    config = Config(*cfg().__dict__)
-except ImportError as e:
+    config = DefaultConfig(**dataclasses.asdict(Config()))
+except Exception as e:
     print(f"Error loading bot config: {e}")
     print("WARNING: Loading default bot config as fallback; this likely will cause problems with discord.py")
-    config = Config()
+    config = DefaultConfig()
