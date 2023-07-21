@@ -15,6 +15,9 @@ class DefaultConfig:
     admins: Sequence[int] = (0,)
     """The list of administrators"""
 
+    results_blacklist: Sequence[int] = (0,)
+    """The list of people not to send vote results to"""
+
     default_ttl: float = 30
     """How long a link is valid for, in minutes"""
 
@@ -50,7 +53,7 @@ class DefaultConfig:
 
 
 try:
-    from botconfig import Config 
+    from botconfig import Config
 
     config = DefaultConfig(**dataclasses.asdict(Config()))
 except Exception as e:
