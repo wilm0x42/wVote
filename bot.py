@@ -600,6 +600,11 @@ async def myresults(context: commands.Context) -> None:
 
     user_entry = None
 
+    if context.author.id in config.results_blacklist:
+        await context.send("Sorry but I'm too sleeby to calculate results")
+        return
+
+
     for entry in week["entries"]:
         if entry["discordID"] == context.author.id:
             user_entry = entry
