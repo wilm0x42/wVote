@@ -2,6 +2,7 @@
 
 import logging
 import json
+import urllib.parse
 from typing import Dict
 
 from aiohttp import web, web_request
@@ -444,19 +445,24 @@ def format_week(week: dict, is_admin: bool) -> dict:
 
         prunedEntry = {
             "uuid": e["uuid"],
-            "pdfUrl": "/files/%s/%s" % (e["uuid"], e.get("pdfFilename")),
             "mp3Format": e.get("mp3Format"),
             "entryName": e["entryName"],
             "entrantName": e["entrantName"],
             "isValid": is_valid,
         }
+        
+        if e.get("pdfFilename") != None:
+            prunedEntry["pdfUrl"] = "/files/%s/%s" % (e["uuid"],
+                                                      urllib.parse.quote(e.get("pdfFilename"))),
+        else:
+        	prunedEntry["pdfUrl"] = None
 
         if is_admin and "entryNotes" in e:
             prunedEntry["entryNotes"] = e["entryNotes"]
 
         if e.get("mp3Format") == "mp3":
             prunedEntry["mp3Url"] = "/files/%s/%s" % (e["uuid"],
-                                                      e["mp3Filename"])
+                                                      urllib.parse.quote(e["mp3Filename"]))
         else:
             prunedEntry["mp3Url"] = e.get("mp3")
 
