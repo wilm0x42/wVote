@@ -1,5 +1,6 @@
 import compo
 import uuid
+import pytest
 
 class TestCreateBlankEntry:
     def test_create_blank_entry_returns_string(self):
@@ -140,7 +141,7 @@ class TestMoveWeeks:
 
 
 class TestFindEntries:
-    def setup(self):
+    def setup_method(self):
         compo.current_week = compo.blank_week()
         compo.next_week = compo.blank_week()
 
