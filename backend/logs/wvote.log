@@ -1,0 +1,401 @@
+2024-02-25 07:44:26,941 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 07:45:33,183 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 07:45:33,184 logging in using static token
+2024-02-25 07:45:33,186 HTTP: Started server
+2024-02-25 07:45:41,722 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 07:45:41,728 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f561db4eee0>, 13589.252582848)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f561db39a60>
+2024-02-25 07:45:51,618 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 07:45:51,620 logging in using static token
+2024-02-25 07:45:51,621 HTTP: Started server
+2024-02-25 07:55:59,388 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 07:55:59,394 Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f754434a3d0>
+2024-02-25 08:05:54,314 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:05:54,316 logging in using static token
+2024-02-25 08:05:54,317 HTTP: Started server
+2024-02-25 08:05:59,059 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:05:59,064 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7ff72411be20>, 14810.335705945)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7ff724169e20>
+2024-02-25 08:11:31,785 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:11:31,787 logging in using static token
+2024-02-25 08:11:31,788 HTTP: Started server
+2024-02-25 08:11:34,378 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:11:34,383 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f45d971fe20>, 15147.848770094)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f45d976de80>
+2024-02-25 08:12:45,206 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:12:45,208 logging in using static token
+2024-02-25 08:12:45,210 HTTP: Started server
+2024-02-25 08:12:46,975 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:12:46,979 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7efd7cd62ee0>, 15221.219285534)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7efd7cd39cd0>
+2024-02-25 08:13:58,763 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:13:58,765 logging in using static token
+2024-02-25 08:13:58,767 HTTP: Started server
+2024-02-25 08:14:00,567 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:14:00,573 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7ff703f20ee0>, 15294.771422951)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7ff703ef7ca0>
+2024-02-25 08:14:08,918 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:14:08,920 logging in using static token
+2024-02-25 08:14:08,922 HTTP: Started server
+2024-02-25 08:14:10,585 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:14:10,590 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f7042012ee0>, 15304.925184864)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f7041fe9cd0>
+2024-02-25 08:14:29,074 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:14:29,075 logging in using static token
+2024-02-25 08:14:29,077 HTTP: Started server
+2024-02-25 08:14:31,917 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:14:31,922 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7fc7418a1ee0>, 15325.070730409)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7fc741879df0>
+2024-02-25 08:14:38,721 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:14:38,723 logging in using static token
+2024-02-25 08:14:38,724 HTTP: Started server
+2024-02-25 08:14:39,523 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:14:39,528 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f3f8a875ee0>, 15334.725019048)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f3f8a84dcd0>
+2024-02-25 08:14:58,332 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:14:58,334 logging in using static token
+2024-02-25 08:14:58,336 HTTP: Started server
+2024-02-25 08:14:59,441 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:14:59,447 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f5f4d5e5ee0>, 15354.350672662)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f5f4d5bcc70>
+2024-02-25 08:15:08,941 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:15:08,943 logging in using static token
+2024-02-25 08:15:08,945 HTTP: Started server
+2024-02-25 08:15:10,008 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:15:10,014 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f0a53952ee0>, 15364.947605342)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f0a53929c40>
+2024-02-25 08:17:35,080 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:17:35,082 logging in using static token
+2024-02-25 08:17:35,084 HTTP: Started server
+2024-02-25 08:17:47,089 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:17:47,091 logging in using static token
+2024-02-25 08:17:47,092 HTTP: Started server
+2024-02-25 08:17:56,503 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=PrivilegedIntentsRequired("Shard ID None is requesting privileged intents that have not been explicitly enabled in the developer portal. It is recommended to go to https://discord.com/developers/applications/ and explicitly enable the privileged intents within your application's page. If this is not possible, then consider disabling the privileged intents instead.")>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 778, in start
+    await self.connect(reconnect=reconnect)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 704, in connect
+    raise PrivilegedIntentsRequired(exc.shard_id) from None
+discord.errors.PrivilegedIntentsRequired: Shard ID None is requesting privileged intents that have not been explicitly enabled in the developer portal. It is recommended to go to https://discord.com/developers/applications/ and explicitly enable the privileged intents within your application's page. If this is not possible, then consider disabling the privileged intents instead.
+2024-02-25 08:17:56,509 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f4284dd2ee0>, 15523.562259995)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f4284daabe0>
+2024-02-25 08:17:56,509 Fatal error on SSL transport
+protocol: <asyncio.sslproto.SSLProtocol object at 0x7f4284dbd640>
+transport: <_SelectorSocketTransport closing fd=7>
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 918, in write
+    n = self._sock.send(data)
+OSError: [Errno 9] Bad file descriptor
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/asyncio/sslproto.py", line 684, in _process_write_backlog
+    self._transport.write(chunk)
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 924, in write
+    self._fatal_error(exc, 'Fatal write error on socket transport')
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 719, in _fatal_error
+    self._force_close(exc)
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 731, in _force_close
+    self._loop.call_soon(self._call_connection_lost, exc)
+  File "/usr/lib/python3.9/asyncio/base_events.py", line 746, in call_soon
+    self._check_closed()
+  File "/usr/lib/python3.9/asyncio/base_events.py", line 510, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+2024-02-25 08:18:02,899 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:18:02,901 logging in using static token
+2024-02-25 08:18:02,903 HTTP: Started server
+2024-02-25 08:18:04,207 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=LoginFailure('Improper token has been passed.')>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 803, in static_login
+    data = await self.request(Route('GET', '/users/@me'))
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 745, in request
+    raise HTTPException(response, data)
+discord.errors.HTTPException: 401 Unauthorized (error code: 0): 401: Unauthorized
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 777, in start
+    await self.login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 612, in login
+    data = await self.http.static_login(token)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/http.py", line 807, in static_login
+    raise LoginFailure('Improper token has been passed.') from exc
+discord.errors.LoginFailure: Improper token has been passed.
+2024-02-25 08:18:04,212 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f850dd2ff40>, 15538.892262697)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f850dd08dc0>
+2024-02-25 08:18:10,037 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:18:10,039 logging in using static token
+2024-02-25 08:18:10,041 HTTP: Started server
+2024-02-25 08:18:15,375 Task exception was never retrieved
+future: <Task finished name='Task-1' coro=<Client.start() done, defined at /home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py:756> exception=PrivilegedIntentsRequired("Shard ID None is requesting privileged intents that have not been explicitly enabled in the developer portal. It is recommended to go to https://discord.com/developers/applications/ and explicitly enable the privileged intents within your application's page. If this is not possible, then consider disabling the privileged intents instead.")>
+Traceback (most recent call last):
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 778, in start
+    await self.connect(reconnect=reconnect)
+  File "/home/tordek/src/wVote2/backend/.venv/lib/python3.9/site-packages/discord/client.py", line 704, in connect
+    raise PrivilegedIntentsRequired(exc.shard_id) from None
+discord.errors.PrivilegedIntentsRequired: Shard ID None is requesting privileged intents that have not been explicitly enabled in the developer portal. It is recommended to go to https://discord.com/developers/applications/ and explicitly enable the privileged intents within your application's page. If this is not possible, then consider disabling the privileged intents instead.
+2024-02-25 08:18:15,383 Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f80eb95ff40>, 15546.383560174)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f80eb937ca0>
+2024-02-25 08:18:15,384 Fatal error on SSL transport
+protocol: <asyncio.sslproto.SSLProtocol object at 0x7f80eb949820>
+transport: <_SelectorSocketTransport closing fd=7>
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 918, in write
+    n = self._sock.send(data)
+OSError: [Errno 9] Bad file descriptor
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/asyncio/sslproto.py", line 684, in _process_write_backlog
+    self._transport.write(chunk)
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 924, in write
+    self._fatal_error(exc, 'Fatal write error on socket transport')
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 719, in _fatal_error
+    self._force_close(exc)
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 731, in _force_close
+    self._loop.call_soon(self._call_connection_lost, exc)
+  File "/usr/lib/python3.9/asyncio/base_events.py", line 746, in call_soon
+    self._check_closed()
+  File "/usr/lib/python3.9/asyncio/base_events.py", line 510, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+2024-02-25 08:19:32,890 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:19:32,892 logging in using static token
+2024-02-25 08:19:32,893 HTTP: Started server
+2024-02-25 08:19:34,145 Shard ID None has connected to Gateway (Session ID: a5a5b2976584f25755295ceaaa4dbeaa).
+2024-02-25 08:19:36,149 DISCORD: Logged in as wVote Test (ID: 773220827188428810)
+2024-02-25 08:19:36,149 DISCORD: Connected to 1 servers, and 5 users
+2024-02-25 08:19:36,149 DISCORD: Invite link: https://discordapp.com/oauth2/authorize?self_id=773220827188428810&scope=bot&permissions=335936592
+2024-02-25 08:21:07,029 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:21:07,030 logging in using static token
+2024-02-25 08:21:07,032 HTTP: Started server
+2024-02-25 08:21:08,183 Shard ID None has connected to Gateway (Session ID: 1e70af44c3e7b0d2d7411b634efea155).
+2024-02-25 08:21:10,186 DISCORD: Logged in as wVote Test (ID: 773220827188428810)
+2024-02-25 08:21:10,186 DISCORD: Connected to 1 servers, and 5 users
+2024-02-25 08:21:10,186 DISCORD: Invite link: https://discordapp.com/oauth2/authorize?self_id=773220827188428810&scope=bot&permissions=335936592
+2024-02-25 08:23:02,865 PyNaCl is not installed, voice will NOT be supported
+2024-02-25 08:23:02,867 logging in using static token
+2024-02-25 08:23:02,869 HTTP: Started server
+2024-02-25 08:23:04,166 Shard ID None has connected to Gateway (Session ID: 313bfb5824d13b8042049b5f8c1e68d6).
+2024-02-25 08:23:06,169 DISCORD: Logged in as wVote Test (ID: 773220827188428810)
+2024-02-25 08:23:06,169 DISCORD: Connected to 1 servers, and 5 users
+2024-02-25 08:23:06,169 DISCORD: Invite link: https://discordapp.com/oauth2/authorize?self_id=773220827188428810&scope=bot&permissions=335936592
+2024-02-25 08:23:12,558 DISCORD: tordek. (183795648582254593) attempted to use an admin command: help
