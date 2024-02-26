@@ -1,0 +1,6 @@
+from . import config
+from dataclasses import dataclass
+
+@dataclass
+class Config(config.Config):
+  bot_key: str = 'Overwrite your key here'

@@ -27,16 +27,11 @@ class Entry(TypedDict):
     discordID: Optional[int]
     uuid: str
     entryNotes: str
-    mp3Format: Union[Literal["external"], Literal["mp3"]]
+    mp3Format: Union[None, Literal["external"], Literal["mp3"]]
     pdfFilename: Optional[str]
     mp3Filename: Optional[str]
     pdf: Optional[bytes]
     mp3: Union[None, bytes, str]
-
-
-
-class VotingEntry(Entry, total=False):
-    # Temporary data for STAR calculation
     voteScore: Optional[float]
     votePlacement: Optional[int]
 
@@ -168,7 +163,7 @@ class Compos:
 
     def get_entry_file(
         self, uuid: str, filename: str
-    ) -> Union[tuple[str, str], tuple[None, None]]:
+    ) -> Union[tuple[Union[bytes, str, None], str], tuple[None, None]]:
         entry = self.find_entry_by_uuid(uuid)
         if entry is None:
             return None, None
@@ -193,10 +188,10 @@ class Compos:
 
         scores = normalize_votes(week["votes"])
 
-        entry_pool: list[VotingEntry] = []
+        entry_pool: list[Entry] = []
 
         # Write final scores to entry data, and put 'em all in entry_pool
-        v_entries: list[VotingEntry] = week["entries"]  # type: ignore
+        v_entries: list[Entry] = week["entries"]  # type: ignore
         for e in v_entries:
             if entry_valid(e):
                 e["voteScore"] = statistics.mean(
@@ -204,7 +199,7 @@ class Compos:
                 )
                 entry_pool.append(e)
 
-        ranked_entries: list[VotingEntry] = []
+        ranked_entries: list[Entry] = []
         # Now that we have scores calculated, run the actual STAR algorithm
         while len(entry_pool) > 1:
             entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"], reverse=True)
@@ -359,4 +354,11 @@ def create_blank_entry(entrant_name: str, discord_id: Optional[int]) -> Entry:
         "discordID": discord_id,
         "uuid": str(uuid.uuid4()),
         "entryNotes": "",
+        "mp3": None,
+        "mp3Filename": None,
+        "mp3Format": None,
+        "pdf": None,
+        "pdfFilename": None,
+        "votePlacement": None,
+        "voteScore": None,
     }

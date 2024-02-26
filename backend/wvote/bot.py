@@ -31,13 +31,12 @@ class WBot(commands.Bot):
         super().__init__(
             description="Musical Voting Platform",
             pm_help=False,
-            command_prefix=[],
+            command_prefix=options.command_prefix,
             case_insensitive=True,
             help_command=None,
             intents=intents,
             # **options,
         )
-        self.command_prefix = options.command_prefix
 
         self.compos = compos
         self.options = options
@@ -82,7 +81,7 @@ class WBot(commands.Bot):
                 return
 
             if any(
-                message.content.startswith(prefix) for prefix in self.command_prefix
+                message.content.startswith(prefix) for prefix in self.options.command_prefix
             ):
                 return
 
@@ -105,8 +104,9 @@ class WBot(commands.Bot):
                 return
 
             if isinstance(error, IsNotAdminError):
+                command_name = context.command.name if context.command else ""
                 logger.warning(
-                    f"DISCORD: {context.author.name} ({context.author.id}) attempted to use an admin command: {context.command.name}"
+                    f"DISCORD: {context.author.name} ({context.author.id}) attempted to use an admin command: {command_name}"
                 )
                 return
 
@@ -124,7 +124,7 @@ class WBot(commands.Bot):
 
             return context.author.id in options.admins
 
-        async def is_admin_check(context: commands.Context) -> bool:
+        def is_admin_check(context: commands.Context) -> bool:
             """
             Bot command check: Returns `true` if the user is an admin.
             Throws `IsNotAdminError()` on failure.
@@ -312,7 +312,7 @@ class WBot(commands.Bot):
                 )
 
             message += "\n```\n"
-            message += f"Use `{self.command_prefix[0]}closevoting` to close voting for this week."
+            message += f"Use `{self.options.command_prefix[0]}closevoting` to close voting for this week."
 
             await context.send(message)
 
@@ -439,7 +439,7 @@ class WBot(commands.Bot):
 
             await context.send(
                 "You haven't submitted anything yet! "
-                "But if you want to you can with %ssubmit !" % self.command_prefix[0]
+                "But if you want to you can with %ssubmit !" % self.options.command_prefix[0]
             )
 
         @self.command()
@@ -599,7 +599,7 @@ class WBot(commands.Bot):
             msg += "Submissions for this week's prompt are currently open.\n"
             msg += (
                 "If you'd like to submit an entry, DM me the command `"
-                + self.command_prefix[0]
+                + self.options.command_prefix[0]
                 + "submit`, and I'll give you "
             )
             msg += "a secret link to a personal submission form. \n"
@@ -611,27 +611,27 @@ class WBot(commands.Bot):
             ) + "\n"
 
         if not full:
-            msg += f"Send `{self.command_prefix[0]}" + "help` to see all available "
+            msg += f"Send `{self.options.command_prefix[0]}" + "help` to see all available "
             msg += "commands."
         else:
             msg += "\nI understand the following commands: \n"
 
             for command in commands:
-                msg += f"`{self.command_prefix[0]}{command}`: "
+                msg += f"`{self.options.command_prefix[0]}{command}`: "
                 msg += self.get_command(command).short_doc + "\n"
 
             if is_admin:
                 msg += "\nAlso since you're an admin, here are some secret commands: \n"
 
                 for command in admin_commands:
-                    msg += f"`{self.command_prefix[0]}{command}`: "
+                    msg += f"`{self.options.command_prefix[0]}{command}`: "
                     msg += self.get_command(command).short_doc + "\n"
 
-            if len(self.command_prefix) > 1:
+            if len(self.options.command_prefix) > 1:
                 msg += "\n"
-                msg += f"Besides `{self.command_prefix[0]}" + "` I understand the "
+                msg += f"Besides `{self.options.command_prefix[0]}" + "` I understand the "
                 msg += "following prefixes: " + ", ".join(
-                    f"`{prefix}`" for prefix in self.command_prefix[1:]
+                    f"`{prefix}`" for prefix in self.options.command_prefix[1:]
                 )
 
         return msg
