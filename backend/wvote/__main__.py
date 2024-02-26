@@ -29,7 +29,6 @@ def main():
         from .botconfig import Config
 
         config = Config()
-        print(config)
     except ModuleNotFoundError as e:
         logging.error(f"Error loading bot config: {e}")
         logging.warning(
@@ -43,7 +42,6 @@ def main():
     compoStorage = compo.Compos()
     keysStorage = keys.Keys(config)
     wbot = bot.WBot(config, compoStorage, keysStorage)
-    print(config.bot_key)
     loop = asyncio.new_event_loop()
     bot_task = loop.create_task(wbot.start(config.bot_key))
     http_task = loop.create_task(
