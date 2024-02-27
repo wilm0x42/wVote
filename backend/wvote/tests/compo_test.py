@@ -1,13 +1,14 @@
-import compo
+from wvote import compo
 import uuid
+import pytest
 
 class TestCreateBlankEntry:
     def test_create_blank_entry_returns_string(self):
-        result = compo.create_blank_entry("wiglaf", discord_id="is a wiener")
+        result = compos.create_blank_entry("wiglaf", discord_id=123)
         assert type(result["uuid"]) is str
 
     def test_create_blank_entry_returns_valid_uuid(self):
-        result = compo.create_blank_entry("wiglaf", discord_id="is still a wiener")
+        result = compos.create_blank_entry("wiglaf", discord_id=1234)
 
         try:
             uuid.UUID(result["uuid"])
@@ -15,52 +16,63 @@ class TestCreateBlankEntry:
             pytest.fail("create_blank_entry did not assign a valid uuid.")
 
 class TestEntryValid:
-    valid_entry = {
+    valid_entry: compos.Entry = {
         "uuid": "totally",
-        "pdf": "not",
+        "pdf": b"not",
         "pdfFilename": "trying",
         "mp3": "to",
-        "mp3Format": "overthrow",
+        "mp3Format": "mp3",
         "mp3Filename": "the",
         "entryName": "mods",
-        "entrantName": "in #confetti"
+        "entrantName": "in #confetti",
+        "discordID": 123,
+        "entryNotes": "",
+        "votePlacement": 1,
+        "voteScore": 1,
     }
 
     def test_valid_entry(self):
-        assert compo.entry_valid(self.valid_entry) == True
+        assert compo.validate_entry(self.valid_entry) == True
 
     def test_missing_requirements(self):
         for k, _ in self.valid_entry.items():
             invalid_entry = self.valid_entry.copy()
             del invalid_entry[k]
 
-            assert compo.entry_valid(invalid_entry) == False
+            assert compo.validate_entry(invalid_entry) == False
 
     def test_none_mp3(self):
         invalid_entry = self.valid_entry.copy()
         invalid_entry["mp3"] = None
 
-        assert compo.entry_valid(invalid_entry) == False
+        assert compo.validate_entry(invalid_entry) == False
 
     def test_none_pdf(self):
         invalid_entry = self.valid_entry.copy()
         invalid_entry["pdf"] = None
 
-        assert compo.entry_valid(invalid_entry) == False
+        assert compo.validate_entry(invalid_entry) == False
 
+from typing import BinaryIO
+class MockPickler(compo.PickleTool):
+    def load(self, _):
+        return "",
+    def dump(self, _, _):
+        pass
 
+compos = compo.Compos(MockPickler())
 class TestLoadWeeks:
     def mock_pickle(self, mocker):
         mocker.patch("compo.pickle.load")
-        mocker.patch("compo.open")
+        mocker.patch("compos.open")
 
     def test_will_load_if_week_is_none(self, mocker):
         self.mock_pickle(mocker)
 
-        compo.current_week = None
-        compo.next_week = None
+        compos.current_week = None
+        compos.next_week = None
 
-        compo.get_week(False)
+        compos.get_week(False)
 
         compo.pickle.load.assert_called()
         assert compo.pickle.load.call_count == 2
@@ -68,12 +80,12 @@ class TestLoadWeeks:
     def test_will_load_only_one_week_is_none(self, mocker):
         self.mock_pickle(mocker)
 
-        compo.current_week = "CURRENT WEEK"
-        compo.next_week = None
+        compos.current_week = "CURRENT WEEK"
+        compos.next_week = None
 
-        result = compo.get_week(False)
+        result = compos.get_week(False)
 
-        compo.open.assert_called_with("weeks/next-week.pickle", "rb")
+        compos.open.assert_called_with("weeks/next-week.pickle", "rb")
         compo.pickle.load.assert_called()
         assert compo.pickle.load.call_count == 1
         assert result == "CURRENT WEEK"
@@ -82,15 +94,15 @@ class TestLoadWeeks:
 class TestSaveWeeks:
     def mock_pickle(self, mocker):
         mocker.patch("compo.pickle.dump", return_value=None)
-        mocker.patch("compo.open")
+        mocker.patch("compos.open")
 
     def test_valid_write(self, mocker):
         self.mock_pickle(mocker)
 
-        compo.current_week = "Solid"
-        compo.next_week = "Snake"
+        compos.current_week = "Solid"
+        compos.next_week = "Snake"
 
-        compo.save_weeks()
+        compos.save_weeks()
 
         compo.pickle.dump.assert_called()
         assert compo.pickle.dump.call_count == 2
@@ -98,100 +110,100 @@ class TestSaveWeeks:
     def test_current_week_none(self, mocker):
         self.mock_pickle(mocker)
 
-        compo.current_week = None
-        compo.next_week = "Raiden"
+        compos.current_week = None
+        compos.next_week = "Raiden"
 
-        compo.save_weeks()
+        compos.save_weeks()
 
         compo.pickle.dump.assert_not_called()
 
     def test_next_week_none(self, mocker):
         self.mock_pickle(mocker)
 
-        compo.current_week = "Big Boss"
-        compo.next_week = None
+        compos.current_week = "Big Boss"
+        compos.next_week = None
 
-        compo.save_weeks()
+        compos.save_weeks()
 
         compo.pickle.dump.assert_not_called()
 
 class TestMoveWeeks:
     def mock_pickle(self, mocker):
         mocker.patch("compo.pickle.dump", return_value=None)
-        mocker.patch("compo.open")
+        mocker.patch("compos.open")
 
 
     def test_move_weeks_dumps(self, mocker):
         self.mock_pickle(mocker)
-        compo.move_to_next_week()
+        compos.move_to_next_week()
 
         compo.pickle.dump.assert_called()
 
 
     def test_move_weeks(self, mocker):
         self.mock_pickle(mocker)
-        compo.current_week = "Gandalf the Gray"
-        compo.next_week = "Gandalf the White"
+        compos.current_week = "Gandalf the Gray"
+        compos.next_week = "Gandalf the White"
 
-        compo.move_to_next_week()
+        compos.move_to_next_week()
 
-        assert compo.current_week == "Gandalf the White"
-        assert compo.next_week == compo.blank_week()
+        assert compos.current_week == "Gandalf the White"
+        assert compos.next_week == compos.blank_week()
 
 
 class TestFindEntries:
     def setup(self):
-        compo.current_week = compo.blank_week()
-        compo.next_week = compo.blank_week()
+        compos.current_week = compos.blank_week()
+        compos.next_week = compos.blank_week()
 
     def test_cant_find_if_theres_nothing(self):
-        found_entry = compo.find_entry_by_uuid("???")
+        found_entry = compos.find_entry_by_uuid("???")
         assert found_entry is None
 
     def test_cant_find_nonexistant(self):
-        entry = compo.create_blank_entry("Hidden Guy", 0)
+        entry = compos.create_blank_entry("Hidden Guy", 0)
 
-        compo.current_week["entries"].append(entry)
+        compos.current_week["entries"].append(entry)
 
-        found_entry = compo.find_entry_by_uuid("???")
+        found_entry = compos.find_entry_by_uuid("???")
         assert found_entry is None
 
     def test_can_find_current_week(self):
-        entry = compo.create_blank_entry("Findable Guy", 1)
+        entry = compos.create_blank_entry("Findable Guy", 1)
 
-        compo.current_week["entries"].append(entry)
+        compos.current_week["entries"].append(entry)
 
-        found_entry = compo.find_entry_by_uuid(entry["uuid"])
+        found_entry = compos.find_entry_by_uuid(entry["uuid"])
         assert found_entry is entry
 
 
     def test_can_find_next_week(self):
-        entry = compo.create_blank_entry("Findable Guy", 1)
+        entry = compos.create_blank_entry("Findable Guy", 1)
 
-        compo.next_week["entries"].append(entry)
+        compos.next_week["entries"].append(entry)
 
-        found_entry = compo.find_entry_by_uuid(entry["uuid"])
+        found_entry = compos.find_entry_by_uuid(entry["uuid"])
         assert found_entry is entry
 
 
 class TestCountValidEntries:
     def test_no_entries_is_zero_valid(self):
-        week = compo.blank_week()
+        week = compos.blank_week()
 
-        assert compo.count_valid_entries(week) == 0
+        assert compos.count_valid_entries(week) == 0
 
     def test_only_invalid_entries_is_zero_valid(self):
-        week = compo.blank_week()
-        entry = compo.create_blank_entry("Invalid", 0)
+        week = compos.blank_week()
+        entry = compos.create_blank_entry("Invalid", 0)
 
         week["entries"].append(entry)
 
-        assert not compo.entry_valid(entry)
-        assert compo.count_valid_entries(week) == 0
+        assert not compo.validate_entry(entry)
+        assert compos.count_valid_entries(week) == 0
 
     def test_counts_valid_entries(self):
-        week = compo.blank_week()
-        entry = compo.create_blank_entry("Invalid", 0)
+        week = compos.blank_week()
+        entry = compos.create_blank_entry("Invalid", 0)
         entry["pdf"] = "yes"
         entry["pdfFilename"] = "here"
         entry["mp3"] = "yes"
@@ -200,19 +212,19 @@ class TestCountValidEntries:
 
         week["entries"].append(entry)
 
-        assert compo.entry_valid(entry)
-        assert compo.count_valid_entries(week) == 1
+        assert compo.validate_entry(entry)
+        assert compos.count_valid_entries(week) == 1
 
 class TestVerifyVotes:
     def test_all_is_good_by_default(self):
-        week = compo.blank_week()
+        week = compos.blank_week()
 
-        compo.verify_votes(week)
+        compos.verify_votes(week)
 
         assert week["votes"] == []
 
     def test_a_single_vote_is_ok(self):
-        week = compo.blank_week()
+        week = compos.blank_week()
         votes = [{
             "userID": 1234,
             "ratings": [{
@@ -223,12 +235,12 @@ class TestVerifyVotes:
         }]
         week["votes"] = votes.copy()
 
-        compo.verify_votes(week)
+        compos.verify_votes(week)
 
         assert week["votes"] == votes
 
     def test_cant_vote_too_high(self):
-        week = compo.blank_week()
+        week = compos.blank_week()
         votes = [{
             "userID": 1234,
             "ratings": [{
@@ -239,12 +251,12 @@ class TestVerifyVotes:
         }]
         week["votes"] = votes.copy()
 
-        compo.verify_votes(week)
+        compos.verify_votes(week)
 
         assert week["votes"][0]["ratings"] == []
 
     def test_cant_vote_too_low(self):
-        week = compo.blank_week()
+        week = compos.blank_week()
         votes = [{
             "userID": 1234,
             "ratings": [{
@@ -255,12 +267,12 @@ class TestVerifyVotes:
         }]
         week["votes"] = votes.copy()
 
-        compo.verify_votes(week)
+        compos.verify_votes(week)
 
         assert week["votes"][0]["ratings"] == []
 
     def test_duped_votes_are_discarded(self):
-        week = compo.blank_week()
+        week = compos.blank_week()
         rating1 = {
                 "voteParam": "overall",
                 "entryUUID": "123",
@@ -277,7 +289,7 @@ class TestVerifyVotes:
         }]
         week["votes"] = votes.copy()
 
-        compo.verify_votes(week)
+        compos.verify_votes(week)
 
         assert week["votes"][0]["ratings"] == [rating1]
 
@@ -285,7 +297,7 @@ class TestNormalizeVotes:
     def test_no_votes_means_no_scores(self):
         votes = []
 
-        scores = compo.normalize_votes(votes)
+        scores = compos.normalize_votes(votes)
 
         assert scores == {}
 
@@ -299,7 +311,7 @@ class TestNormalizeVotes:
             }]
         }]
 
-        scores = compo.normalize_votes(votes)
+        scores = compos.normalize_votes(votes)
 
         assert scores == {"123": [(3, "overall")]}
 
@@ -309,7 +321,7 @@ class TestNormalizeVotes:
             "ratings": []
         }]
 
-        scores = compo.normalize_votes(votes)
+        scores = compos.normalize_votes(votes)
 
         assert scores == {}
 
@@ -327,6 +339,6 @@ class TestNormalizeVotes:
             }]
         }]
 
-        scores = compo.normalize_votes(votes)
+        scores = compos.normalize_votes(votes)
 
         assert scores == {"123": [(1, "overall")], "777": [(5, "overall")]}

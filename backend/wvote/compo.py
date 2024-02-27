@@ -2,8 +2,8 @@ import datetime
 import uuid
 import logging
 import statistics
-from typing import Optional, TypedDict, Union, Literal
 import pickle
+from typing import Optional, TypedDict, Union, Literal, BinaryIO, Any
 
 THIS_WEEK = True
 NEXT_WEEK = False
@@ -21,13 +21,27 @@ class Vote(TypedDict):
     userName: str
 
 
-class Entry(TypedDict):
+class MandatoryEntryFields(TypedDict):
     entryName: str
     entrantName: str
     discordID: Optional[int]
     uuid: str
+
+
+class Entry(MandatoryEntryFields, total=False):
     entryNotes: str
-    mp3Format: Union[None, Literal["external"], Literal["mp3"]]
+    mp3Format: Union[None, Literal["external", "mp3"]]
+    pdfFilename: Optional[str]
+    mp3Filename: Optional[str]
+    pdf: Optional[bytes]
+    mp3: Union[None, bytes, str]
+    voteScore: Optional[float]
+    votePlacement: Optional[int]
+
+
+class ValidEntry(MandatoryEntryFields):
+    entryNotes: str
+    mp3Format: Union[None, Literal["external", "mp3"]]
     pdfFilename: Optional[str]
     mp3Filename: Optional[str]
     pdf: Optional[bytes]
@@ -48,10 +62,18 @@ class Week(TypedDict):
     crudbroke: int
 
 
+class PickleTool:
+    def load(self, file: BinaryIO):
+        return pickle.load(file)
+    
+    def dump(self, data: Any, file: BinaryIO):
+        return pickle.dump(data, file)
+    
 class Compos:
-    def __init__(self):
+    def __init__(self, pickletool: PickleTool):
         self.current_week: Optional[Week] = None
         self.next_week: Optional[Week] = None
+        self.pickletool = pickletool
 
     def blank_week(self) -> Week:
         return {
@@ -112,14 +134,14 @@ class Compos:
 
         if self.current_week is None:
             try:
-                self.current_week = pickle.load(open("weeks/current-week.pickle", "rb"))
+                self.current_week = self.pickletool.load(open("weeks/current-week.pickle", "rb"))
             except FileNotFoundError:
                 self.current_week = self.blank_week()
-                self.current_week["submissionsOpen"] = False
+                # self.current_week["submissionsOpen"] = False
 
         if self.next_week is None:
             try:
-                self.next_week = pickle.load(open("weeks/next-week.pickle", "rb"))
+                self.next_week = self.pickletool.load(open("weeks/next-week.pickle", "rb"))
             except FileNotFoundError:
                 self.next_week = self.blank_week()
 
@@ -131,8 +153,8 @@ class Compos:
         later be read again.
         """
         if self.current_week is not None and self.next_week is not None:
-            pickle.dump(self.current_week, open("weeks/current-week.pickle", "wb"))
-            pickle.dump(self.next_week, open("weeks/next-week.pickle", "wb"))
+            self.pickletool.dump(self.current_week, open("weeks/current-week.pickle", "wb"))
+            self.pickletool.dump(self.next_week, open("weeks/next-week.pickle", "wb"))
             logging.info("COMPO: current-week.pickle and next-week.pickle overwritten")
 
     def advance_weeks(self) -> None:
@@ -147,7 +169,7 @@ class Compos:
             "weeks/archive/" + datetime.datetime.now().strftime("%y-%m-%d") + ".pickle",
             "wb",
         ) as archive_file:
-            pickle.dump(self.current_week, archive_file)
+            self.pickletool.dump(self.current_week, archive_file)
 
         self.current_week = self.next_week
         self.next_week = self.blank_week()
@@ -168,10 +190,18 @@ class Compos:
         if entry is None:
             return None, None
 
-        if "mp3Filename" in entry and entry["mp3Filename"] == filename:
+        if (
+            "mp3" in entry
+            and "mp3Filename" in entry
+            and entry["mp3Filename"] == filename
+        ):
             return entry["mp3"], "audio/mpeg"
 
-        if "pdfFilename" in entry and entry["pdfFilename"] == filename:
+        if (
+            "pdf" in entry
+            and "pdfFilename" in entry
+            and entry["pdfFilename"] == filename
+        ):
             return entry["pdf"], "application/pdf"
 
         return None, None
@@ -193,7 +223,7 @@ class Compos:
         # Write final scores to entry data, and put 'em all in entry_pool
         v_entries: list[Entry] = week["entries"]  # type: ignore
         for e in v_entries:
-            if entry_valid(e):
+            if validate_entry(e):
                 e["voteScore"] = statistics.mean(
                     score[0] for score in scores.get(e["uuid"], [(0, None)])
                 )
@@ -204,33 +234,33 @@ class Compos:
         while len(entry_pool) > 1:
             entry_pool = sorted(entry_pool, key=lambda e: e["voteScore"], reverse=True)
 
-            entryA = entry_pool[0]
-            entryB = entry_pool[1]
+            entry_a = entry_pool[0]
+            entry_b = entry_pool[1]
 
-            preferEntryA = 0
-            preferEntryB = 0
+            prefer_entry_a = 0
+            prefer_entry_b = 0
 
             for v in week["votes"]:
                 # note that normalization doesn't matter for comparing preference
-                scoreA = sum(
+                score_a = sum(
                     r["rating"] * param_weights[r["voteParam"]]
                     for r in v["ratings"]
-                    if r["entryUUID"] == entryA["uuid"]
+                    if r["entryUUID"] == entry_a["uuid"]
                 )
-                scoreB = sum(
+                score_b = sum(
                     r["rating"] * param_weights[r["voteParam"]]
                     for r in v["ratings"]
-                    if r["entryUUID"] == entryB["uuid"]
+                    if r["entryUUID"] == entry_b["uuid"]
                 )
 
-                if scoreA > scoreB:
-                    preferEntryA += 1
-                elif scoreB > scoreA:
-                    preferEntryB += 1
+                if score_a > score_b:
+                    prefer_entry_a += 1
+                elif score_b > score_a:
+                    prefer_entry_b += 1
 
-            # greater than or equal to, as entryA is the entry with a higher score,
+            # greater than or equal to, as entry_a is the entry with a higher score,
             # to settle things in the case of a tie
-            if preferEntryA >= preferEntryB:
+            if prefer_entry_a >= prefer_entry_b:
                 ranked_entries.append(entry_pool.pop(0))
             else:
                 ranked_entries.append(entry_pool.pop(1))
@@ -247,7 +277,7 @@ class Compos:
 def verify_votes(week: Week) -> None:
     # Makes sure a single user can only vote on the same parameter
     # for the same entry a single time
-    userVotes = set({})
+    user_votes = set({})
 
     # Validate data, and throw away sus ratings
     for v in week["votes"]:
@@ -255,14 +285,14 @@ def verify_votes(week: Week) -> None:
             if not (
                 0 <= r["rating"] <= 5
                 and r["voteParam"] in week["voteParams"]
-                and (v["userID"], r["entryUUID"], r["voteParam"]) not in userVotes
+                and (v["userID"], r["entryUUID"], r["voteParam"]) not in user_votes
             ):
                 logging.warning("COMPO: FRAUD DETECTED (CHECK VOTES)")
                 logging.warning(f"Sus rating: {str(r)}")
                 v["ratings"].remove(r)
                 continue
 
-            userVotes.add((v["userID"], r["entryUUID"], r["voteParam"]))
+            user_votes.add((v["userID"], r["entryUUID"], r["voteParam"]))
 
 
 def fetch_votes_for_entry(votes: list, entry_uuid: str) -> list:
@@ -310,7 +340,7 @@ def add_to_week(week: Week, entry: Entry):
     week["entries"].append(entry)
 
 
-def entry_valid(entry: Entry) -> bool:
+def validate_entry(entry: Entry) -> Union[ValidEntry, None]:
     requirements = [
         "uuid",
         "pdf",
@@ -323,13 +353,16 @@ def entry_valid(entry: Entry) -> bool:
     ]
 
     if any(requirement not in entry for requirement in requirements):
-        return False
+        return None
 
-    return all(entry[param] is not None for param in ["mp3", "pdf"])
+    if not all(entry[param] is not None for param in ["mp3", "pdf"]):
+        return None
+    
+    return entry # type: ignore
 
 
-def valid_entries(week: Week) -> list[Entry]:
-    return [e for e in week["entries"] if entry_valid(e)]
+def valid_entries(week: Week) -> list[ValidEntry]:
+    return [e for e in week["entries"] if validate_entry(e)] # type: ignore
 
 
 def create_blank_entry(entrant_name: str, discord_id: Optional[int]) -> Entry:
@@ -353,12 +386,4 @@ def create_blank_entry(entrant_name: str, discord_id: Optional[int]) -> Entry:
         "entrantName": entrant_name,
         "discordID": discord_id,
         "uuid": str(uuid.uuid4()),
-        "entryNotes": "",
-        "mp3": None,
-        "mp3Filename": None,
-        "mp3Format": None,
-        "pdf": None,
-        "pdfFilename": None,
-        "votePlacement": None,
-        "voteScore": None,
     }

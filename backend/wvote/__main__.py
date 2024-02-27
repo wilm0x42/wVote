@@ -2,7 +2,7 @@
 
 import logging
 import logging.handlers
-
+import pickle
 import asyncio
 
 from . import bot
@@ -39,13 +39,13 @@ def main():
 
         config = Config()
 
-    compoStorage = compo.Compos()
-    keysStorage = keys.Keys(config)
-    wbot = bot.WBot(config, compoStorage, keysStorage)
+    compo_storage = compo.Compos(compo.PickleTool())
+    keys_storage = keys.Keys(config)
+    wbot = bot.WBot(config, compo_storage, keys_storage)
     loop = asyncio.new_event_loop()
     bot_task = loop.create_task(wbot.start(config.bot_key))
     http_task = loop.create_task(
-        http_server.WebServer(config, wbot, compoStorage, keysStorage).start_http()
+        http_server.WebServer(config, wbot, compo_storage, keys_storage).start_http()
     )
 
     loop.run_forever()

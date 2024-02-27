@@ -1,4 +1,7 @@
 __pycache__/
 venv/
 wvote/botconfig.py
-logs/
+logs/*
+weeks/*
+static/*
+!**/.gitkeep

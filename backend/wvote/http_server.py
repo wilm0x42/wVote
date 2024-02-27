@@ -221,15 +221,15 @@ class WebServer:
             for which_week in [True, False]:
                 week = compos.get_week(which_week)
 
-                for entryIndex, entry in enumerate(week["entries"]):
+                for entry_index, entry in enumerate(week["entries"]):
                     if entry["uuid"] == uuid:
-                        choice = (week, entryIndex, entry)
+                        choice = (week, entry_index, entry)
                         break
 
             if choice is None:
                 return web.Response(status=404, text="That entry doesn't seem to exist")
 
-            week, entryIndex, entry = choice
+            week, entry_index, entry = choice
 
             # Process it
             reader = await request.multipart()
@@ -275,13 +275,14 @@ class WebServer:
                     if field.filename == "" or not field.filename:
                         continue
                     if not field.filename.endswith(field.name):
-                        errMsg = "Wrong file format! Expected %s" % field.name
-                        return web.Response(status=400, text=errMsg)
+                        error_message = "Wrong file format! Expected %s" % field.name
+                        return web.Response(status=400, text=error_message)
 
                     size = 0
                     entry[field.name] = None
 
-                    entry[field.name + "Filename"] = field.filename
+                    file_field_name = field.name + "Filename"
+                    entry[file_field_name] = field.filename  # type: ignore
 
                     if field.name == "mp3":
                         entry["mp3Format"] = "mp3"
@@ -293,16 +294,16 @@ class WebServer:
                         size += len(chunk)
                         if size > 1000 * 1000 * 25:  # 25MB limit
                             entry[field.name] = None
-                            entry[field.name + "Filename"] = None
+                            entry[field.name + "Filename"] = None  # type: ignore
                             return web.Response(status=413, text=TOO_BIG_TEXT)
-                        if entry[field.name] is None:
+                        if entry.get(field.name) is None:
                             entry[field.name] = chunk
                         else:
-                            entry[field.name] += chunk
+                            entry[field.name] += chunk  # type: ignore
 
             if not is_admin:
                 # Move the entry to the end of the list
-                week["entries"].append(week["entries"].pop(entryIndex))
+                week["entries"].append(week["entries"].pop(entry_index))
 
             compos.save_weeks()
 
@@ -383,14 +384,14 @@ class WebServer:
             """
             Massages week data into the format that will be output as JSON.
             """
-            entryData = []
+            entry_data = []
 
             for e in week["entries"]:
-                is_valid = compo.entry_valid(e)
+                is_valid = compo.validate_entry(e)
                 if not is_admin and not is_valid:
                     continue
 
-                prunedEntry = {
+                pruned_entry = {
                     "uuid": e["uuid"],
                     "mp3Format": e.get("mp3Format"),
                     "entryName": e["entryName"],
@@ -398,36 +399,36 @@ class WebServer:
                     "isValid": is_valid,
                 }
 
-                pdfFilename = e.get("pdfFilename")
-                if pdfFilename is not None:
-                    prunedEntry["pdfUrl"] = (
-                        "/files/%s/%s"
-                        % (e["uuid"], urllib.parse.quote(pdfFilename)),
+                pdf_filename = e.get("pdfFilename")
+                if pdf_filename is not None:
+                    pruned_entry["pdfUrl"] = (
+                        "/files/%s/%s" % (e["uuid"], urllib.parse.quote(pdf_filename)),
                     )
                 else:
-                    prunedEntry["pdfUrl"] = None
+                    pruned_entry["pdfUrl"] = None
 
                 if is_admin and "entryNotes" in e:
-                    prunedEntry["entryNotes"] = e["entryNotes"]
+                    pruned_entry["entryNotes"] = e["entryNotes"]
 
-                if e.get("mp3Format") == "mp3":
-                    prunedEntry["mp3Url"] = "/files/%s/%s" % (
+                mp3Filename = e.get("mp3Filename")
+                if e.get("mp3Format") == "mp3" and mp3Filename:
+                    pruned_entry["mp3Url"] = "/files/%s/%s" % (
                         e["uuid"],
-                        urllib.parse.quote(e["mp3Filename"]),
+                        urllib.parse.quote(mp3Filename),
                     )
                 else:
-                    prunedEntry["mp3Url"] = e.get("mp3")
+                    pruned_entry["mp3Url"] = e.get("mp3")
 
                 # dummy vote data for the client's benefit
-                for voteParam in week["voteParams"]:
-                    prunedEntry[voteParam] = None
+                for vote_param in week["voteParams"]:
+                    pruned_entry[vote_param] = None
 
-                entryData.append(prunedEntry)
+                entry_data.append(pruned_entry)
 
             if not week.get("helpTipDefs"):
-                helpTipDefs = {}
-                for voteParam in week["voteParams"]:
-                    helpTipDefs[voteParam] = {
+                help_tip_defs = {}
+                for vote_param in week["voteParams"]:
+                    help_tip_defs[vote_param] = {
                         "1": "1",
                         "2": "2",
                         "3": "3",
@@ -435,29 +436,29 @@ class WebServer:
                         "5": "5",
                     }
             else:
-                helpTipDefs = week["helpTipDefs"]
+                help_tip_defs = week["helpTipDefs"]
 
             data = {
-                "entries": entryData,
+                "entries": entry_data,
                 "theme": week["theme"],
                 "date": week["date"],
                 "submissionsOpen": week["submissionsOpen"],
                 "votingOpen": week["votingOpen"],
                 "voteParams": week["voteParams"],
-                "helpTipDefs": helpTipDefs,
+                "helpTipDefs": help_tip_defs,
             }
 
             return data
 
         def get_week_votes(week: compo.Week) -> list[compo.Vote]:
-            adaptedData = week["votes"].copy()
+            adapted_data = week["votes"].copy()
 
             # JavaScript is very silly and won't work if we send these huge
             # numbers as actual numbers, so we have to stringify them first
-            for v in adaptedData:
+            for v in adapted_data:
                 v["userID"] = str(v["userID"])
 
-            return adaptedData
+            return adapted_data
 
         def get_editable_entry(entry: compo.Entry) -> dict:
             entry_data = {
@@ -468,13 +469,14 @@ class WebServer:
                 "mp3Format": entry.get("mp3Format"),
             }
 
-            if entry.get("mp3Format") == "mp3":
-                entry_data["mp3Url"] = f"/files/{entry['uuid']}/{entry['mp3Filename']}"
+            mp3Filename = entry.get("mp3Filename")
+            if entry.get("mp3Format") == "mp3" and mp3Filename:
+                entry_data["mp3Url"] = f"/api/files/{entry['uuid']}/{mp3Filename}"
             else:
                 entry_data["mp3Url"] = entry.get("mp3")
 
             if entry.get("pdfFilename") is not None:
-                entry_data["pdfUrl"] = "/files/%s/%s" % (
+                entry_data["pdfUrl"] = "/api/files/%s/%s" % (
                     entry["uuid"],
                     entry.get("pdfFilename"),
                 )

@@ -81,7 +81,8 @@ class WBot(commands.Bot):
                 return
 
             if any(
-                message.content.startswith(prefix) for prefix in self.options.command_prefix
+                message.content.startswith(prefix)
+                for prefix in self.options.command_prefix
             ):
                 return
 
@@ -116,7 +117,7 @@ class WBot(commands.Bot):
 
             logger.error("DISCORD: Unhandled command error: %s" % str(error))
 
-        async def is_admin(context: commands.Context) -> bool:
+        def is_admin(context: commands.Context) -> bool:
             """
             Bot command check: Returns `true` if the user is an admin.
             Throws `IsNotAdminError()` on failure.
@@ -178,7 +179,7 @@ class WBot(commands.Bot):
             async with context.channel.typing():
                 for entry in week["entries"]:
                     try:
-                        if not compo.entry_valid(entry):
+                        if not compo.validate_entry(entry):
                             continue
 
                         discord_user = self.get_user(entry["discordID"])
@@ -260,7 +261,7 @@ class WBot(commands.Bot):
             for entry in week["entries"]:
                 if entry["discordID"] == context.author.id:
                     key = keys.create_edit_key(entry["uuid"])
-                    url = "{options.url_prefix}/edit/{key}"
+                    url = f"{options.url_prefix}/edit/?key={key}"
                     edit_info = (
                         "Link to edit your existing "
                         "submission: " + url + self.expiry_message()
@@ -362,20 +363,24 @@ class WBot(commands.Bot):
                 and datetime.datetime.now().time() > deadline_time_offset
             ):
                 target_date += datetime.timedelta(days=7)
-
+            
             # Target time is Friday at midnight EST
             target_time = datetime.datetime.combine(target_date, deadline_time_offset)
 
             time_difference = target_time - datetime.datetime.now() + timezone_offset
+
+            # TODO: Use a time formatter like https://babel.pocoo.org/en/latest/dates.html#time-delta-formatting
+            # It even supports timezone lol.
             days = time_difference.days
             hours = time_difference.seconds // 3600
             minutes = (time_difference.seconds % 3600) // 60
             minutes = round(minutes)
             result = ""
-            if days > 1:
-                result += "{} days".format(days)
-            elif days > 0:
-                result += "{} day".format(days)
+            if days != 1:
+                result += f"{days} days"
+            else:
+                result += f"{days} day"
+
             if days > 0:
                 if hours > 0 and minutes > 0:
                     result += ", "
@@ -398,9 +403,9 @@ class WBot(commands.Bot):
 
             if days == 0 and hours == 0:
                 result += "Approximately "
-            if minutes > 1:
+            if minutes != 1:
                 result += "{} minutes ".format(minutes)
-            elif minutes > 0:
+            else:
                 result += "{} minute ".format(minutes)
 
             if days == 0 and hours == 0 and minutes == 0:
@@ -417,13 +422,9 @@ class WBot(commands.Bot):
         async def help(context: commands.Context) -> None:
             admin_context = False
             if isinstance(context.channel, discord.DMChannel):
-                admin_context = is_admin_check(context)
+                admin_context = is_admin(context)
 
             await context.send(self.help_message(True, admin_context))
-
-            # FIXME: WTF?
-            if not admin_context:
-                raise IsNotAdminError()
 
         @self.command()
         @commands.dm_only()
@@ -439,7 +440,8 @@ class WBot(commands.Bot):
 
             await context.send(
                 "You haven't submitted anything yet! "
-                "But if you want to you can with %ssubmit !" % self.options.command_prefix[0]
+                "But if you want to you can with %ssubmit !"
+                % self.options.command_prefix[0]
             )
 
         @self.command()
@@ -611,7 +613,10 @@ class WBot(commands.Bot):
             ) + "\n"
 
         if not full:
-            msg += f"Send `{self.options.command_prefix[0]}" + "help` to see all available "
+            msg += (
+                f"Send `{self.options.command_prefix[0]}"
+                + "help` to see all available "
+            )
             msg += "commands."
         else:
             msg += "\nI understand the following commands: \n"
@@ -629,7 +634,9 @@ class WBot(commands.Bot):
 
             if len(self.options.command_prefix) > 1:
                 msg += "\n"
-                msg += f"Besides `{self.options.command_prefix[0]}" + "` I understand the "
+                msg += (
+                    f"Besides `{self.options.command_prefix[0]}" + "` I understand the "
+                )
                 msg += "following prefixes: " + ", ".join(
                     f"`{prefix}`" for prefix in self.options.command_prefix[1:]
                 )
@@ -645,28 +652,33 @@ class WBot(commands.Bot):
 
         # If a music file was attached (including in the form of an external link),
         # make note of it in the message
-        if "mp3" in entry:
-            if entry["mp3Format"] == "mp3":
+        mp3 = entry.get("mp3")
+        mp3Format = entry.get("mp3Format")
+        mp3Filename = entry.get("mp3Filename")
+        if mp3 and mp3Format :
+            if mp3Format == "mp3" and mp3Filename:
                 entry_message += "MP3: %s/files/%s/%s %d KB\n" % (
                     self.options.url_prefix,
                     entry["uuid"],
-                    urllib.parse.quote(entry["mp3Filename"]),
-                    len(entry["mp3"]) / 1000,
+                    urllib.parse.quote(mp3Filename),
+                    len(mp3) / 1000,
                 )
-            elif entry["mp3Format"] == "external":
-                entry_message += "MP3: %s\n" % entry["mp3"]
+            elif mp3Format == "external":
+                entry_message += "MP3: %s\n" % mp3
 
         # If a score was attached, make note of it in the message
-        if "pdf" in entry:
+        pdf = entry.get("pdf")
+        pdf_filename = entry.get("pdfFilename")
+        if pdf and pdf_filename:
             entry_message += "PDF: %s/files/%s/%s %d KB\n" % (
                 self.options.url_prefix,
                 entry["uuid"],
-                urllib.parse.quote(entry["pdfFilename"]),
-                len(entry["pdf"]) / 1000,
+                urllib.parse.quote(pdf_filename),
+                len(pdf) / 1000,
             )
 
         # Mention whether the entry is valid
-        if compo.entry_valid(entry):
+        if compo.validate_entry(entry):
             entry_message += "This entry is valid, and good to go!\n"
         else:
             entry_message += (

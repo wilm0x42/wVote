@@ -29,7 +29,7 @@ class Config:
     bot_key: str = "SET YOUR KEY"
     """The bot key to use for logging in with discord.py"""
 
-    url_prefix: str = "http://127.0.0.1:8251"
+    url_prefix: str = "http://127.0.0.1:5173"
     """The URL prefix to use for links"""
 
     http_port: int = 8251

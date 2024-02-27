@@ -1,0 +1,108 @@
+label
+{
+    margin: 8px;
+}
+
+input
+{
+    font-size: 1em;
+}
+
+h3
+{
+    padding: 0px;
+    margin: 0px;
+    font-size: 1em;
+    text-decoration: underline;
+    text-align: left;
+}
+
+h3:hover
+{
+    cursor: pointer;
+}
+
+hr
+{
+	color: #361536;
+}
+
+.admin-week-text-param
+{
+	width: 400px;
+}
+
+.admin-entry-form
+{
+	background: linear-gradient(to bottom left, rgba(141, 80, 141, 1), rgba(141, 80, 141, 0.5));
+	width: 500px;
+	border: 1px solid black;
+}
+
+.admin-entry-param
+{
+	text-align: center;
+}
+
+.admin-submit-form
+{
+	margin: auto;
+	width: 500px;
+}
+
+.admin-submit-button
+{
+	background-color: white;
+	box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
+	border: 1px solid black;
+	padding: 8px;
+	width: 150px;
+	margin-left: 175px;
+}
+
+.admin-submit-button:hover
+{
+	cursor: pointer;
+}
+
+.submit-babble
+{
+	text-align: center;
+}
+
+.entry-list
+{
+	float: right;
+}
+
+.form-invalid
+{
+	background: rgb(255, 100, 100);
+}
+
+.admin-controls
+{
+	text-align: center;
+	padding: 32px;
+	border: 1px solid black;
+	background: rgba(141, 80, 141, 0.5)
+}
+
+.entries-preview
+{
+    width: 90vw;
+    height: 90vh;
+}
+
+.vote-data
+{
+	background: linear-gradient(to bottom left, rgba(141, 80, 141, 1), rgba(141, 80, 141, 0.5));
+	width: 500px;
+	border: 1px solid black;
+}
+
+.admin-progress-img
+{
+    width: 200px;
+    margin: auto;
+}
