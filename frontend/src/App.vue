@@ -34,7 +34,7 @@ a {
 
 h1 {
   background-color: #ff00ff;
-  background: url("/static/banner_background.png");
+  background: url("@/static/banner_background.png");
   background-repeat: repeat-x;
   color: white;
   font-size: 3em;
@@ -91,7 +91,7 @@ h1 {
 }
 
 .entry-cell-selected {
-  background-image: url("/static/cat_head_bob.gif");
+  background-image: url("@/static/cat_head_bob.gif");
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -154,7 +154,7 @@ h1 {
 
 .viewer-control-bar {
   background-color: #ff00ff;
-  background: url("/static/banner_background.png");
+  background: url("@/static/banner_background.png");
   background-repeat: repeat-x;
 
   margin: 0px;
