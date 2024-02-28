@@ -6,17 +6,17 @@ const router = createRouter({
     {
       path: "/",
       name: "vote",
-      component: () => import("../views/VotingView.vue"),
+      component: () => import("../views/VotingView/"),
     },
     {
-      path: "/edit",
+      path: "/edit/:id",
       name: "edit",
-      component: () => import("../views/SubmissionView.vue"),
+      component: () => import("../views/SubmissionView/"),
     },
     {
       path: "/admin",
       name: "admin",
-      component: () => import("../views/AdminView.vue"),
+      component: () => import("../views/AdminView/"),
     },
   ],
 });

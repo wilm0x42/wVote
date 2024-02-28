@@ -261,7 +261,7 @@ class WBot(commands.Bot):
             for entry in week["entries"]:
                 if entry["discordID"] == context.author.id:
                     key = keys.create_edit_key(entry["uuid"])
-                    url = f"{options.url_prefix}/edit/?key={key}"
+                    url = f"{options.url_prefix}/edit/{entry['uuid']}?key={key}"
                     edit_info = (
                         "Link to edit your existing "
                         "submission: " + url + self.expiry_message()
@@ -273,7 +273,7 @@ class WBot(commands.Bot):
             compo.add_to_week(week, new_entry)
 
             key = keys.create_edit_key(new_entry["uuid"])
-            url = f"{options.url_prefix}/edit/?key={key}"
+            url = f"{options.url_prefix}/edit/{new_entry['uuid']}?key={key}"
 
             await context.send("Submission form: " + url + self.expiry_message())
 
@@ -657,7 +657,7 @@ class WBot(commands.Bot):
         mp3Filename = entry.get("mp3Filename")
         if mp3 and mp3Format :
             if mp3Format == "mp3" and mp3Filename:
-                entry_message += "MP3: %s/files/%s/%s %d KB\n" % (
+                entry_message += "MP3: %s/api/files/%s/%s %d KB\n" % (
                     self.options.url_prefix,
                     entry["uuid"],
                     urllib.parse.quote(mp3Filename),
@@ -670,7 +670,7 @@ class WBot(commands.Bot):
         pdf = entry.get("pdf")
         pdf_filename = entry.get("pdfFilename")
         if pdf and pdf_filename:
-            entry_message += "PDF: %s/files/%s/%s %d KB\n" % (
+            entry_message += "PDF: %s/api/files/%s/%s %d KB\n" % (
                 self.options.url_prefix,
                 entry["uuid"],
                 urllib.parse.quote(pdf_filename),

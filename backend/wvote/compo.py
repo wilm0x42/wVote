@@ -5,8 +5,8 @@ import statistics
 import pickle
 from typing import Optional, TypedDict, Union, Literal, BinaryIO, Any
 
-THIS_WEEK = True
-NEXT_WEEK = False
+THIS_WEEK = False
+NEXT_WEEK = True
 
 
 class Rating(TypedDict):
@@ -17,14 +17,14 @@ class Rating(TypedDict):
 
 class Vote(TypedDict):
     ratings: list[Rating]
-    userID: str
+    userID: int
     userName: str
 
 
 class MandatoryEntryFields(TypedDict):
     entryName: str
     entrantName: str
-    discordID: Optional[int]
+    discordID: int
     uuid: str
 
 
@@ -365,7 +365,7 @@ def valid_entries(week: Week) -> list[ValidEntry]:
     return [e for e in week["entries"] if validate_entry(e)] # type: ignore
 
 
-def create_blank_entry(entrant_name: str, discord_id: Optional[int]) -> Entry:
+def create_blank_entry(entrant_name: str, discord_id: int) -> Entry:
     """
     Create a blank entry for an entrant and returns a UUID
 

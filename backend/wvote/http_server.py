@@ -1,7 +1,7 @@
 import logging
 import json
 import urllib.parse
-from typing import Dict
+from typing import TypedDict, Optional, Any
 
 from aiohttp import web, web_request
 
@@ -17,6 +17,30 @@ You can alternatively upload to SoundCloud or Clyp or something,
 and provide us with a link. If you need help, ask us in
 #weekly-challenge-discussion.
 """
+
+
+class RequiredEntryResponse(TypedDict):
+    uuid: str
+    mp3Format: Optional[str]
+    entrantName: str
+    entryName: str
+    isValid: bool
+    pdfUrl: Optional[str]
+    mp3Url: Optional[str]
+
+
+class EntryResponse(RequiredEntryResponse, total=False):
+    entryNotes: str
+
+
+class EntriesResponse(TypedDict):
+    entries: list[EntryResponse]
+    theme: str
+    date: str
+    submissionsOpen: bool
+    votingOpen: bool
+    voteParams: list[str]
+    helpTipDefs: dict[str, dict[str, str]]
 
 
 class WebServer:
@@ -45,24 +69,28 @@ class WebServer:
         async def get_entries_handler(request: web_request.Request) -> web.Response:
             """Display this weeks votable entries"""
             return web.json_response(
-                format_week(compos.get_week(compo.THIS_WEEK), False)
+                format_week(compos.get_week(compo.THIS_WEEK), is_admin=False)
             )
 
         async def get_entry_handler(request: web_request.Request) -> web.Response:
             """Return an entry for editing"""
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
+            uuid = request.match_info["uuid"]
 
             if not compos.get_week(compo.NEXT_WEEK)["submissionsOpen"]:
                 return web.Response(
                     status=400, text="Submissions are currently closed!"
                 )
 
-            if not keys.is_valid_edit_key(auth_key):
+            if not keys.is_valid_edit_key(auth_key, uuid):
                 return web.Response(status=401, text="Invalid or expired link")
 
             key = keys.edit_keys[auth_key]
+            assert uuid == key["entryUUID"]
 
-            entry = compos.find_entry_by_uuid(key["entryUUID"])
+            entry = compos.find_entry_by_uuid(uuid)
 
             if not entry:
                 return web.Response(status=400, text="Entry doesn't exist")
@@ -75,7 +103,9 @@ class WebServer:
             - Submissions
             - Votes
             """
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
 
             if not keys.is_valid_admin_key(auth_key):
                 return web.Response(status=401, text="Invalid or expired admin link")
@@ -83,7 +113,10 @@ class WebServer:
             this_week = compos.get_week(compo.THIS_WEEK)
             next_week = compos.get_week(compo.NEXT_WEEK)
 
-            weeks = [format_week(this_week, True), format_week(next_week, True)]
+            weeks = [
+                format_week(this_week, is_admin=True),
+                format_week(next_week, is_admin=True),
+            ]
             votes = get_week_votes(this_week)
 
             data = {"weeks": weeks, "votes": votes}
@@ -92,18 +125,22 @@ class WebServer:
 
         async def admin_preview_handler(request: web_request.Request) -> web.Response:
             """Display next weeks votable entries"""
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
 
             if not keys.is_valid_admin_key(auth_key):
                 return web.Response(status=401, text="Invalid or expired admin link")
 
             return web.json_response(
-                format_week(compos.get_week(compo.NEXT_WEEK), False)
+                format_week(compos.get_week(compo.NEXT_WEEK), is_admin=False)
             )
 
         async def admin_viewvote_handler(request: web_request.Request) -> web.Response:
             """?"""
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
             user_id = request.match_info["userID"]
 
             if not keys.is_valid_admin_key(auth_key):
@@ -123,7 +160,9 @@ class WebServer:
             request: web_request.Request,
         ) -> web.Response:
             """Delete every vote from an user"""
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
             user_id = request.match_info["userID"]
 
             if not keys.is_valid_admin_key(auth_key):
@@ -140,7 +179,9 @@ class WebServer:
 
         async def admin_control_handler(request: web_request.Request) -> web.Response:
             """Update week information"""
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
 
             if not keys.is_valid_admin_key(auth_key):
                 return web.Response(status=401, text="Invalid or expired admin link")
@@ -163,7 +204,9 @@ class WebServer:
 
         async def admin_archive_handler(request: web_request.Request) -> web.Response:
             """Archive current week, move next week to current, and create a new week"""
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
 
             if not keys.is_valid_admin_key(auth_key):
                 return web.Response(status=401, text="Invalid or expired admin link")
@@ -177,14 +220,17 @@ class WebServer:
 
             TODO: Take in more data?
             """
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
 
             if not keys.is_valid_admin_key(auth_key):
                 return web.Response(status=401, text="Invalid or expired admin link")
 
             entry_data = await request.json()
 
-            discord_id = None
+            # TODO: Handle this IDK
+            discord_id = -1
             if "discordId" in entry_data:
                 try:
                     discord_id = int(entry_data["discordId"])
@@ -202,12 +248,13 @@ class WebServer:
 
             This takes multipart/form-encoding because of large files
             """
-            auth_key = request.match_info["authKey"]
+            auth_header = request.headers["authorization"]
+            [bearer, auth_key] = auth_header.split(" ")
+            assert bearer == "Bearer"
             uuid = request.match_info["uuid"]
 
             is_authorized_user = (
-                keys.is_valid_edit_key(auth_key)
-                and keys.edit_keys[auth_key]["entryUUID"] == uuid
+                keys.is_valid_edit_key(auth_key, uuid)
                 and compos.get_week(compo.NEXT_WEEK)["submissionsOpen"]
             )
 
@@ -345,7 +392,7 @@ class WebServer:
                 user_votes = [
                     vote
                     for vote in user_votes
-                    if vote["entryUUID"] != user_entry["uuid"]
+                    if vote["entryUUID"] != user_entry["uuid"] # TODO: Do this in vote ranking
                 ]
 
                 # Find the user's highest rating
@@ -380,29 +427,31 @@ class WebServer:
             return web.json_response(options.allowed_hosts)
 
         # Helpers
-        def format_week(week: compo.Week, is_admin: bool) -> dict:
+        def format_week(week: compo.Week, *, is_admin: bool) -> EntriesResponse:
             """
             Massages week data into the format that will be output as JSON.
             """
-            entry_data = []
+            entry_data: list[EntryResponse] = []
 
             for e in week["entries"]:
-                is_valid = compo.validate_entry(e)
+                is_valid = compo.validate_entry(e) is not None
                 if not is_admin and not is_valid:
                     continue
 
-                pruned_entry = {
+                pruned_entry: EntryResponse = {
                     "uuid": e["uuid"],
                     "mp3Format": e.get("mp3Format"),
                     "entryName": e["entryName"],
                     "entrantName": e["entrantName"],
                     "isValid": is_valid,
+                    "pdfUrl": "",
+                    "mp3Url": "",
                 }
 
                 pdf_filename = e.get("pdfFilename")
                 if pdf_filename is not None:
                     pruned_entry["pdfUrl"] = (
-                        "/files/%s/%s" % (e["uuid"], urllib.parse.quote(pdf_filename)),
+                        f"/api/files/{e['uuid']}/{urllib.parse.quote(pdf_filename)}"
                     )
                 else:
                     pruned_entry["pdfUrl"] = None
@@ -412,12 +461,12 @@ class WebServer:
 
                 mp3Filename = e.get("mp3Filename")
                 if e.get("mp3Format") == "mp3" and mp3Filename:
-                    pruned_entry["mp3Url"] = "/files/%s/%s" % (
+                    pruned_entry["mp3Url"] = "/api/files/%s/%s" % (
                         e["uuid"],
                         urllib.parse.quote(mp3Filename),
                     )
                 else:
-                    pruned_entry["mp3Url"] = e.get("mp3")
+                    pruned_entry["mp3Url"] = e.get("mp3")  # type: ignore
 
                 # dummy vote data for the client's benefit
                 for vote_param in week["voteParams"]:
@@ -438,7 +487,7 @@ class WebServer:
             else:
                 help_tip_defs = week["helpTipDefs"]
 
-            data = {
+            return {
                 "entries": entry_data,
                 "theme": week["theme"],
                 "date": week["date"],
@@ -448,15 +497,13 @@ class WebServer:
                 "helpTipDefs": help_tip_defs,
             }
 
-            return data
-
-        def get_week_votes(week: compo.Week) -> list[compo.Vote]:
+        def get_week_votes(week: compo.Week) -> list[Any]:
             adapted_data = week["votes"].copy()
 
             # JavaScript is very silly and won't work if we send these huge
             # numbers as actual numbers, so we have to stringify them first
             for v in adapted_data:
-                v["userID"] = str(v["userID"])
+                v["userID"] = str(v["userID"]) # type: ignore
 
             return adapted_data
 
@@ -489,21 +536,19 @@ class WebServer:
             [
                 web.get("/api/files/{uuid}/{filename}", week_files_handler),
                 web.get("/api/entry_data", get_entries_handler),
-                web.get("/api/entry_data/{authKey}", get_entry_handler),
+                web.get("/api/entry_data/{uuid}", get_entry_handler),
                 web.get("/api/allowed_hosts", allowed_hosts_handler),
-                web.get("/api/admin/get_admin_data/{authKey}", admin_get_data_handler),
-                web.get("/api/admin/get_preview_data/{authKey}", admin_preview_handler),
-                web.get(
-                    "/api/admin/viewvote/{authKey}/{userID}", admin_viewvote_handler
-                ),
-                web.post("/api/admin/edit/{authKey}", admin_control_handler),
-                web.post("/api/admin/archive/{authKey}", admin_archive_handler),
-                web.post("/api/admin/spoof/{authKey}", admin_spoof_handler),
+                web.get("/api/admin/get_admin_data", admin_get_data_handler),
+                web.get("/api/admin/get_preview_data", admin_preview_handler),
+                web.get("/api/admin/viewvote/{userID}", admin_viewvote_handler),
+                web.post("/api/admin/edit", admin_control_handler),
+                web.post("/api/admin/archive", admin_archive_handler),
+                web.post("/api/admin/spoof", admin_spoof_handler),
                 web.post(
-                    "/api/admin/delete_vote/{authKey}/{userID}",
+                    "/api/admin/delete_vote/{userID}",
                     admin_deletevote_handler,
                 ),
-                web.post("/api/edit/post/{uuid}/{authKey}", file_post_handler),
+                web.post("/api/edit/post/{uuid}", file_post_handler),
                 web.post("/api/submit_vote", submit_vote_handler),
                 web.static("/", "static"),
             ]

@@ -1,37 +1,33 @@
 import random
 import datetime
 import string
+from typing import TypedDict
 from . import config
+
+
+class EditKey(TypedDict):
+    entryUUID: str
+    creationTime: datetime.datetime
+    timeToLive: float
+
+
+class AdminKey(TypedDict):
+    creationTime: datetime.datetime
+    timeToLive: float
+
+
+class VoteKey(TypedDict):
+    userID: int
+    userName: str
+    creationTime: datetime.datetime
+    timeToLive: float
 
 
 class Keys:
     def __init__(self, options: config.Config):
-        self.edit_keys = {
-            # "a1b2c3d4":
-            # {
-            #   "entryUUID": "cf56f9c3-e81f-43b0-b16b-de2144b54b02",
-            #   "creationTime": datetime.datetime.now(),
-            #   "timeToLive": 200
-            # }
-        }
-
-        self.admin_keys = {
-            # "a1b2c3d4":
-            # {
-            #   "creationTime": datetime.datetime.now(),
-            #   "timeToLive": 200
-            # }
-        }
-
-        self.vote_keys = {
-            # "a1b2c3d4":
-            # {
-            #  "userID": 336685325231325184,
-            #  "userName": "wilm0x42",
-            #  "creationTime": datetime.datetime.now(),
-            #  "timeToLive": 200
-            # }
-        }
+        self.edit_keys: dict[str, EditKey] = {}
+        self.admin_keys: dict[str, AdminKey] = {}
+        self.vote_keys: dict[str, VoteKey] = {}
         self.options = options
 
     def key_valid(self, key: str, keystore: dict) -> bool:
@@ -54,8 +50,11 @@ class Keys:
     def is_valid_vote_key(self, key) -> bool:
         return self.key_valid(key, self.vote_keys)
 
-    def is_valid_edit_key(self, key) -> bool:
-        return self.key_valid(key, self.edit_keys)
+    def is_valid_edit_key(self, key, uuid) -> bool:
+        if not self.key_valid(key, self.edit_keys):
+            return False
+
+        return self.edit_keys[key]["entryUUID"] == uuid
 
     def create_key(self, length: int = 8) -> str:
         """Generates a cryptographically-random alphanumeric key."""
@@ -85,7 +84,7 @@ class Keys:
 
         return key
 
-    def create_vote_key(self, user_id: int, user_name) -> str:
+    def create_vote_key(self, user_id: int, user_name: str) -> str:
         key = self.create_key()
 
         self.vote_keys[key] = {

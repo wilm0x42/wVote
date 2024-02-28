@@ -1,21 +1,21 @@
 <script setup lang="ts">
+import kirbPhone from "./kirb_phone.gif";
+import kirbThanks from "./kirb_thanks.png";
+import type { Entry } from "@/types";
 import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
 
-type Entry = {
-  uuid: string;
-  entryName: string;
-  entrantName: string;
-  mp3Url: string;
-  pdfUrl: string;
-  mp3Format: "mp3" | "external" | null;
-};
+const route = useRoute();
+
+const entryId = route.params["id"] as string;
+
+const searchParams = new URLSearchParams(window.location.search);
+const authKey = searchParams.get("key") as string;
 
 const mode = ref<null | "submit" | "thanks">(null);
 const working = ref(false);
-const authKey = ref("");
 const pdfFormat = ref<"keep" | "upload">("upload");
 const mp3Format = ref<"keep" | "upload" | "external">("upload");
-const validHosts = ref([]);
 const mp3File = ref<null | {
   fileName: string;
   file: File;
@@ -25,7 +25,9 @@ const pdfFile = ref<null | {
   fileName: string;
   file: File;
 }>(null);
+
 const entry = ref<Entry | null>(null);
+const validHosts = ref([]);
 
 const submit = async () => {
   try {
@@ -57,13 +59,13 @@ const submit = async () => {
       }
       formData.append("mp3", mp3File.value.file, mp3File.value.fileName);
     }
-    const request = await fetch(
-      `/api/edit/post/${entry.value.uuid}/${authKey.value}`,
-      {
-        method: "POST",
-        body: formData,
+    const request = await fetch(`/api/edit/post/${entry.value.uuid}`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        authorization: `Bearer ${authKey}`,
       },
-    );
+    });
     if (!request.ok) {
       throw new Error("Something went wrong: " + (await request.text()));
     }
@@ -121,9 +123,10 @@ const mp3LinkError = () => {
 };
 
 onMounted(async () => {
-  mode.value = "submit";
-  working.value = true;
   try {
+    mode.value = "submit";
+    working.value = true;
+
     const hostsRequest = await fetch("/api/allowed_hosts");
     if (!hostsRequest.ok) {
       throw new Error(
@@ -135,10 +138,12 @@ onMounted(async () => {
 
     validHosts.value = await hostsRequest.json();
 
-    const searchParams = new URLSearchParams(window.location.search);
-    authKey.value = searchParams.get("key")!;
-
-    const request = await fetch("/api/entry_data/" + authKey.value);
+    // TODO: fetch /api/entry_data/id
+    const request = await fetch(`/api/entry_data/${entryId}`, {
+      headers: {
+        authorization: `Bearer ${authKey}`,
+      },
+    });
 
     if (!request.ok) {
       throw new Error("Something went wrong: " + (await request.text()));
@@ -172,7 +177,7 @@ onMounted(async () => {
   <div v-if="mode === null">Loading...</div>
   <div v-else-if="mode === 'submit' && entry">
     <div v-if="working" class="progress-img">
-      <img class="progress-img" src="../static/kirb_phone.gif" />
+      <img class="progress-img" :src="kirbPhone" />
       <p>I'm taking good care of things, hold on!</p>
     </div>
     <div v-else>
@@ -184,79 +189,80 @@ onMounted(async () => {
         </p>
       </div>
       <div class="submit-form">
-        <div class="entry-param">
-          <label for="entryName">Entry Name</label>
-          <input name="entryName" type="text" v-model="entry.entryName" />
-        </div>
-        <br />
-        <div class="entry-param">
-          <label
-            ><input type="radio" value="upload" v-model="mp3Format" /> Upload
-            MP3</label
-          >
-          <label
-            ><input type="radio" value="external" v-model="mp3Format" /> Link
-            MP3</label
-          >
-          <label v-show="entry.mp3Url"
-            ><input type="radio" value="keep" v-model="mp3Format" /> Keep
-            current MP3 file</label
-          >
-        </div>
-        <div class="entry-param" v-if="mp3Format === 'keep'">
-          <a :href="entry.mp3Url">Link to MP3</a>
-        </div>
-        <div class="entry-param" v-else-if="mp3Format === 'upload'">
-          <label for="mp3">Upload MP3</label>
-          <input
-            name="mp3"
-            type="file"
-            @change="setFile('mp3', $event)"
-            accept=".mp3"
-          />
-        </div>
-        <div class="entry-param" v-else-if="mp3Format === 'external'">
-          <label for="mp3Link"
-            >If you have an external link to your submission (e.g. SoundCloud),
-            you can enter that here.</label
-          >
-          <input name="mp3Link" type="text" v-model="mp3Link" />
-
-          <div v-if="mp3LinkError()" class="error-message">
-            {{ mp3LinkError() }}
+        <form @submit="submit">
+          <div class="entry-param">
+            <label for="entryName">Entry Name</label>
+            <input name="entryName" type="text" v-model="entry.entryName" />
           </div>
-        </div>
-        <br />
-        <div class="entry-param">
-          <label
-            ><input type="radio" value="upload" v-model="pdfFormat" /> Upload
-            PDF</label
-          >
-          <label v-show="entry.pdfUrl"
-            ><input type="radio" value="keep" v-model="pdfFormat" /> Keep
-            current PDF file</label
-          >
-        </div>
-        <div class="entry-param" v-if="pdfFormat === 'keep'">
-          <a :href="entry.pdfUrl">Link to PDF</a>
-        </div>
-        <div class="entry-param" v-else-if="pdfFormat === 'upload'">
-          <label for="pdf">Upload PDF</label>
+          <br />
+          <div class="entry-param">
+            <label
+              ><input type="radio" value="upload" v-model="mp3Format" /> Upload
+              MP3</label
+            >
+            <label
+              ><input type="radio" value="external" v-model="mp3Format" /> Link
+              MP3</label
+            >
+            <label v-show="entry.mp3Url"
+              ><input type="radio" value="keep" v-model="mp3Format" /> Keep
+              current MP3 file</label
+            >
+          </div>
+          <div class="entry-param" v-if="mp3Format === 'keep'">
+            <a :href="entry.mp3Url">Link to MP3</a>
+          </div>
+          <div class="entry-param" v-else-if="mp3Format === 'upload'">
+            <label for="mp3">Upload MP3</label>
+            <input
+              name="mp3"
+              type="file"
+              @change="setFile('mp3', $event)"
+              accept=".mp3"
+            />
+          </div>
+          <div class="entry-param" v-else-if="mp3Format === 'external'">
+            <label for="mp3Link"
+              >If you have an external link to your submission (e.g.
+              SoundCloud), you can enter that here.</label
+            >
+            <input name="mp3Link" type="text" v-model="mp3Link" />
+
+            <div v-if="mp3LinkError()" class="error-message">
+              {{ mp3LinkError() }}
+            </div>
+          </div>
+          <br />
+          <div class="entry-param">
+            <label
+              ><input type="radio" value="upload" v-model="pdfFormat" /> Upload
+              PDF</label
+            >
+            <label v-show="entry.pdfUrl"
+              ><input type="radio" value="keep" v-model="pdfFormat" /> Keep
+              current PDF file</label
+            >
+          </div>
+          <div class="entry-param" v-if="pdfFormat === 'keep'">
+            <a :href="entry.pdfUrl">Link to PDF</a>
+          </div>
+          <div class="entry-param" v-else-if="pdfFormat === 'upload'">
+            <label for="pdf">Upload PDF</label>
+            <input
+              name="pdf"
+              type="file"
+              @change="setFile('pdf', $event)"
+              accept=".pdf"
+            />
+          </div>
+          <br />
           <input
-            name="pdf"
-            type="file"
-            @change="setFile('pdf', $event)"
-            accept=".pdf"
+            :disabled="working"
+            class="entry-param submit-button"
+            type="submit"
+            value="Submit Entry"
           />
-        </div>
-        <br />
-        <input
-          :disabled="working"
-          class="entry-param submit-button"
-          type="submit"
-          value="Submit Entry"
-          @click="submit"
-        />
+        </form>
       </div>
     </div>
   </div>
@@ -273,10 +279,67 @@ onMounted(async () => {
           If you have any issues, let us know in #weekly-challenge-discussion,
           or DM one of our moderators.
         </p>
-        <img width="500px" src="../static/kirb_thanks.png" />
+        <img width="500px" :src="kirbThanks" />
       </div>
     </div>
   </div>
 </template>
 
-<style></style>
+<style>
+label {
+  margin: 8px;
+}
+
+.entry-form {
+  background: linear-gradient(
+    to bottom left,
+    rgba(141, 80, 141, 1),
+    rgba(141, 80, 141, 0.5)
+  );
+  padding: 16px;
+  width: 500px;
+}
+
+.entry-param {
+  margin: 4px;
+  text-align: center;
+}
+
+.submit-form {
+  margin: auto;
+  width: 500px;
+}
+
+.submit-button {
+  background-color: white;
+  box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
+  border: 1px solid black;
+  padding: 8px;
+  width: 150px;
+  margin-left: 175px;
+}
+
+.submit-button:hover {
+  cursor: pointer;
+}
+
+.submit-babble {
+  text-align: center;
+}
+
+.entry-list {
+  float: right;
+}
+
+.form-current-week {
+  background: rgb(255, 150, 150);
+  border: 1px solid black;
+}
+
+.admin-controls {
+  text-align: center;
+  padding: 32px;
+  border: 1px solid black;
+  background: rgba(255, 255, 255, 0.5);
+}
+</style>
