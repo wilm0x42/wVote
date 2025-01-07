@@ -152,7 +152,6 @@
 	</div>
 
 	<script>
-
 		Vue.component("vote-star-widget", {
 			props: [
 				"value",
@@ -229,6 +228,9 @@
 					this.mode = "vote";
 				}
 
+				// Load any saved votes from local storage, if they apply to this week
+				this.loadVotesFromLocalStorage();
+
 				this.working = false;
 			},
 			methods: {
@@ -257,6 +259,45 @@
 					this.viewedEntryIndex = index
 					this.showEntryList = false
 				},
+				loadVotesFromLocalStorage: function () {
+					// console.log("Loading saved votes from local storage...");
+					// check if we have any saved votes
+					let savedVotes = localStorage.getItem("votes");
+					if (savedVotes != null) {
+						savedEntries = JSON.parse(savedVotes);
+
+						// check if saved entry is from this week
+						for (let savedEntry of savedEntries) {
+							for (let entry of this.entries) {
+								if (entry.uuid == savedEntry.entryUUID) {
+									entry[savedEntry.voteParam] = savedEntry.rating;
+
+									// console.log("Loaded vote for " + savedEntry.voteForName + " (" + savedEntry.voteParam + "): " + savedEntry.rating);
+								}
+							}
+						}
+					}
+				},
+				saveVotesToLocalStorage: function () {
+					// console.log("Saving votes to local storage...");
+					let votes = [];
+
+					for (let entry of this.entries) {
+						for (let param of this.voteParams) {
+							if (entry[param] != null) {
+								let data = {
+									entryUUID: entry.uuid,
+									voteForName: entry.entrantName,
+									voteParam: param,
+									rating: entry[param]
+								}
+								votes.push(data)
+							}
+						}
+					}
+
+					localStorage.setItem("votes", JSON.stringify(votes));
+				},
 				updateNumEntriesRated: function () {
 					var total = 0
 
@@ -270,6 +311,9 @@
 					}
 
 					this.numEntriesRated = total
+
+					// introducing side effect where votes are saved here too
+					this.saveVotesToLocalStorage()
 				},
 				submitVote: async function () {
 					this.working = true;
