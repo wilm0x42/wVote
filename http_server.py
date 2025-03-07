@@ -344,7 +344,7 @@ async def file_post_handler(request: web_request.Request) -> web.Response:
                 if not chunk:
                     break
                 size += len(chunk)
-                if size > 1000 * 1000 * 25:  # 25MB limit
+                if size > 1000 * 1000 * 10:  # 10MB limit
                     entry[field.name] = None
                     entry[field.name + "Filename"] = None
                     return web.Response(status=413, text=too_big_text)
