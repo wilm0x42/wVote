@@ -388,6 +388,14 @@ async def manage(context: commands.Context) -> None:
     url = "%s/admin/%s" % (config.url_prefix, key)
     await context.send("Admin interface: " + url + expiry_message())
 
+@client.command()
+async def dominate(context: commands.Context) -> None:
+    """Wrapper for submit. A very essential feature, I assure you."""
+    if isinstance(context.channel, discord.channel.DMChannel):
+        await context.send("...oh, if you say so  :smirk:")
+        await submit(context)
+    else:
+        await context.send("_Ahem._ Only in private... DM me to use this feature  :flushed:")
 
 @client.command()
 @commands.dm_only()
