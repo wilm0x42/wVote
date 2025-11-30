@@ -397,7 +397,7 @@ async def dominate(context: commands.Context) -> None:
     else:
         await context.send("_Ahem._ Only in private... DM me to use this feature  :flushed:")
 
-@client.command()
+@client.command(aliases=["resubmit"])
 @commands.dm_only()
 async def submit(context: commands.Context) -> None:
     """Provides a link to submit your entry."""
