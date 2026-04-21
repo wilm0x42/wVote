@@ -389,6 +389,11 @@ async def manage(context: commands.Context) -> None:
     await context.send("Admin interface: " + url + expiry_message())
 
 @client.command()
+async def howareyou(context: commands.Context) -> None:
+    """important for spinda's silly joke"""
+    await context.send("im robot beep boop")
+
+@client.command()
 async def dominate(context: commands.Context) -> None:
     """Wrapper for submit. A very essential feature, I assure you."""
     if isinstance(context.channel, discord.channel.DMChannel):
